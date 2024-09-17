@@ -8,8 +8,8 @@ const RipSelector: React.FC<RipSelectorProps> = ({ onSelect }) => {
   const [selectedRip, setSelectedRip] = useState<string | null>(null);
 
   const ripOptions = [
-    { name: '30 cm', url: 'app/models/30cmRib.stl' },
-    { name: '50 cm', url: 'app/models/50cmRib.stl' },
+    { name: '30 cm', url: '/models/30cmRib.stl' },
+    { name: '50 cm', url: '/models/50cmRib.stl' },
   ];
 
   const handleRipChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

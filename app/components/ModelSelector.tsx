@@ -4,18 +4,18 @@ const ModelSelector: React.FC<{ onSelect: (modelUrl: string) => void }> = ({ onS
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   const models = [
-    { name: 'Model 1', url: 'app/models/model1.stl' },
-    { name: 'Model 2', url: 'app/models/model2.stl' },
-    { name: 'Model 3', url: 'app/models/model3.stl' },
-    { name: 'Model 4', url: 'app/models/model4.stl' },
-    { name: 'Model 5', url: 'app/models/model5.stl' },
-    { name: 'Model 6', url: 'app/models/model6.stl' },
-    { name: 'Model 7', url: 'app/models/model7.stl' },
-    { name: 'Model 8', url: 'app/models/model8.stl' },
-    { name: 'Model 9', url: 'app/models/model9.stl' },
-    { name: 'Model 10', url: 'app/models/model10.stl' },
-    { name: 'Model 11', url: 'app/models/model11.stl' },
-    { name: 'Model 12', url: 'app/models/model12.stl' },
+    { name: 'Model 1', url: '/models/model1.stl' },
+    { name: 'Model 2', url: '/models/model2.stl' },
+    { name: 'Model 3', url: '/models/model3.stl' },
+    { name: 'Model 4', url: '/models/model4.stl' },
+    { name: 'Model 5', url: '/models/model5.stl' },
+    { name: 'Model 6', url: '/models/model6.stl' },
+    { name: 'Model 7', url: '/models/model7.stl' },
+    { name: 'Model 8', url: '/models/model8.stl' },
+    { name: 'Model 9', url: '/models/model9.stl' },
+    { name: 'Model 10', url: '/models/model10.stl' },
+    { name: 'Model 11', url: '/models/model11.stl' },
+    { name: 'Model 12', url: '/models/model12.stl' },
   ];
 
   const handleClick = (url: string) => {

@@ -2,8 +2,8 @@ import React from 'react';
 
 const ShelfSelector: React.FC<{ onSelect: (shelfModelUrl: string) => void }> = ({ onSelect }) => {
   const shelves = [
-    { name: 'Glass Shelf', url: 'app/models/glassShelf.stl' },
-    { name: 'Wooden Shelf', url: 'app/models/woodenShelf.stl' },
+    { name: 'Glass Shelf', url: '/models/glassShelf.stl' },
+    { name: 'Wooden Shelf', url: '/models/woodenShelf.stl' },
   ];
 
   return (
