@@ -25,15 +25,20 @@ const ModelSelector: React.FC<{ onSelect: (modelUrl: string) => void }> = ({ onS
 
   return (
     <div>
-      {models.map((model) => (
-        <button
-          key={model.name}
-          onClick={() => handleClick(model.url)}
-          style={{ backgroundColor: selectedModel === model.url ? 'gray' : 'initial' }}
-        >
-          {model.name}
-        </button>
-      ))}
+      <h3 className="text-lg font-medium mb-2">Select a Model:</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        {models.map((model) => (
+          <button
+            key={model.name}
+            onClick={() => handleClick(model.url)}
+            className={`p-2 border rounded-md text-sm ${
+              selectedModel === model.url ? 'bg-gray-400 text-white' : 'bg-white'
+            } hover:bg-gray-100`}
+          >
+            {model.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

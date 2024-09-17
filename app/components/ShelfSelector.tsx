@@ -8,16 +8,19 @@ const ShelfSelector: React.FC<{ onSelect: (shelfModelUrl: string) => void }> = (
 
   return (
     <div>
-      <label htmlFor="shelf-select">Select a Shelf: </label>
-      <select id="shelf-select" onChange={(e) => onSelect(e.target.value)}>
-        <option value="">--Select a Shelf--</option>
-        {shelves.map((shelf) => (
-          <option key={shelf.name} value={shelf.url}>
-            {shelf.name}
-          </option>
-        ))}
-      </select>
-    </div>
+    <h3 className="text-lg font-medium mb-2">Select a Shelf:</h3>
+    <select
+      className="w-full p-2 border rounded-md"
+      onChange={(e) => onSelect(e.target.value)}
+    >
+      <option value="">--Select a Shelf--</option>
+      {shelves.map((shelf) => (
+        <option key={shelf.name} value={shelf.url}>
+          {shelf.name}
+        </option>
+      ))}
+    </select>
+  </div>
   );
 };
 

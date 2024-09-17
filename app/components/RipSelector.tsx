@@ -20,16 +20,22 @@ const RipSelector: React.FC<RipSelectorProps> = ({ onSelect }) => {
 
   return (
     <div>
-      <label htmlFor="rip-select">Select a Rip:</label>
-      <select id="rip-select" value={selectedRip || ''} onChange={handleRipChange}>
-        <option value="" disabled>Select a rip</option>
-        {ripOptions.map((rip) => (
-          <option key={rip.url} value={rip.url}>
-            {rip.name}
-          </option>
-        ))}
-      </select>
-    </div>
+    <h3 className="text-lg font-medium mb-2">Select a Rip:</h3>
+    <select
+      className="w-full p-2 border rounded-md"
+      value={selectedRip || ''}
+      onChange={handleRipChange}
+    >
+      <option value="" disabled>
+        Select a rip
+      </option>
+      {ripOptions.map((rip) => (
+        <option key={rip.url} value={rip.url}>
+          {rip.name}
+        </option>
+      ))}
+    </select>
+  </div>
   );
 };
 
