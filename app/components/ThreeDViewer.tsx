@@ -27,7 +27,6 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
       loader.load(modelUrl, (modelGeometry) => {
         loader.load(ripUrl, (ripGeometry) => {
 
-          // Glass-like material for shelf
           const materialShelf = new THREE.MeshStandardMaterial({
             color: 0x9bc3c9,
             opacity: 0.7,
@@ -37,43 +36,42 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
             side: THREE.DoubleSide,
           });
 
-          // Simulating gradient metallic gold without environment map
+        
           const materialGold = new THREE.MeshStandardMaterial({
             color: 0xf7ef8a,
-            metalness: 0.3, // fully metallic
-            roughness: 3, // Adjust roughness for gradient-like sheen
+            metalness: 0.3,
+            roughness: 3, 
           });
 
           const shelfBoundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(shelfGeometry));
           const shelfHeight = shelfBoundingBox.max.y - shelfBoundingBox.min.y;
 
           const adjustedCornerPositions = [
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },    // Front-left corner
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },    // Front-right corner
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },    // Back-left corner
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },    // Back-right corner
+            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },    
+            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },    
+            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },    
+            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },    
           ];
 
-          // the structure
+         
           for (let i = 0; i < shelfQuantity; i++) {
             const baseHeight = i * (shelfHeight + 300); 
 
-            // Connectors
+           
             adjustedCornerPositions.forEach((pos) => {
               const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
               connectorMesh.scale.set(15 / 10, 15 / 10, 15 / 10); 
               connectorMesh.position.set(pos.x, baseHeight, pos.z);
               scene.add(connectorMesh);
 
-              // Rip on top of the connectors
+             
               const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
               ripMesh.scale.set(10 / 10, 150 / 150, 10 / 10);
-              ripMesh.position.set(pos.x, baseHeight + 15, pos.z); // Positioned above the connector
-              scene.add(ripMesh);
+              ripMesh.position.set(pos.x, baseHeight + 15, pos.z);
 
-              // Add the shelf on top of the rip
+             
               const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(0, baseHeight + 30, 0); // Positioned above the rip
+              shelfMesh.position.set(0, baseHeight + 30, 0); 
               scene.add(shelfMesh);
             });
           }
