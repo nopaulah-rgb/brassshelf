@@ -81,7 +81,7 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
     pointLight.position.set(200, 200, 200);
     scene.add(pointLight);
 
-    camera.position.set(0, 100, 200);
+    camera.position.set(0, 200, 2000);
 
     const animate = function () {
       requestAnimationFrame(animate);
