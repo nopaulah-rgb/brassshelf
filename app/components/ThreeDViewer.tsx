@@ -11,7 +11,6 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-
     renderer.setClearColor(0xffffff);
     mountRef.current?.appendChild(renderer.domElement);
 
@@ -26,7 +25,6 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
     loader.load(shelfUrl, (shelfGeometry) => {
       loader.load(modelUrl, (modelGeometry) => {
         loader.load(ripUrl, (ripGeometry) => {
-
           const materialShelf = new THREE.MeshStandardMaterial({
             color: 0x9bc3c9,
             opacity: 0.7,
@@ -36,42 +34,38 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
             side: THREE.DoubleSide,
           });
 
-        
           const materialGold = new THREE.MeshStandardMaterial({
             color: 0xf7ef8a,
             metalness: 0.3,
-            roughness: 3, 
+            roughness: 3,
           });
 
           const shelfBoundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(shelfGeometry));
           const shelfHeight = shelfBoundingBox.max.y - shelfBoundingBox.min.y;
 
           const adjustedCornerPositions = [
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },    
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },    
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },    
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },    
+            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },
+            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },
+            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },
+            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },
           ];
 
-         
           for (let i = 0; i < shelfQuantity; i++) {
-            const baseHeight = i * (shelfHeight + 300); 
+            const baseHeight = i * (shelfHeight + 300);
 
-           
             adjustedCornerPositions.forEach((pos) => {
               const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-              connectorMesh.scale.set(15 / 10, 15 / 10, 15 / 10); 
+              connectorMesh.scale.set(15 / 10, 15 / 10, 15 / 10);
               connectorMesh.position.set(pos.x, baseHeight, pos.z);
               scene.add(connectorMesh);
 
-             
               const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
               ripMesh.scale.set(10 / 10, 150 / 150, 10 / 10);
               ripMesh.position.set(pos.x, baseHeight + 15, pos.z);
+              scene.add(ripMesh); // Adding the rip mesh to the scene
 
-             
               const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(0, baseHeight + 30, 0); 
+              shelfMesh.position.set(0, baseHeight + 30, 0);
               scene.add(shelfMesh);
             });
           }
