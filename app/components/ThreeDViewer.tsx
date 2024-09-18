@@ -61,14 +61,22 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
 
               const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
               ripMesh.scale.set(10 / 10, 150 / 150, 10 / 10);
-              ripMesh.position.set(pos.x, baseHeight + 15, pos.z);
-              scene.add(ripMesh); // Adding the rip mesh to the scene
+              ripMesh.position.set(pos.x, baseHeight , pos.z);
+              scene.add(ripMesh);
 
               const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(0, baseHeight + 30, 0);
+              shelfMesh.position.set(0, baseHeight , 0);
               scene.add(shelfMesh);
             });
           }
+
+          // Calculate the center of the shelf geometry
+          const shelfCenter = new THREE.Vector3();
+          shelfBoundingBox.getCenter(shelfCenter);
+
+          // Adjust the camera's target to the center of the model
+          controls.target.set(shelfCenter.x, shelfCenter.y, shelfCenter.z);
+          controls.update();
         });
       });
     });
