@@ -3,13 +3,32 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
-const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: string; shelfQuantity: number }> = ({ modelUrl, shelfUrl, ripUrl, shelfQuantity }) => {
+interface ThreeDViewerProps {
+  modelUrl: string;
+  shelfUrl: string;
+  ripUrl: string;
+  shelfQuantity: number;
+  mountType: string;
+}
+
+const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
+  modelUrl,
+  shelfUrl,
+  ripUrl,
+  shelfQuantity,
+  mountType,
+}) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Clear existing scene if any
+    if (mountRef.current) {
+      mountRef.current.innerHTML = '';
+    }
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0xffffff);
     mountRef.current?.appendChild(renderer.domElement);
@@ -22,6 +41,9 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
 
     const loader = new STLLoader();
 
+    console.log(`Loading models for mount type: ${mountType}`);
+
+    // Load shelf, connector, and rip models
     loader.load(shelfUrl, (shelfGeometry) => {
       loader.load(modelUrl, (modelGeometry) => {
         loader.load(ripUrl, (ripGeometry) => {
@@ -37,7 +59,7 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
           const materialGold = new THREE.MeshStandardMaterial({
             color: 0xf7ef8a,
             metalness: 0.3,
-            roughness: 3,
+            roughness: 0.8,
           });
 
           const shelfBoundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(shelfGeometry));
@@ -55,27 +77,21 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
 
             adjustedCornerPositions.forEach((pos) => {
               const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-              connectorMesh.scale.set(15 / 10, 15 / 10, 15 / 10);
+              connectorMesh.scale.set(1.5, 1.5, 1.5);
               connectorMesh.position.set(pos.x, baseHeight, pos.z);
               scene.add(connectorMesh);
 
               const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-              ripMesh.scale.set(10 / 10, 150 / 150, 10 / 10);
-              ripMesh.position.set(pos.x, baseHeight , pos.z);
+              ripMesh.scale.set(1, 1, 1);
+              ripMesh.position.set(pos.x, baseHeight, pos.z);
               scene.add(ripMesh);
 
               const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(0, baseHeight , 0);
+              shelfMesh.position.set(0, baseHeight, 0);
               scene.add(shelfMesh);
             });
           }
 
-          // Calculate the center of the shelf geometry
-          const shelfCenter = new THREE.Vector3();
-          shelfBoundingBox.getCenter(shelfCenter);
-
-          // Adjust the camera's target to the center of the model
-          controls.target.set(shelfCenter.x, shelfCenter.y, shelfCenter.z);
           controls.update();
         });
       });
@@ -91,7 +107,7 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
 
     camera.position.set(0, 200, 2000);
 
-    const animate = function () {
+    const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
@@ -99,10 +115,10 @@ const ThreeDViewer: React.FC<{ modelUrl: string; shelfUrl: string; ripUrl: strin
     animate();
 
     return () => {
-      mountRef.current?.removeChild(renderer.domElement);
       controls.dispose();
+      renderer.dispose();
     };
-  }, [modelUrl, shelfUrl, ripUrl, shelfQuantity]);
+  }, [modelUrl, shelfUrl, ripUrl, shelfQuantity, mountType]);
 
   return <div ref={mountRef}></div>;
 };
