@@ -9,6 +9,7 @@ import ThreeDViewer from "~/components/ThreeDViewer";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import MountTypeSelector from "~/components/MountTypeSelector";
+import BarSelector from "~/components/BarSelector";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -22,6 +23,7 @@ export default function Index() {
   const [selectedRip, setSelectedRip] = useState<string | null>(null);
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [mountType, setMountType] = useState<string | null>(null);
+  const [barCount, setBarCount] = useState<number>(1);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedModel && selectedRip && mountType;
@@ -32,12 +34,13 @@ export default function Index() {
         Configure Your Shelf Assembly
       </h1>
 
-      {/* Selection Components for Shelf, Quantity, Rip, and Mount Type */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Selection Components for Shelf, Quantity, Rip, Mount Type, and Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <ShelfSelector onSelect={setSelectedShelf} />
         <ShelfQuantitySelector onSelect={setShelfQuantity} />
         <RipSelector onSelect={setSelectedRip} />
         <MountTypeSelector onSelect={setMountType} />
+        <BarSelector onSelect={setBarCount} />
       </div>
 
       {/* Model Selector Component */}
@@ -54,6 +57,7 @@ export default function Index() {
             ripUrl={selectedRip!}
             shelfQuantity={shelfQuantity}
             mountType={mountType!}
+            barCount={barCount}
           />
         </div>
       ) : (
