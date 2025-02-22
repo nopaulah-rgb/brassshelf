@@ -456,21 +456,28 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
               ];
 
-              ceilingConnectorPositions.forEach((pos) => {
-                const ceilingConnector = new THREE.Mesh(modelGeometry, materialGold);
-                ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
-                scene.add(ceilingConnector);
+              // Load Model 11 for ceiling connections
+              const model11Loader = new STLLoader();
+              model11Loader.load('/models/model11.stl', (model11Geometry) => {
+                ceilingConnectorPositions.forEach((pos) => {
+                  const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                  ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                  ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                  ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                  scene.add(ceilingConnector);
+                });
               });
             } else {
               // For single shelf setup
-              adjustedCornerPositions.forEach((pos) => {
-                const ceilingConnector = new THREE.Mesh(modelGeometry, materialGold);
-                ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
-                scene.add(ceilingConnector);
+              const model11Loader = new STLLoader();
+              model11Loader.load('/models/model11.stl', (model11Geometry) => {
+                adjustedCornerPositions.forEach((pos) => {
+                  const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                  ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                  ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                  ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                  scene.add(ceilingConnector);
+                });
               });
             }
           } else if (mountType === 'ceiling to counter') {
