@@ -671,47 +671,72 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 // Son raf ile counter arasındaki mesafe
                 const gapHeight = lastShelfHeight - counterTop;
                 
-                if (barCount === 2) {
-                  // Bay 2 için counter'a uzanan ripler
-                  const ripPositions = [
-                    // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                    { x: 0, z: shelfBoundingBox.min.z + 5 },  // Ortada
-                    { x: shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                    
-                    // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                    { x: 0, z: shelfBoundingBox.max.z - 5 },  // Ortada
-                    { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                  ];
+                // Load Model 11 for connections
+                const model11Loader = new STLLoader();
+                model11Loader.load('/models/model11.stl', (model11Geometry) => {
+                  if (barCount === 2) {
+                    // Bay 2 için counter ve tavana uzanan ripler
+                    const ripPositions = [
+                      { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                      { x: 0, z: shelfBoundingBox.min.z + 5 },
+                      { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                      { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                      { x: 0, z: shelfBoundingBox.max.z - 5 },
+                      { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                    ];
 
-                  ripPositions.forEach((pos) => {
-                    const extendedRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
-                    const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
-                    
-                    extendedRip.position.set(
-                      pos.x,
-                      counterTop + (gapHeight / 2),
-                      pos.z + zOffset
-                    );
-                    
-                    scene.add(extendedRip);
-                  });
-                } else {
-                  // Bay 1 için counter'a uzanan ripler
-                  adjustedCornerPositions.forEach((pos) => {
-                    const extendedRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
-                    const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
-                    
-                    extendedRip.position.set(
-                      pos.x,
-                      counterTop + (gapHeight / 2),
-                      pos.z + zOffset
-                    );
-                    
-                    scene.add(extendedRip);
-                  });
-                }
+                    ripPositions.forEach((pos) => {
+                      // Counter'a bağlanan Model 11
+                      const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
+                      counterConnector.scale.set(1.5, 1.5, 1.5);
+                      counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
+                      scene.add(counterConnector);
+
+                      // Tavana bağlanan Model 11
+                      const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                      ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                      ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                      ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
+                      scene.add(ceilingConnector);
+
+                      // Dikey ripler
+                      const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
+                      const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+                      verticalRip.position.set(
+                        pos.x,
+                        counterTop + (gapHeight / 2),
+                        pos.z + zOffset
+                      );
+                      scene.add(verticalRip);
+                    });
+                  } else {
+                    // Bay 1 için counter'a uzanan ripler
+                    adjustedCornerPositions.forEach((pos) => {
+                      // Counter'a bağlanan Model 11
+                      const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
+                      counterConnector.scale.set(1.5, 1.5, 1.5);
+                      counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
+                      scene.add(counterConnector);
+
+                      // Tavana bağlanan Model 11
+                      const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                      ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                      ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                      ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
+                      scene.add(ceilingConnector);
+
+                      // Dikey ripler
+                      const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
+                      const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+                      verticalRip.position.set(
+                        pos.x,
+                        counterTop + (gapHeight / 2),
+                        pos.z + zOffset
+                      );
+                      scene.add(verticalRip);
+                    });
+                  }
+                });
               }
             } else {
               // 4 ve üzeri raf sayısı için counter'a kadar olan mesafeyi hesapla
