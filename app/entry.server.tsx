@@ -22,21 +22,21 @@ export default function handleRequest(
   // This is ignored so we can keep it in the template for visibility.  Feel
   // free to delete this parameter in your app if you're not using it!
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadContext: AppLoadContext
+  // loadContext: AppLoadContext
 ) {
   return isbot(request.headers.get("user-agent") || "")
     ? handleBotRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        remixContext
-      )
+      request,
+      responseStatusCode,
+      responseHeaders,
+      remixContext
+    )
     : handleBrowserRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        remixContext
-      );
+      request,
+      responseStatusCode,
+      responseHeaders,
+      remixContext
+    );
 }
 
 function handleBotRequest(
