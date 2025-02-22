@@ -377,6 +377,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -434,6 +453,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               adjustedCornerPositions.forEach((pos) => {
                 const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                 connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                
+                // Belirli modeller için yatay konumlandırma yap
+                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                  // Yatay konumlandırma için rotasyon
+                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                  
+                  // Sadece arka (duvara yakın) modeli döndür
+                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                  }
+                  // Öndeki model için ek rotasyon yok
+                } else {
+                  // Diğer modeller için mevcut rotasyonu koru
+                  connectorMesh.rotation.y = Math.PI / 2;
+                }
+
                 connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                 scene.add(connectorMesh);
 
@@ -520,6 +558,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   ripPositions.forEach((pos) => {
                     const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                     connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                    // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                    const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                    
+                    // Belirli modeller için yatay konumlandırma yap
+                    if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                      // Yatay konumlandırma için rotasyon
+                      connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                      
+                      // Sadece arka (duvara yakın) modeli döndür
+                      if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                        connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                      }
+                      // Öndeki model için ek rotasyon yok
+                    } else {
+                      // Diğer modeller için mevcut rotasyonu koru
+                      connectorMesh.rotation.y = Math.PI / 2;
+                    }
+
                     connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                     scene.add(connectorMesh);
 
@@ -577,6 +634,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 adjustedCornerPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -678,6 +754,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   ripPositions.forEach((pos) => {
                     const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                     connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                    // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                    const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                    
+                    // Belirli modeller için yatay konumlandırma yap
+                    if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                      // Yatay konumlandırma için rotasyon
+                      connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                      
+                      // Sadece arka (duvara yakın) modeli döndür
+                      if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                        connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                      }
+                      // Öndeki model için ek rotasyon yok
+                    } else {
+                      // Diğer modeller için mevcut rotasyonu koru
+                      connectorMesh.rotation.y = Math.PI / 2;
+                    }
+
                     connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                     scene.add(connectorMesh);
 
@@ -735,6 +830,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 adjustedCornerPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -784,6 +898,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -841,6 +974,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               adjustedCornerPositions.forEach((pos) => {
                 const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                 connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                
+                // Belirli modeller için yatay konumlandırma yap
+                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                  // Yatay konumlandırma için rotasyon
+                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                  
+                  // Sadece arka (duvara yakın) modeli döndür
+                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                  }
+                  // Öndeki model için ek rotasyon yok
+                } else {
+                  // Diğer modeller için mevcut rotasyonu koru
+                  connectorMesh.rotation.y = Math.PI / 2;
+                }
+
                 connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                 scene.add(connectorMesh);
 
@@ -933,6 +1085,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1073,6 +1244,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   // Model ekle
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1156,6 +1346,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   // Model ekle
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1198,218 +1407,6 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   );
                   
                   scene.add(floorRip);
-                });
-
-                // Tek shelf için yatay ripler
-                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Tek shelf için ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, adjustedCornerPositions);
-              }
-            }
-          } else if (mountType === 'wall to counter') {
-            const topShelfHeight = 1195;
-            const shelfSpacing = 250; // Normal raf aralığı
-            
-            // Counter'ı oluştur
-            const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-            counter.position.set(0, 200, -600);
-            scene.add(counter);
-
-            // Dolap kapakları oluştur
-            const createCabinetDoor = (xPos: number) => {
-              const door = new THREE.Mesh(roomGeometry.cabinetDoor, whiteRoomMaterial);
-              door.position.set(xPos, 190, -199);
-              door.rotateY(Math.PI);
-
-              const edgeGeometry = new THREE.EdgesGeometry(door.geometry);
-              const edgeMaterial = new THREE.LineBasicMaterial({ color: 0xd3d3d3 });
-              const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
-              door.add(edges);
-
-              const handleGeometry = new THREE.BoxGeometry(10, 100, 5);
-              const handle = new THREE.Mesh(handleGeometry, whiteRoomMaterial);
-              handle.position.set(220, 0, 2);
-              door.add(handle);
-
-              return door;
-            };
-
-            // Kapakları ekle
-            const doorPositions = [-750, -250, 250, 750];
-            doorPositions.forEach(xPos => {
-              const door = createCabinetDoor(xPos);
-              scene.add(door);
-            });
-
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                const ripPositions = [
-                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                  
-                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                ];
-
-                // Her pozisyon için rip-model setini ekle
-                ripPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-
-                  // Counter'a uzanan rip ekle
-                  const counterHeight = 400; // Counter yüksekliği
-                  const ripHeight = baseHeight - counterHeight;
-                  const counterRipGeometry = new THREE.BoxGeometry(10, ripHeight, 10);
-                  const counterRip = new THREE.Mesh(counterRipGeometry, materialGold);
-                  
-                  counterRip.position.set(
-                    pos.x,
-                    counterHeight + (ripHeight / 2),
-                    pos.z + zOffset
-                  );
-                  
-                  scene.add(counterRip);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-              } else {
-                // Bay 1 için model ve ripleri ekle
-                adjustedCornerPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-
-                  // Counter'a uzanan rip ekle
-                  const counterHeight = 400; // Counter yüksekliği
-                  const ripHeight = baseHeight - counterHeight;
-                  const counterRipGeometry = new THREE.BoxGeometry(10, ripHeight, 10);
-                  const counterRip = new THREE.Mesh(counterRipGeometry, materialGold);
-                  
-                  counterRip.position.set(
-                    pos.x,
-                    counterHeight + (ripHeight / 2),
-                    pos.z + zOffset
-                  );
-                  
-                  scene.add(counterRip);
                 });
 
                 // Tek shelf için yatay ripler
@@ -1460,6 +1457,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   // Model ekle
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1531,6 +1547,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   // Model ekle
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1613,6 +1648,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                  
+                  // Belirli modeller için yatay konumlandırma yap
+                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                    // Yatay konumlandırma için rotasyon
+                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                    
+                    // Sadece arka (duvara yakın) modeli döndür
+                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                    }
+                    // Öndeki model için ek rotasyon yok
+                  } else {
+                    // Diğer modeller için mevcut rotasyonu koru
+                    connectorMesh.rotation.y = Math.PI / 2;
+                  }
+
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
 
@@ -1670,6 +1724,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               adjustedCornerPositions.forEach((pos) => {
                 const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                 connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
+                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
+                
+                // Belirli modeller için yatay konumlandırma yap
+                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
+                  // Yatay konumlandırma için rotasyon
+                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
+                  
+                  // Sadece arka (duvara yakın) modeli döndür
+                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
+                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
+                  }
+                  // Öndeki model için ek rotasyon yok
+                } else {
+                  // Diğer modeller için mevcut rotasyonu koru
+                  connectorMesh.rotation.y = Math.PI / 2;
+                }
+
                 connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                 scene.add(connectorMesh);
 
