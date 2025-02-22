@@ -23,16 +23,32 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (mountRef.current) {
-      mountRef.current.innerHTML = '';
-    }
+    if (!mountRef.current) return;
 
+    // Clear previous content
+    mountRef.current.innerHTML = '';
+
+    // Get container dimensions
+    const container = mountRef.current;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight || window.innerHeight * 0.6; // Responsive yükseklik
+
+    // Scene setup
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    
+    // Camera setup with container aspect ratio
+    const camera = new THREE.PerspectiveCamera(
+      35,  // Daha uygun bir görüş açısı
+      containerWidth / containerHeight,
+      0.1,
+      10000
+    );
+
+    // Renderer setup with container size
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(containerWidth, containerHeight);
     renderer.setClearColor(0xf5f5f5);
-    mountRef.current?.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // Oda duvarlarını oluştur
     const roomGeometry = {
@@ -193,8 +209,35 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 500;
-    controls.maxDistance = 3000;
+    controls.minDistance = 4000;
+    controls.maxDistance = 8000;
+    controls.maxPolarAngle = Math.PI / 1.5;
+    controls.minPolarAngle = Math.PI / 4;
+    controls.target.set(0, 600, -500);
+    
+    // Responsive handler
+    const handleResize = () => {
+      if (!container) return;
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight || window.innerHeight * 0.6;
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+
+      // Ekran boyutuna göre kamera pozisyonunu ayarla
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        camera.position.set(5500, 2500, 2500);  // Mobil için daha uzak
+      } else {
+        camera.position.set(4500, 2000, 2000);  // Desktop için normal
+      }
+      camera.lookAt(0, 600, -500);
+      controls.update();
+    };
+
+    window.addEventListener('resize', handleResize);
 
     const loader = new STLLoader();
 
@@ -232,6 +275,66 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           const safetyMargin = 200;
           const zOffset = -950 + (shelfDepth / 2) + safetyMargin;
           const shelfSpacing = 250; // Raflar arası mesafe
+
+          // Yatay ripleri ekleyen yeni fonksiyon
+          const addHorizontalConnectingRips = (
+            baseHeight: number,
+            positions: { x: number, z: number }[],
+            isFront: boolean
+          ) => {
+            // Her iki ardışık pozisyon arasına yatay rip ekle
+            for (let i = 0; i < positions.length - 1; i++) {
+              const start = positions[i];
+              const end = positions[i + 1];
+              
+              // İki nokta arasındaki mesafe
+              const length = Math.abs(end.x - start.x);
+              
+              // Yatay rip geometrisi
+              const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
+              const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+              
+              // Ripin pozisyonu (iki nokta arasının ortası)
+              horizontalRip.position.set(
+                start.x + (length / 2),
+                baseHeight,
+                (isFront ? shelfBoundingBox.min.z : shelfBoundingBox.max.z) + zOffset
+              );
+              
+              scene.add(horizontalRip);
+            }
+          };
+
+          // Ön ve arka modeller arasına yatay rip ekleyen fonksiyon
+          const addFrontToBackRips = (
+            baseHeight: number,
+            positions: { x: number, z: number }[]
+          ) => {
+            // Aynı x koordinatına sahip ön ve arka noktaları eşleştir
+            const frontPoints = positions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+            const backPoints = positions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+
+            frontPoints.forEach(frontPoint => {
+              const backPoint = backPoints.find(bp => bp.x === frontPoint.x);
+              if (backPoint) {
+                // İki nokta arasındaki mesafe
+                const length = Math.abs(backPoint.z - frontPoint.z);
+                
+                // Yatay rip geometrisi
+                const sideRipGeometry = new THREE.BoxGeometry(10, 10, length);
+                const sideRip = new THREE.Mesh(sideRipGeometry, materialGold);
+                
+                // Ripin pozisyonu (iki nokta arasının ortası)
+                sideRip.position.set(
+                  frontPoint.x,
+                  baseHeight,
+                  frontPoint.z + (length / 2) + zOffset
+                );
+                
+                scene.add(sideRip);
+              }
+            });
+          };
 
           // Mount type'a göre başlangıç yüksekliğini ve yön hesaplaması
           let baseHeight: number;
@@ -282,6 +385,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(ripMesh);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
+              } else {
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
 
               adjustedCornerPositions.forEach((pos) => {
@@ -294,6 +441,36 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripMesh.scale.set(1, 1, 1);
                 ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                 scene.add(ripMesh);
+              });
+            }
+
+            // After all shelves are created, add ceiling connectors
+            if (barCount === 2) {
+              // For two shelves setup
+              const ceilingConnectorPositions = [
+                { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: 0, z: shelfBoundingBox.min.z + 5 },
+                { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: 0, z: shelfBoundingBox.max.z - 5 },
+                { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              ceilingConnectorPositions.forEach((pos) => {
+                const ceilingConnector = new THREE.Mesh(modelGeometry, materialGold);
+                ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                scene.add(ceilingConnector);
+              });
+            } else {
+              // For single shelf setup
+              adjustedCornerPositions.forEach((pos) => {
+                const ceilingConnector = new THREE.Mesh(modelGeometry, materialGold);
+                ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                scene.add(ceilingConnector);
               });
             }
           } else if (mountType === 'ceiling to counter') {
@@ -344,6 +521,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                     ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                     scene.add(ripMesh);
                   });
+
+                  // Ön taraftaki yatay ripler için pozisyonlar
+                  const frontPositions = [
+                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                  ];
+                  
+                  // Arka taraftaki yatay ripler için pozisyonlar
+                  const backPositions = [
+                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                  ];
+
+                  // Yatay ripleri ekle
+                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                  addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                  // Ön-arka bağlantı ripleri için pozisyonlar
+                  const allPositions = [
+                    // Sol shelf'in köşeleri
+                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                    // Orta bağlantı noktaları
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                    // Sağ shelf'in köşeleri
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                  ];
+
+                  // Ön-arka bağlantı riplerini ekle
+                  addFrontToBackRips(baseHeight, allPositions);
+                } else {
+                  // Tek shelf için yatay ripler
+                  const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                  const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                  
+                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                  addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                  // Tek shelf için ön-arka bağlantı riplerini ekle
+                  addFrontToBackRips(baseHeight, adjustedCornerPositions);
                 }
 
                 adjustedCornerPositions.forEach((pos) => {
@@ -458,6 +679,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                     ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                     scene.add(ripMesh);
                   });
+
+                  // Ön taraftaki yatay ripler için pozisyonlar
+                  const frontPositions = [
+                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                  ];
+                  
+                  // Arka taraftaki yatay ripler için pozisyonlar
+                  const backPositions = [
+                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                  ];
+
+                  // Yatay ripleri ekle
+                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                  addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                  // Ön-arka bağlantı ripleri için pozisyonlar
+                  const allPositions = [
+                    // Sol shelf'in köşeleri
+                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                    // Orta bağlantı noktaları
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                    // Sağ shelf'in köşeleri
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                  ];
+
+                  // Ön-arka bağlantı riplerini ekle
+                  addFrontToBackRips(baseHeight, allPositions);
+                } else {
+                  // Tek shelf için yatay ripler
+                  const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                  const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                  
+                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                  addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                  // Tek shelf için ön-arka bağlantı riplerini ekle
+                  addFrontToBackRips(baseHeight, adjustedCornerPositions);
                 }
 
                 adjustedCornerPositions.forEach((pos) => {
@@ -520,6 +785,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(ripMesh);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
+              } else {
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
 
               adjustedCornerPositions.forEach((pos) => {
@@ -579,8 +888,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               });
             }
           } else if (mountType === 'ceiling to wall') {
-            // Tavandan başla, normal aralıklarla yerleştir
             const topShelfHeight = 1195;
+            const shelfSpacing = 250; // Normal raf aralığı
             
             for (let i = 0; i < shelfQuantity; i++) {
               baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
@@ -626,96 +935,98 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   scene.add(ripMesh);
                 });
 
-                // Bay 2 için yatay ripleri ve duvar bağlantılarını ekle
-                const wallConnectPositions = [
-                  // Sol shelf'in bağlantı noktaları
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
                   { x: xOffset, z: shelfBoundingBox.min.z + 5 },
                   { x: xOffset, z: shelfBoundingBox.max.z - 5 },
                   // Orta bağlantı noktaları
                   { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
                   { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in bağlantı noktaları
+                  // Sağ shelf'in köşeleri
                   { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
                   { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
                 ];
 
-                wallConnectPositions.forEach((pos) => {
-                  // Yatay ripler (arka duvara bağlantı)
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
+
+                // Add wall connections for each shelf level
+                const wallConnectionPositions = [
+                  { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: 0, z: shelfBoundingBox.min.z + 5 },
+                  { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: 0, z: shelfBoundingBox.max.z - 5 },
+                  { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                wallConnectionPositions.forEach((pos) => {
+                  // Add wall connector (Model 5)
+                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                  wallConnector.scale.set(1.5, 1.5, 1.5);
+                  wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
+                  wallConnector.rotation.y = Math.PI / 2;
+                  wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
+
+                  // Add horizontal rip from wall to shelf
                   const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
                   const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
                   const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
                   horizontalRip.position.set(
                     pos.x,
                     baseHeight,
                     (pos.z + zOffset - 1000) / 2
                   );
-                  scene.add(horizontalRip);
 
-                  // Duvara bağlantı için yan çevrilmiş model
+                  scene.add(wallConnector);
+                  scene.add(horizontalRip);
+                });
+              } else {
+                // For single shelf
+                adjustedCornerPositions.forEach((pos) => {
+                  // Add wall connector (Model 5)
                   const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
                   wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
+                  wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
                   wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
+                  wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
+
+                  // Add horizontal rip from wall to shelf
+                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                  horizontalRip.position.set(
+                    pos.x,
+                    baseHeight,
+                    (pos.z + zOffset - 1000) / 2
+                  );
+
                   scene.add(wallConnector);
+                  scene.add(horizontalRip);
                 });
               }
-
-              adjustedCornerPositions.forEach((pos) => {
-                // Dikey connector ve ripler
-                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                connectorMesh.scale.set(1.5, 1.5, 1.5);
-                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(connectorMesh);
-
-                const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                verticalRip.scale.set(1, 1, 1);
-                verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(verticalRip);
-
-                // Yatay ripler (arka duvara bağlantı)
-                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                
-                horizontalRip.position.set(
-                  pos.x,
-                  baseHeight,
-                  (pos.z + zOffset - 1000) / 2
-                );
-                
-                scene.add(horizontalRip);
-
-                // Duvara bağlantı için yan çevrilmiş model
-                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                wallConnector.scale.set(1.5, 1.5, 1.5);
-                // Modeli 90 derece yan çevir
-                wallConnector.rotation.z = Math.PI / 2;
-                // Duvara dönük olması için y ekseninde döndür
-                wallConnector.rotation.y = Math.PI / 2;
-                wallConnector.position.set(pos.x, baseHeight, -1000);
-                scene.add(wallConnector);
-              });
             }
 
-            // Dikey ripleri tavana kadar uzat
-            if (shelfQuantity > 0) {
-              const lastShelfHeight = topShelfHeight - ((shelfQuantity - 1) * (shelfHeight + shelfSpacing));
-              
-              adjustedCornerPositions.forEach((pos) => {
-                const extendedRipGeometry = new THREE.BoxGeometry(10, topShelfHeight - lastShelfHeight, 10);
-                const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
-                
-                extendedRip.position.set(
-                  pos.x,
-                  (topShelfHeight + lastShelfHeight) / 2,
-                  pos.z + zOffset
-                );
-                
-                scene.add(extendedRip);
-              });
-            }
+            // ... rest of the existing code for ceiling connections ...
           } else if (mountType === 'wall to floor') {
             const topShelfHeight = 1195;
             const shelfSpacing = 250; // Normal raf aralığı
@@ -798,6 +1109,40 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   
                   scene.add(floorRip);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
               } else {
                 // Bay 1 için model ve ripleri ekle
                 adjustedCornerPositions.forEach((pos) => {
@@ -847,6 +1192,16 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   
                   scene.add(floorRip);
                 });
+
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
             }
           } else if (mountType === 'wall to counter') {
@@ -964,6 +1319,40 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   
                   scene.add(counterRip);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
               } else {
                 // Bay 1 için model ve ripleri ekle
                 adjustedCornerPositions.forEach((pos) => {
@@ -1015,6 +1404,16 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   
                   scene.add(counterRip);
                 });
+
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
             }
           } else if (mountType === 'wall') {
@@ -1085,6 +1484,40 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   wallConnector.position.set(pos.x, baseHeight, -1000);
                   scene.add(wallConnector);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
               } else {
                 // Bay 1 için model ve ripleri ekle
                 adjustedCornerPositions.forEach((pos) => {
@@ -1122,6 +1555,16 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   wallConnector.position.set(pos.x, baseHeight, -1000);
                   scene.add(wallConnector);
                 });
+
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
             }
           } else {
@@ -1171,6 +1614,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(ripMesh);
                 });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
+              } else {
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
               }
 
               adjustedCornerPositions.forEach((pos) => {
@@ -1187,9 +1674,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
             }
           }
 
-          // Kamera pozisyonunu ayarla
-          camera.position.set(0, 750, 1500);
-          camera.lookAt(0, 750, -500);
+          // Kamera pozisyonunu daha da uzaktan gösterecek şekilde ayarla
+          camera.position.set(4500, 2000, 2000);     // Tüm değerleri artırdık
+          camera.lookAt(0, 600, -500);               // Hedef nokta aynı
           controls.update();
         });
       });
@@ -1203,12 +1690,17 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     animate();
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       controls.dispose();
       renderer.dispose();
     };
   }, [modelUrl, shelfUrl, ripUrl, shelfQuantity, mountType, barCount]);
 
-  return <div ref={mountRef}></div>;
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <div ref={mountRef} className="w-full md:w-[80%] lg:w-[70%] h-[400px] md:h-[500px] lg:h-[70%] max-h-[900px]" />
+    </div>
+  );
 };
 
 export default ThreeDViewer;

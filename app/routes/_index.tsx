@@ -1,11 +1,11 @@
 import { json } from "@remix-run/node";
-import { Outlet, useRouteError } from "@remix-run/react";
+import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
+import ThreeDViewer from "~/components/ThreeDViewer";
 
 // Components
 import ModelSelector from "~/components/ModelSelector";
 import RipSelector from "~/components/RipSelector";
-import ThreeDViewer from "~/components/ThreeDViewer";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import MountTypeSelector from "~/components/MountTypeSelector";
@@ -17,57 +17,73 @@ export const loader = async () => {
 };
 
 export default function Index() {
-  // State for storing user selections
+  // State for storing user selections - başlangıç değerlerini null yap
   const [selectedShelf, setSelectedShelf] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedRip, setSelectedRip] = useState<string | null>(null);
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
-  const [mountType, setMountType] = useState<string | null>(null);
+  const [mountType, setMountType] = useState<string>("Ceiling");
   const [barCount, setBarCount] = useState<number>(1);
+  //const [price] = useState<number>(599.00);
 
   // Determine if all necessary selections have been made
-  const isViewerReady = selectedShelf && selectedModel && selectedRip && mountType;
+  const isViewerReady = selectedShelf && selectedModel && selectedRip;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        Configure Your Shelf Assembly
-      </h1>
+    <div className="min-h-screen bg-olive-100">
+      {/* Header */}
+      <header className="p-4 md:p-6 flex justify-between items-center">
+        <h1 className="text-lg md:text-xl lg:text-2xl">Origin Shelf Builder</h1>
+      </header>
 
-      {/* Selection Components for Shelf, Quantity, Rip, Mount Type, and Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <ShelfSelector onSelect={setSelectedShelf} />
-        <ShelfQuantitySelector onSelect={setShelfQuantity} />
-        <RipSelector onSelect={setSelectedRip} />
-        <MountTypeSelector onSelect={setMountType} />
-        <BarSelector onSelect={setBarCount} />
-      </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 md:px-6">
+        {/* Flex container - mobilde dikey, tablet ve üstünde yatay */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Sol Panel - Konfigürasyon */}
+          <div className="w-full lg:w-1/3">
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-xl md:text-2xl font-bold mb-6">Configure Your Shelf Assembly</h2>
+              
+              <div className="space-y-4 md:space-y-6">
+                <ShelfSelector onSelect={setSelectedShelf} />
+                <ShelfQuantitySelector onSelect={setShelfQuantity} />
+                <RipSelector onSelect={setSelectedRip} />
+                <MountTypeSelector onSelect={setMountType} />
+                <BarSelector onSelect={setBarCount} />
+                <ModelSelector onSelect={setSelectedModel} />
+              </div>
+            </div>
+          </div>
 
-      {/* Model Selector Component */}
-      <div className="mb-6">
-        <ModelSelector onSelect={setSelectedModel} />
-      </div>
-
-      {/* Conditional Rendering for the 3D Viewer */}
-      {isViewerReady ? (
-        <div className="flex justify-center mb-6">
-          <ThreeDViewer
-            modelUrl={selectedModel!}
-            shelfUrl={selectedShelf!}
-            ripUrl={selectedRip!}
-            shelfQuantity={shelfQuantity}
-            mountType={mountType!}
-            barCount={barCount}
-          />
+          {/* Sağ Panel - 3D Viewer */}
+          <div className="w-full lg:w-2/3">
+            {isViewerReady ? (
+              <div className="w-full h-[400px] md:h-[500px] lg:h-[600px]">
+                <ThreeDViewer
+                  modelUrl={selectedModel}
+                  shelfUrl={selectedShelf}
+                  ripUrl={selectedRip}
+                  shelfQuantity={shelfQuantity}
+                  mountType={mountType}
+                  barCount={barCount}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100 flex flex-col items-center justify-center p-4 md:p-6">
+                <div className="text-center max-w-md">
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-600 mb-3 md:mb-4">
+                    Please Configure Your Shelfs
+                  </h2>
+                  <p className="text-sm md:text-base lg:text-lg text-gray-500 px-4">
+                    Select options from the left panel to view your custom shelf
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <p className="text-gray-500 text-center">
-          Please select all options (shelf, model, rip, and mounting type) to view the 3D configuration.
-        </p>
-      )}
-
-      {/* Render Outlet for nested routes */}
-      <Outlet />
+      </div>
     </div>
   );
 }
