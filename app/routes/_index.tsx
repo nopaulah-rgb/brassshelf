@@ -5,7 +5,6 @@ import ThreeDViewer from "~/components/ThreeDViewer";
 import { CrossbarSelector } from "~/components/CrossbarSelector";
 
 // Components
-import ModelSelector from "~/components/ModelSelector";
 import RipSelector from "~/components/RipSelector";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
@@ -20,7 +19,6 @@ export const loader = async () => {
 export default function Index() {
   // State for storing user selections - başlangıç değerlerini null yap
   const [selectedShelf, setSelectedShelf] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedRip, setSelectedRip] = useState<string | null>(null);
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [mountType, setMountType] = useState<string>("Ceiling");
@@ -31,7 +29,7 @@ export default function Index() {
   const [showCrossbars, setShowCrossbars] = useState<boolean>(true);
 
   // Determine if all necessary selections have been made
-  const isViewerReady = selectedShelf && selectedModel && selectedRip;
+  const isViewerReady = selectedShelf && selectedRip;
 
   return (
     <div className="min-h-screen bg-olive-100">
@@ -59,7 +57,6 @@ export default function Index() {
                   showCrossbars={showCrossbars}
                   onChange={setShowCrossbars}
                 />
-                <ModelSelector onSelect={setSelectedModel} />
               </div>
             </div>
           </div>
@@ -69,7 +66,6 @@ export default function Index() {
             {isViewerReady ? (
               <div className="w-full h-[400px] md:h-[500px] lg:h-[600px]">
                 <ThreeDViewer
-                  modelUrl={selectedModel}
                   shelfUrl={selectedShelf}
                   ripUrl={selectedRip}
                   shelfQuantity={shelfQuantity}

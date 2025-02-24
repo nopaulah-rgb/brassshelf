@@ -4,23 +4,21 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 interface ThreeDViewerProps {
-  modelUrl: string;
   shelfUrl: string;
   ripUrl: string;
   shelfQuantity: number;
   mountType: string;
   barCount: number;
-  showCrossbars: boolean; // Add this prop back
+  showCrossbars: boolean;
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
-  modelUrl,
   shelfUrl,
   ripUrl,
   shelfQuantity,
   mountType,
   barCount,
-  showCrossbars, // Add this prop back
+  showCrossbars,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -243,1408 +241,264 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
     const loader = new STLLoader();
 
+    // Load default model for connectors
+    let modelGeometry: THREE.BufferGeometry;
+    loader.load('/models/model1.stl', (geometry) => {
+      modelGeometry = geometry;
+    }, undefined, (error) => {
+      console.error('Error loading model:', error);
+    });
+
     // Load shelf, connector, and rip models
     loader.load(shelfUrl, (shelfGeometry) => {
-      loader.load(modelUrl, (modelGeometry) => {
-        loader.load(ripUrl, (ripGeometry) => {
-          const materialShelf = new THREE.MeshStandardMaterial({
-            color: 0x9bc3c9,
-            opacity: 0.7,
-            transparent: true,
-            metalness: 0.1,
-            roughness: 0.2,
-            side: THREE.DoubleSide,
-          });
+      loader.load(ripUrl, (ripGeometry) => {
+        const materialShelf = new THREE.MeshStandardMaterial({
+          color: 0x9bc3c9,
+          opacity: 0.7,
+          transparent: true,
+          metalness: 0.1,
+          roughness: 0.2,
+          side: THREE.DoubleSide,
+        });
 
-          const materialGold = new THREE.MeshStandardMaterial({
-            color: 0xf7ef8a,
-            metalness: 0.3,
-            roughness: 0.8,
-          });
+        const materialGold = new THREE.MeshStandardMaterial({
+          color: 0xf7ef8a,
+          metalness: 0.3,
+          roughness: 0.8,
+        });
 
-          const shelfBoundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(shelfGeometry));
-          const shelfHeight = shelfBoundingBox.max.y - shelfBoundingBox.min.y;
-          const shelfDepth = shelfBoundingBox.max.z - shelfBoundingBox.min.z;
-          const shelfWidth = shelfBoundingBox.max.x - shelfBoundingBox.min.x;
+        const shelfBoundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(shelfGeometry));
+        const shelfHeight = shelfBoundingBox.max.y - shelfBoundingBox.min.y;
+        const shelfDepth = shelfBoundingBox.max.z - shelfBoundingBox.min.z;
+        const shelfWidth = shelfBoundingBox.max.x - shelfBoundingBox.min.x;
 
-          const adjustedCornerPositions = [
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },
-            { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },
-            { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },
-          ];
+        const adjustedCornerPositions = [
+          { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },
+          { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },
+          { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },
+          { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },
+        ];
 
-          const safetyMargin = 200;
-          const zOffset = -950 + (shelfDepth / 2) + safetyMargin;
-          const shelfSpacing = 250; // Raflar arası mesafe
+        const safetyMargin = 200;
+        const zOffset = -950 + (shelfDepth / 2) + safetyMargin;
+        const shelfSpacing = 250; // Raflar arası mesafe
 
-          // Yatay ripleri ekleyen yeni fonksiyon
-          const addHorizontalConnectingRips = (
-            baseHeight: number,
-            positions: { x: number, z: number }[],
-            isFront: boolean
-          ) => {
-            // Only add horizontal rips if showCrossbars is true
-            if (!showCrossbars) return;
+        // Yatay ripleri ekleyen yeni fonksiyon
+        const addHorizontalConnectingRips = (
+          baseHeight: number,
+          positions: { x: number, z: number }[],
+          isFront: boolean
+        ) => {
+          // Only add horizontal rips if showCrossbars is true
+          if (!showCrossbars) return;
 
-            // Her iki ardışık pozisyon arasına yatay rip ekle
-            for (let i = 0; i < positions.length - 1; i++) {
-              const start = positions[i];
-              const end = positions[i + 1];
-              
+          // Her iki ardışık pozisyon arasına yatay rip ekle
+          for (let i = 0; i < positions.length - 1; i++) {
+            const start = positions[i];
+            const end = positions[i + 1];
+            
+            // İki nokta arasındaki mesafe
+            const length = Math.abs(end.x - start.x);
+            
+            // Yatay rip geometrisi
+            const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
+            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+            
+            // Ripin pozisyonu (iki nokta arasının ortası)
+            horizontalRip.position.set(
+              start.x + (length / 2),
+              baseHeight,
+              (isFront ? shelfBoundingBox.min.z : shelfBoundingBox.max.z) + zOffset
+            );
+            
+            scene.add(horizontalRip);
+          }
+        };
+
+        // Ön ve arka modeller arasına yatay rip ekleyen fonksiyon
+        const addFrontToBackRips = (
+          baseHeight: number,
+          positions: { x: number, z: number }[]
+        ) => {
+          // Aynı x koordinatına sahip ön ve arka noktaları eşleştir
+          const frontPoints = positions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+          const backPoints = positions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+
+          frontPoints.forEach(frontPoint => {
+            const backPoint = backPoints.find(bp => bp.x === frontPoint.x);
+            if (backPoint) {
               // İki nokta arasındaki mesafe
-              const length = Math.abs(end.x - start.x);
+              const length = Math.abs(backPoint.z - frontPoint.z);
               
               // Yatay rip geometrisi
-              const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
-              const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+              const sideRipGeometry = new THREE.BoxGeometry(10, 10, length);
+              const sideRip = new THREE.Mesh(sideRipGeometry, materialGold);
               
               // Ripin pozisyonu (iki nokta arasının ortası)
-              horizontalRip.position.set(
-                start.x + (length / 2),
+              sideRip.position.set(
+                frontPoint.x,
                 baseHeight,
-                (isFront ? shelfBoundingBox.min.z : shelfBoundingBox.max.z) + zOffset
+                frontPoint.z + (length / 2) + zOffset
               );
               
-              scene.add(horizontalRip);
+              scene.add(sideRip);
             }
-          };
+          });
+        };
 
-          // Ön ve arka modeller arasına yatay rip ekleyen fonksiyon
-          const addFrontToBackRips = (
-            baseHeight: number,
-            positions: { x: number, z: number }[]
-          ) => {
-            // Aynı x koordinatına sahip ön ve arka noktaları eşleştir
-            const frontPoints = positions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-            const backPoints = positions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+        // Mount type'a göre başlangıç yüksekliğini ve yön hesaplaması
+        let baseHeight: number;
+        if (mountType === 'ceiling') {
+          // Tavandan aşağıya doğru
+          const topShelfHeight = 1195;
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
 
-            frontPoints.forEach(frontPoint => {
-              const backPoint = backPoints.find(bp => bp.x === frontPoint.x);
-              if (backPoint) {
-                // İki nokta arasındaki mesafe
-                const length = Math.abs(backPoint.z - frontPoint.z);
-                
-                // Yatay rip geometrisi
-                const sideRipGeometry = new THREE.BoxGeometry(10, 10, length);
-                const sideRip = new THREE.Mesh(sideRipGeometry, materialGold);
-                
-                // Ripin pozisyonu (iki nokta arasının ortası)
-                sideRip.position.set(
-                  frontPoint.x,
-                  baseHeight,
-                  frontPoint.z + (length / 2) + zOffset
-                );
-                
-                scene.add(sideRip);
-              }
-            });
-          };
+            // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+            const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+            const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
 
-          // Mount type'a göre başlangıç yüksekliğini ve yön hesaplaması
-          let baseHeight: number;
-          if (mountType === 'ceiling') {
-            // Tavandan aşağıya doğru
-            const topShelfHeight = 1195;
-            
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
 
-              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              // Eğer barCount 2 ise, ikinci shelf'i ekle
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                const ripPositions = [
-                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                  
-                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                ];
-
-                // Her pozisyon için rip-model setini ekle
-                ripPositions.forEach((pos) => {
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                  ripMesh.scale.set(1, 1, 1);
-                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(ripMesh);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-              } else {
-                // Tek shelf için yatay ripler
-                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Tek shelf için ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, adjustedCornerPositions);
-              }
-
-              adjustedCornerPositions.forEach((pos) => {
-                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                
-                // Belirli modeller için yatay konumlandırma yap
-                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                  // Yatay konumlandırma için rotasyon
-                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                  
-                  // Sadece arka (duvara yakın) modeli döndür
-                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                  }
-                  // Öndeki model için ek rotasyon yok
-                } else {
-                  // Diğer modeller için mevcut rotasyonu koru
-                  connectorMesh.rotation.y = Math.PI / 2;
-                }
-
-                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(connectorMesh);
-
-                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                ripMesh.scale.set(1, 1, 1);
-                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(ripMesh);
-              });
-            }
-
-            // After all shelves are created, add ceiling connectors
+            // Eğer barCount 2 ise, ikinci shelf'i ekle
             if (barCount === 2) {
-              // For two shelves setup
-              const ceilingConnectorPositions = [
-                { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                { x: 0, z: shelfBoundingBox.min.z + 5 },
-                { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                { x: 0, z: shelfBoundingBox.max.z - 5 },
-                { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
-              ];
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
 
-              // Load Model 11 for ceiling connections
-              const model11Loader = new STLLoader();
-              model11Loader.load('/models/model11.stl', (model11Geometry) => {
-                ceilingConnectorPositions.forEach((pos) => {
-                  const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
-                  ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                  ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                  ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
-                  scene.add(ceilingConnector);
-                });
-              });
-            } else {
-              // For single shelf setup
-              const model11Loader = new STLLoader();
-              model11Loader.load('/models/model11.stl', (model11Geometry) => {
-                adjustedCornerPositions.forEach((pos) => {
-                  const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
-                  ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                  ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                  ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
-                  scene.add(ceilingConnector);
-                });
-              });
-            }
-          } else if (mountType === 'ceiling to counter') {
-            const topShelfHeight = 1195;
-            
-            if (shelfQuantity <= 3) {
-              // Normal aralıklarla rafları yerleştir
-              for (let i = 0; i < shelfQuantity; i++) {
-                baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-                // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-                const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-                const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-                // Normal shelf oluşturma
-                const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                shelfMesh.position.set(xOffset, baseHeight, zOffset);
-                scene.add(shelfMesh);
-
-                // Eğer barCount 2 ise, ikinci shelf'i ekle
-                if (barCount === 2) {
-                  const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                  secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                  scene.add(secondShelfMesh);
-
-                  // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                  const ripPositions = [
-                    // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                    
-                    // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                  ];
-
-                  // Her pozisyon için rip-model setini ekle
-                  ripPositions.forEach((pos) => {
-                    const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                    connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                    // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                    const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                    
-                    // Belirli modeller için yatay konumlandırma yap
-                    if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                      // Yatay konumlandırma için rotasyon
-                      connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                      
-                      // Sadece arka (duvara yakın) modeli döndür
-                      if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                        connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                      }
-                      // Öndeki model için ek rotasyon yok
-                    } else {
-                      // Diğer modeller için mevcut rotasyonu koru
-                      connectorMesh.rotation.y = Math.PI / 2;
-                    }
-
-                    connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(connectorMesh);
-
-                    const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                    ripMesh.scale.set(1, 1, 1);
-                    ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(ripMesh);
-                  });
-
-                  // Ön taraftaki yatay ripler için pozisyonlar
-                  const frontPositions = [
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                  ];
-                  
-                  // Arka taraftaki yatay ripler için pozisyonlar
-                  const backPositions = [
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                  ];
-
-                  // Yatay ripleri ekle
-                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                  addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                  // Ön-arka bağlantı ripleri için pozisyonlar
-                  const allPositions = [
-                    // Sol shelf'in köşeleri
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                    // Orta bağlantı noktaları
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                    // Sağ shelf'in köşeleri
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                  ];
-
-                  // Ön-arka bağlantı riplerini ekle
-                  addFrontToBackRips(baseHeight, allPositions);
-                } else {
-                  // Tek shelf için yatay ripler
-                  const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                  const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                  
-                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                  addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                  // Tek shelf için ön-arka bağlantı riplerini ekle
-                  addFrontToBackRips(baseHeight, adjustedCornerPositions);
-                }
-
-                adjustedCornerPositions.forEach((pos) => {
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                  ripMesh.scale.set(1, 1, 1);
-                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(ripMesh);
-                });
-              }
-
-              // Son raf ile counter arasına uzatılmış rip ekle
-              const lastShelfHeight = topShelfHeight - ((shelfQuantity - 1) * (shelfHeight + shelfSpacing));
-              const counterTop = 400; // Counter yüksekliği
-              
-              if (lastShelfHeight > counterTop) {
-                // Son raf ile counter arasındaki mesafe
-                const gapHeight = lastShelfHeight - counterTop;
-                
-                // Load Model 11 for connections
-                const model11Loader = new STLLoader();
-                model11Loader.load('/models/model11.stl', (model11Geometry) => {
-                  if (barCount === 2) {
-                    // Bay 2 için counter ve tavana uzanan ripler
-                    const ripPositions = [
-                      { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                      { x: 0, z: shelfBoundingBox.min.z + 5 },
-                      { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                      { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                      { x: 0, z: shelfBoundingBox.max.z - 5 },
-                      { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                    ];
-
-                    ripPositions.forEach((pos) => {
-                      // Counter'a bağlanan Model 11
-                      const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
-                      counterConnector.scale.set(1.5, 1.5, 1.5);
-                      counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
-                      scene.add(counterConnector);
-
-                      // Tavana bağlanan Model 11
-                      const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
-                      ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                      ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                      ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
-                      scene.add(ceilingConnector);
-
-                      // Dikey ripler
-                      const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
-                      const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-                      verticalRip.position.set(
-                        pos.x,
-                        counterTop + (gapHeight / 2),
-                        pos.z + zOffset
-                      );
-                      scene.add(verticalRip);
-                    });
-                  } else {
-                    // Bay 1 için counter'a uzanan ripler
-                    adjustedCornerPositions.forEach((pos) => {
-                      // Counter'a bağlanan Model 11
-                      const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
-                      counterConnector.scale.set(1.5, 1.5, 1.5);
-                      counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
-                      scene.add(counterConnector);
-
-                      // Tavana bağlanan Model 11
-                      const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
-                      ceilingConnector.scale.set(1.5, 1.5, 1.5);
-                      ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
-                      ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
-                      scene.add(ceilingConnector);
-
-                      // Dikey ripler
-                      const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
-                      const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-                      verticalRip.position.set(
-                        pos.x,
-                        counterTop + (gapHeight / 2),
-                        pos.z + zOffset
-                      );
-                      scene.add(verticalRip);
-                    });
-                  }
-                });
-              }
-            } else {
-              // 4 ve üzeri raf sayısı için counter'a kadar olan mesafeyi hesapla
-              const counterHeight = 400;
-              const availableSpace = topShelfHeight - counterHeight;
-              const adjustedSpacing = (availableSpace - (shelfQuantity * shelfHeight)) / (shelfQuantity - 1);
-              
-              for (let i = 0; i < shelfQuantity; i++) {
-                baseHeight = topShelfHeight - (i * (shelfHeight + adjustedSpacing));
-
-                // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-                const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-                const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-                // Normal shelf oluşturma
-                const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                shelfMesh.position.set(xOffset, baseHeight, zOffset);
-                scene.add(shelfMesh);
-
-                // Eğer barCount 2 ise, ikinci shelf'i ekle
-                if (barCount === 2) {
-                  const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                  secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                  scene.add(secondShelfMesh);
-
-                  // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                  const ripPositions = [
-                    // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                    
-                    // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                  ];
-
-                  // Her pozisyon için rip-model setini ekle
-                  ripPositions.forEach((pos) => {
-                    const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                    connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                    // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                    const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                    
-                    // Belirli modeller için yatay konumlandırma yap
-                    if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                      // Yatay konumlandırma için rotasyon
-                      connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                      
-                      // Sadece arka (duvara yakın) modeli döndür
-                      if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                        connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                      }
-                      // Öndeki model için ek rotasyon yok
-                    } else {
-                      // Diğer modeller için mevcut rotasyonu koru
-                      connectorMesh.rotation.y = Math.PI / 2;
-                    }
-
-                    connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(connectorMesh);
-
-                    const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                    ripMesh.scale.set(1, 1, 1);
-                    ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(ripMesh);
-                  });
-
-                  // Ön taraftaki yatay ripler için pozisyonlar
-                  const frontPositions = [
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                  ];
-                  
-                  // Arka taraftaki yatay ripler için pozisyonlar
-                  const backPositions = [
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                  ];
-
-                  // Yatay ripleri ekle
-                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                  addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                  // Ön-arka bağlantı ripleri için pozisyonlar
-                  const allPositions = [
-                    // Sol shelf'in köşeleri
-                    { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                    // Orta bağlantı noktaları
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                    // Sağ shelf'in köşeleri
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                    { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                  ];
-
-                  // Ön-arka bağlantı riplerini ekle
-                  addFrontToBackRips(baseHeight, allPositions);
-                } else {
-                  // Tek shelf için yatay ripler
-                  const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                  const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                  
-                  addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                  addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                  // Tek shelf için ön-arka bağlantı riplerini ekle
-                  addFrontToBackRips(baseHeight, adjustedCornerPositions);
-                }
-
-                adjustedCornerPositions.forEach((pos) => {
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                  ripMesh.scale.set(1, 1, 1);
-                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(ripMesh);
-                });
-              }
-            }
-          } else if (mountType === 'ceiling to floor') {
-            const topShelfHeight = 1195;
-            const shelfSpacing = 250; // Normal raf aralığı
-            
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              // Eğer barCount 2 ise, ikinci shelf'i ekle
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                const ripPositions = [
-                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                  
-                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                ];
-
-                // Her pozisyon için rip-model setini ekle
-                ripPositions.forEach((pos) => {
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                  ripMesh.scale.set(1, 1, 1);
-                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(ripMesh);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-              } else {
-                // Tek shelf için yatay ripler
-                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Tek shelf için ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, adjustedCornerPositions);
-              }
-
-              adjustedCornerPositions.forEach((pos) => {
-                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                
-                // Belirli modeller için yatay konumlandırma yap
-                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                  // Yatay konumlandırma için rotasyon
-                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                  
-                  // Sadece arka (duvara yakın) modeli döndür
-                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                  }
-                  // Öndeki model için ek rotasyon yok
-                } else {
-                  // Diğer modeller için mevcut rotasyonu koru
-                  connectorMesh.rotation.y = Math.PI / 2;
-                }
-
-                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(connectorMesh);
-
-                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                ripMesh.scale.set(1, 1, 1);
-                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                scene.add(ripMesh);
-              });
-            }
-
-            // Zemine uzanan ripler ekle
-            if (barCount === 2) {
-              // Bay 2 için tüm rip pozisyonlardan zemine uzanan ripler ekle
+              // İki shelf için rip-model setlerinin pozisyonlarını hesapla
               const ripPositions = [
                 // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                { x: 0, z: shelfBoundingBox.min.z + 5 },  // Ortada
-                { x: shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
                 
                 // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                { x: 0, z: shelfBoundingBox.max.z - 5 },  // Ortada
-                { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
               ];
 
-              // Her pozisyon için uzatılmış rip ekle
+              // Her pozisyon için rip-model setini ekle
               ripPositions.forEach((pos) => {
-                const extendedRipGeometry = new THREE.BoxGeometry(10, topShelfHeight, 10);
-                const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
-                
-                extendedRip.position.set(
-                  pos.x,
-                  topShelfHeight / 2,
-                  pos.z + zOffset
-                );
-                
-                scene.add(extendedRip);
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                ripMesh.scale.set(1, 1, 1);
+                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(ripMesh);
               });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
             } else {
-              // Bay 1 için zemine uzanan ripler ekle
-              adjustedCornerPositions.forEach((pos) => {
-                const extendedRipGeometry = new THREE.BoxGeometry(10, topShelfHeight, 10);
-                const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
-                
-                extendedRip.position.set(
-                  pos.x,
-                  topShelfHeight / 2,
-                  pos.z + zOffset
-                );
-                
-                scene.add(extendedRip);
+              // Tek shelf için yatay ripler
+              const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+              const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+              
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Tek shelf için ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, adjustedCornerPositions);
+            }
+
+            adjustedCornerPositions.forEach((pos) => {
+              const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+              connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+              connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(connectorMesh);
+
+              const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+              ripMesh.scale.set(1, 1, 1);
+              ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(ripMesh);
+            });
+          }
+
+          // After all shelves are created, add ceiling connectors
+          if (barCount === 2) {
+            // For two shelves setup
+            const ceilingConnectorPositions = [
+              { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+              { x: 0, z: shelfBoundingBox.min.z + 5 },
+              { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+              { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+              { x: 0, z: shelfBoundingBox.max.z - 5 },
+              { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+            ];
+
+            // Load Model 11 for ceiling connections
+            const model11Loader = new STLLoader();
+            model11Loader.load('/models/model11.stl', (model11Geometry) => {
+              ceilingConnectorPositions.forEach((pos) => {
+                const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                scene.add(ceilingConnector);
               });
-            }
-          } else if (mountType === 'ceiling to wall') {
-            const topShelfHeight = 1195;
-            const shelfSpacing = 250; // Normal raf aralığı
-            
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              // Eğer barCount 2 ise, ikinci shelf'i ekle
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                const ripPositions = [
-                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                  
-                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                ];
-
-                // Her pozisyon için rip-model setini ekle
-                ripPositions.forEach((pos) => {
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
-                  ripMesh.scale.set(1, 1, 1);
-                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(ripMesh);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-
-                // Add wall connections for each shelf level
-                const wallConnectionPositions = [
-                  { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: 0, z: shelfBoundingBox.min.z + 5 },
-                  { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: 0, z: shelfBoundingBox.max.z - 5 },
-                  { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                wallConnectionPositions.forEach((pos) => {
-                  // Add wall connector (Model 5)
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
-
-                  // Add horizontal rip from wall to shelf
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-
-                  scene.add(wallConnector);
-                  scene.add(horizontalRip);
-                });
-              } else {
-                // For single shelf
-                adjustedCornerPositions.forEach((pos) => {
-                  // Add wall connector (Model 5)
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
-
-                  // Add horizontal rip from wall to shelf
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-
-                  scene.add(wallConnector);
-                  scene.add(horizontalRip);
-                });
-              }
-            }
-
-            // ... rest of the existing code for ceiling connections ...
-          } else if (mountType === 'wall to floor') {
-            const topShelfHeight = 1195;
-            const shelfSpacing = 250; // Normal raf aralığı
-            
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
-              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
-              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
-                const ripPositions = [
-                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
-                  
-                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
-                ];
-
-                // Her pozisyon için rip-model setini ekle
-                ripPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-
-                  // Zemine uzanan rip ekle
-                  const floorRipGeometry = new THREE.BoxGeometry(10, baseHeight, 10);
-                  const floorRip = new THREE.Mesh(floorRipGeometry, materialGold);
-                  
-                  floorRip.position.set(
-                    pos.x,
-                    baseHeight / 2,
-                    pos.z + zOffset
-                  );
-                  
-                  scene.add(floorRip);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-              } else {
-                // Bay 1 için model ve ripleri ekle
-                adjustedCornerPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-
-                  // Zemine uzanan rip ekle
-                  const floorRipGeometry = new THREE.BoxGeometry(10, baseHeight, 10);
-                  const floorRip = new THREE.Mesh(floorRipGeometry, materialGold);
-                  
-                  floorRip.position.set(
-                    pos.x,
-                    baseHeight / 2,
-                    pos.z + zOffset
-                  );
-                  
-                  scene.add(floorRip);
-                });
-
-                // Tek shelf için yatay ripler
-                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Tek shelf için ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, adjustedCornerPositions);
-              }
-            }
-          } else if (mountType === 'wall') {
-            const topShelfHeight = 1195;
-            
-            for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
-
-              // Shelf pozisyonlarını hesapla
-              const xOffset = barCount === 2 ? -shelfWidth : 0;
-              const secondShelfOffset = xOffset + shelfWidth;
-
-              // Normal shelf oluşturma
-              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-              shelfMesh.position.set(xOffset, baseHeight, zOffset);
-              scene.add(shelfMesh);
-
-              if (barCount === 2) {
-                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
-                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
-                scene.add(secondShelfMesh);
-
-                // Tüm bağlantı noktaları (köşeler ve shelf'ler arası)
-                const allConnectPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },  // Sol ön
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },  // Sol arka
-                  // Shelf'ler arası bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Orta ön
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Orta arka
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Sağ ön
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }   // Sağ arka
-                ];
-
-                allConnectPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-                });
-
-                // Ön taraftaki yatay ripler için pozisyonlar
-                const frontPositions = [
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
-                ];
-                
-                // Arka taraftaki yatay ripler için pozisyonlar
-                const backPositions = [
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Yatay ripleri ekle
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Ön-arka bağlantı ripleri için pozisyonlar
-                const allPositions = [
-                  // Sol shelf'in köşeleri
-                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
-                  // Orta bağlantı noktaları
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
-                  // Sağ shelf'in köşeleri
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
-                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
-                ];
-
-                // Ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, allPositions);
-              } else {
-                // Bay 1 için model ve ripleri ekle
-                adjustedCornerPositions.forEach((pos) => {
-                  // Model ekle
-                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
-                  connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
-
-                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
-                  scene.add(connectorMesh);
-
-                  // Dikey rip ekle (ilk raf hariç)
-                  if (i !== 0) {
-                    const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
-                    verticalRip.scale.set(1, 1, 1);
-                    verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
-                    scene.add(verticalRip);
-                  }
-
-                  // Yatay rip ekle
-                  const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-                  const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-                  const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-                  
-                  horizontalRip.position.set(
-                    pos.x,
-                    baseHeight,
-                    (pos.z + zOffset - 1000) / 2
-                  );
-                  scene.add(horizontalRip);
-
-                  // Duvardaki bağlantı noktaları
-                  const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
-                  wallConnector.scale.set(1.5, 1.5, 1.5);
-                  wallConnector.rotation.z = Math.PI / 2;
-                  wallConnector.rotation.y = Math.PI / 2;
-                  wallConnector.position.set(pos.x, baseHeight, -1000);
-                  scene.add(wallConnector);
-                });
-
-                // Tek shelf için yatay ripler
-                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
-                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
-                
-                addHorizontalConnectingRips(baseHeight, frontPositions, true);
-                addHorizontalConnectingRips(baseHeight, backPositions, false);
-
-                // Tek shelf için ön-arka bağlantı riplerini ekle
-                addFrontToBackRips(baseHeight, adjustedCornerPositions);
-              }
-            }
+            });
           } else {
-            // Zeminden yukarıya doğru
-            const bottomShelfHeight = 300;
-            
+            // For single shelf setup
+            const model11Loader = new STLLoader();
+            model11Loader.load('/models/model11.stl', (model11Geometry) => {
+              adjustedCornerPositions.forEach((pos) => {
+                const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset); // Position at ceiling height (1500)
+                scene.add(ceilingConnector);
+              });
+            });
+          }
+        } else if (mountType === 'ceiling to counter') {
+          const topShelfHeight = 1195;
+          
+          if (shelfQuantity <= 3) {
+            // Normal aralıklarla rafları yerleştir
             for (let i = 0; i < shelfQuantity; i++) {
-              baseHeight = bottomShelfHeight + (i * (shelfHeight + shelfSpacing));
+              baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
 
               // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
               const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
@@ -1678,24 +532,6 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 ripPositions.forEach((pos) => {
                   const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                   connectorMesh.scale.set(1.5, 1.5, 1.5);
-
-                  // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                  const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                  
-                  // Belirli modeller için yatay konumlandırma yap
-                  if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                    // Yatay konumlandırma için rotasyon
-                    connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                    
-                    // Sadece arka (duvara yakın) modeli döndür
-                    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                      connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                    }
-                    // Öndeki model için ek rotasyon yok
-                  } else {
-                    // Diğer modeller için mevcut rotasyonu koru
-                    connectorMesh.rotation.y = Math.PI / 2;
-                  }
 
                   connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                   scene.add(connectorMesh);
@@ -1755,23 +591,190 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                 const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
                 connectorMesh.scale.set(1.5, 1.5, 1.5);
 
-                // Model numarasını URL'den çıkar ve null/undefined kontrolü yap
-                const modelNumber = modelUrl.match(/model(\d+)\.stl/)?.[1] || '';
-                
-                // Belirli modeller için yatay konumlandırma yap
-                if (['1', '2', '3', '7', '8', '9'].includes(modelNumber)) {
-                  // Yatay konumlandırma için rotasyon
-                  connectorMesh.rotation.x = Math.PI / 2; // 90 derece X ekseni etrafında döndür
-                  
-                  // Sadece arka (duvara yakın) modeli döndür
-                  if (pos.z === shelfBoundingBox.max.z - 5) { // Arka model
-                    connectorMesh.rotation.z = Math.PI; // 180 derece döndür
-                  }
-                  // Öndeki model için ek rotasyon yok
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                ripMesh.scale.set(1, 1, 1);
+                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(ripMesh);
+              });
+            }
+
+            // Son raf ile counter arasına uzatılmış rip ekle
+            const lastShelfHeight = topShelfHeight - ((shelfQuantity - 1) * (shelfHeight + shelfSpacing));
+            const counterTop = 400; // Counter yüksekliği
+            
+            if (lastShelfHeight > counterTop) {
+              // Son raf ile counter arasındaki mesafe
+              const gapHeight = lastShelfHeight - counterTop;
+              
+              // Load Model 11 for connections
+              const model11Loader = new STLLoader();
+              model11Loader.load('/models/model11.stl', (model11Geometry) => {
+                if (barCount === 2) {
+                  // Bay 2 için counter ve tavana uzanan ripler
+                  const ripPositions = [
+                    { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: 0, z: shelfBoundingBox.min.z + 5 },
+                    { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                    { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                    { x: 0, z: shelfBoundingBox.max.z - 5 },
+                    { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                  ];
+
+                  ripPositions.forEach((pos) => {
+                    // Counter'a bağlanan Model 11
+                    const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
+                    counterConnector.scale.set(1.5, 1.5, 1.5);
+                    counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
+                    scene.add(counterConnector);
+
+                    // Tavana bağlanan Model 11
+                    const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                    ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                    ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                    ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
+                    scene.add(ceilingConnector);
+
+                    // Dikey ripler
+                    const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
+                    const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+                    verticalRip.position.set(
+                      pos.x,
+                      counterTop + (gapHeight / 2),
+                      pos.z + zOffset
+                    );
+                    scene.add(verticalRip);
+                  });
                 } else {
-                  // Diğer modeller için mevcut rotasyonu koru
-                  connectorMesh.rotation.y = Math.PI / 2;
+                  // Bay 1 için counter'a uzanan ripler
+                  adjustedCornerPositions.forEach((pos) => {
+                    // Counter'a bağlanan Model 11
+                    const counterConnector = new THREE.Mesh(model11Geometry, materialGold);
+                    counterConnector.scale.set(1.5, 1.5, 1.5);
+                    counterConnector.position.set(pos.x, counterTop, pos.z + zOffset);
+                    scene.add(counterConnector);
+
+                    // Tavana bağlanan Model 11
+                    const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
+                    ceilingConnector.scale.set(1.5, 1.5, 1.5);
+                    ceilingConnector.rotation.x = Math.PI; // Rotate 180 degrees to face down
+                    ceilingConnector.position.set(pos.x, 1500, pos.z + zOffset);
+                    scene.add(ceilingConnector);
+
+                    // Dikey ripler
+                    const verticalRipGeometry = new THREE.BoxGeometry(10, gapHeight, 10);
+                    const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+                    verticalRip.position.set(
+                      pos.x,
+                      counterTop + (gapHeight / 2),
+                      pos.z + zOffset
+                    );
+                    scene.add(verticalRip);
+                  });
                 }
+              });
+            }
+          } else {
+            // 4 ve üzeri raf sayısı için counter'a kadar olan mesafeyi hesapla
+            const counterHeight = 400;
+            const availableSpace = topShelfHeight - counterHeight;
+            const adjustedSpacing = (availableSpace - (shelfQuantity * shelfHeight)) / (shelfQuantity - 1);
+            
+            for (let i = 0; i < shelfQuantity; i++) {
+              baseHeight = topShelfHeight - (i * (shelfHeight + adjustedSpacing));
+
+              // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+              const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+              const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
+
+              // Normal shelf oluşturma
+              const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              shelfMesh.position.set(xOffset, baseHeight, zOffset);
+              scene.add(shelfMesh);
+
+              // Eğer barCount 2 ise, ikinci shelf'i ekle
+              if (barCount === 2) {
+                const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+                secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+                scene.add(secondShelfMesh);
+
+                // İki shelf için rip-model setlerinin pozisyonlarını hesapla
+                const ripPositions = [
+                  // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                  
+                  // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+                ];
+
+                // Her pozisyon için rip-model setini ekle
+                ripPositions.forEach((pos) => {
+                  const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                  connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                  connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(connectorMesh);
+
+                  const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                  ripMesh.scale.set(1, 1, 1);
+                  ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(ripMesh);
+                });
+
+                // Ön taraftaki yatay ripler için pozisyonlar
+                const frontPositions = [
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+                ];
+                
+                // Arka taraftaki yatay ripler için pozisyonlar
+                const backPositions = [
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Yatay ripleri ekle
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Ön-arka bağlantı ripleri için pozisyonlar
+                const allPositions = [
+                  // Sol shelf'in köşeleri
+                  { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                  // Orta bağlantı noktaları
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                  // Sağ shelf'in köşeleri
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                  { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+                ];
+
+                // Ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, allPositions);
+              } else {
+                // Tek shelf için yatay ripler
+                const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+                // Tek shelf için ön-arka bağlantı riplerini ekle
+                addFrontToBackRips(baseHeight, adjustedCornerPositions);
+              }
+
+              adjustedCornerPositions.forEach((pos) => {
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
 
                 connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
                 scene.add(connectorMesh);
@@ -1783,12 +786,743 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               });
             }
           }
+        } else if (mountType === 'ceiling to floor') {
+          const topShelfHeight = 1195;
+          const shelfSpacing = 250; // Normal raf aralığı
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
 
-          // Kamera pozisyonunu daha da uzaktan gösterecek şekilde ayarla
-          camera.position.set(4500, 2000, 2000);     // Tüm değerleri artırdık
-          camera.lookAt(0, 600, -500);               // Hedef nokta aynı
-          controls.update();
-        });
+            // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+            const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+            const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
+
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
+
+            // Eğer barCount 2 ise, ikinci shelf'i ekle
+            if (barCount === 2) {
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
+
+              // İki shelf için rip-model setlerinin pozisyonlarını hesapla
+              const ripPositions = [
+                // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                
+                // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+              ];
+
+              // Her pozisyon için rip-model setini ekle
+              ripPositions.forEach((pos) => {
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                ripMesh.scale.set(1, 1, 1);
+                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(ripMesh);
+              });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
+            } else {
+              // Tek shelf için yatay ripler
+              const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+              const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+              
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Tek shelf için ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, adjustedCornerPositions);
+            }
+
+            adjustedCornerPositions.forEach((pos) => {
+              const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+              connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+              connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(connectorMesh);
+
+              const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+              ripMesh.scale.set(1, 1, 1);
+              ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(ripMesh);
+            });
+          }
+
+          // Zemine uzanan ripler ekle
+          if (barCount === 2) {
+            // Bay 2 için tüm rip pozisyonlardan zemine uzanan ripler ekle
+            const ripPositions = [
+              // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+              { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+              { x: 0, z: shelfBoundingBox.min.z + 5 },  // Ortada
+              { x: shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+              
+              // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+              { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+              { x: 0, z: shelfBoundingBox.max.z - 5 },  // Ortada
+              { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+            ];
+
+            // Her pozisyon için uzatılmış rip ekle
+            ripPositions.forEach((pos) => {
+              const extendedRipGeometry = new THREE.BoxGeometry(10, topShelfHeight, 10);
+              const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
+              
+              extendedRip.position.set(
+                pos.x,
+                topShelfHeight / 2,
+                pos.z + zOffset
+              );
+              
+              scene.add(extendedRip);
+            });
+          } else {
+            // Bay 1 için zemine uzanan ripler ekle
+            adjustedCornerPositions.forEach((pos) => {
+              const extendedRipGeometry = new THREE.BoxGeometry(10, topShelfHeight, 10);
+              const extendedRip = new THREE.Mesh(extendedRipGeometry, materialGold);
+              
+              extendedRip.position.set(
+                pos.x,
+                topShelfHeight / 2,
+                pos.z + zOffset
+              );
+              
+              scene.add(extendedRip);
+            });
+          }
+        } else if (mountType === 'ceiling to wall') {
+          const topShelfHeight = 1195;
+          const shelfSpacing = 250; // Normal raf aralığı
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
+
+            // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+            const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+            const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
+
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
+
+            // Eğer barCount 2 ise, ikinci shelf'i ekle
+            if (barCount === 2) {
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
+
+              // İki shelf için rip-model setlerinin pozisyonlarını hesapla
+              const ripPositions = [
+                // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                
+                // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+              ];
+
+              // Her pozisyon için rip-model setini ekle
+              ripPositions.forEach((pos) => {
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                ripMesh.scale.set(1, 1, 1);
+                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(ripMesh);
+              });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
+
+              // Add wall connections for each shelf level
+              const wallConnectionPositions = [
+                { x: -shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: 0, z: shelfBoundingBox.min.z + 5 },
+                { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: -shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: 0, z: shelfBoundingBox.max.z - 5 },
+                { x: shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              wallConnectionPositions.forEach((pos) => {
+                // Add wall connector (Model 5)
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
+
+                // Add horizontal rip from wall to shelf
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+
+                scene.add(wallConnector);
+                scene.add(horizontalRip);
+              });
+            } else {
+              // For single shelf
+              adjustedCornerPositions.forEach((pos) => {
+                // Add wall connector (Model 5)
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2; // Rotate to face outward from wall
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000); // Position at wall
+
+                // Add horizontal rip from wall to shelf
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+
+                scene.add(wallConnector);
+                scene.add(horizontalRip);
+              });
+            }
+          }
+
+          // ... rest of the existing code for ceiling connections ...
+        } else if (mountType === 'wall to floor') {
+          const topShelfHeight = 1195;
+          const shelfSpacing = 250; // Normal raf aralığı
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
+
+            // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+            const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+            const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
+
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
+
+            if (barCount === 2) {
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
+
+              // İki shelf için rip-model setlerinin pozisyonlarını hesapla
+              const ripPositions = [
+                // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                
+                // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+              ];
+
+              // Her pozisyon için rip-model setini ekle
+              ripPositions.forEach((pos) => {
+                // Model ekle
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                // Dikey rip ekle (ilk raf hariç)
+                if (i !== 0) {
+                  const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
+                  verticalRip.scale.set(1, 1, 1);
+                  verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(verticalRip);
+                }
+
+                // Yatay rip ekle
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+                scene.add(horizontalRip);
+
+                // Duvardaki bağlantı noktaları
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2;
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000);
+                scene.add(wallConnector);
+
+                // Zemine uzanan rip ekle
+                const floorRipGeometry = new THREE.BoxGeometry(10, baseHeight, 10);
+                const floorRip = new THREE.Mesh(floorRipGeometry, materialGold);
+                
+                floorRip.position.set(
+                  pos.x,
+                  baseHeight / 2,
+                  pos.z + zOffset
+                );
+                
+                scene.add(floorRip);
+              });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
+            } else {
+              // Bay 1 için model ve ripleri ekle
+              adjustedCornerPositions.forEach((pos) => {
+                // Model ekle
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                // Dikey rip ekle (ilk raf hariç)
+                if (i !== 0) {
+                  const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
+                  verticalRip.scale.set(1, 1, 1);
+                  verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(verticalRip);
+                }
+
+                // Yatay rip ekle
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+                scene.add(horizontalRip);
+
+                // Duvardaki bağlantı noktaları
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2;
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000);
+                scene.add(wallConnector);
+
+                // Zemine uzanan rip ekle
+                const floorRipGeometry = new THREE.BoxGeometry(10, baseHeight, 10);
+                const floorRip = new THREE.Mesh(floorRipGeometry, materialGold);
+                
+                floorRip.position.set(
+                  pos.x,
+                  baseHeight / 2,
+                  pos.z + zOffset
+                );
+                
+                scene.add(floorRip);
+              });
+
+              // Tek shelf için yatay ripler
+              const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+              const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+              
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Tek shelf için ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, adjustedCornerPositions);
+            }
+          }
+        } else if (mountType === 'wall') {
+          const topShelfHeight = 1195;
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = topShelfHeight - (i * (shelfHeight + shelfSpacing));
+
+            // Shelf pozisyonlarını hesapla
+            const xOffset = barCount === 2 ? -shelfWidth : 0;
+            const secondShelfOffset = xOffset + shelfWidth;
+
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
+
+            if (barCount === 2) {
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
+
+              // Tüm bağlantı noktaları (köşeler ve shelf'ler arası)
+              const allConnectPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },  // Sol ön
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },  // Sol arka
+                // Shelf'ler arası bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Orta ön
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Orta arka
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Sağ ön
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }   // Sağ arka
+              ];
+
+              allConnectPositions.forEach((pos) => {
+                // Model ekle
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                // Dikey rip ekle (ilk raf hariç)
+                if (i !== 0) {
+                  const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
+                  verticalRip.scale.set(1, 1, 1);
+                  verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(verticalRip);
+                }
+
+                // Yatay rip ekle
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+                scene.add(horizontalRip);
+
+                // Duvardaki bağlantı noktaları
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2;
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000);
+                scene.add(wallConnector);
+              });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
+            } else {
+              // Bay 1 için model ve ripleri ekle
+              adjustedCornerPositions.forEach((pos) => {
+                // Model ekle
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                // Dikey rip ekle (ilk raf hariç)
+                if (i !== 0) {
+                  const verticalRip = new THREE.Mesh(ripGeometry, materialGold);
+                  verticalRip.scale.set(1, 1, 1);
+                  verticalRip.position.set(pos.x, baseHeight, pos.z + zOffset);
+                  scene.add(verticalRip);
+                }
+
+                // Yatay rip ekle
+                const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+                const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+                const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+                
+                horizontalRip.position.set(
+                  pos.x,
+                  baseHeight,
+                  (pos.z + zOffset - 1000) / 2
+                );
+                scene.add(horizontalRip);
+
+                // Duvardaki bağlantı noktaları
+                const wallConnector = new THREE.Mesh(modelGeometry, materialGold);
+                wallConnector.scale.set(1.5, 1.5, 1.5);
+                wallConnector.rotation.z = Math.PI / 2;
+                wallConnector.rotation.y = Math.PI / 2;
+                wallConnector.position.set(pos.x, baseHeight, -1000);
+                scene.add(wallConnector);
+              });
+
+              // Tek shelf için yatay ripler
+              const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+              const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+              
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Tek shelf için ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, adjustedCornerPositions);
+            }
+          }
+        } else {
+          // Zeminden yukarıya doğru
+          const bottomShelfHeight = 300;
+          
+          for (let i = 0; i < shelfQuantity; i++) {
+            baseHeight = bottomShelfHeight + (i * (shelfHeight + shelfSpacing));
+
+            // Shelf pozisyonlarını hesapla (odanın içinde olacak şekilde)
+            const xOffset = barCount === 2 ? -shelfWidth : 0; // Sol shelf'i sola kaydır
+            const secondShelfOffset = xOffset + shelfWidth; // İki shelf arası mesafe 0
+
+            // Normal shelf oluşturma
+            const shelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+            shelfMesh.position.set(xOffset, baseHeight, zOffset);
+            scene.add(shelfMesh);
+
+            // Eğer barCount 2 ise, ikinci shelf'i ekle
+            if (barCount === 2) {
+              const secondShelfMesh = new THREE.Mesh(shelfGeometry, materialShelf);
+              secondShelfMesh.position.set(secondShelfOffset, baseHeight, zOffset);
+              scene.add(secondShelfMesh);
+
+              // İki shelf için rip-model setlerinin pozisyonlarını hesapla
+              const ripPositions = [
+                // Ön taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }, // Sağ shelf sağ uç
+                
+                // Arka taraf için 3 pozisyon (sol uç, orta, sağ uç)
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },                // Sol shelf sol uç
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },  // Ortada (iki shelf'in birleştiği yer)
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }  // Sağ shelf sağ uç
+              ];
+
+              // Her pozisyon için rip-model setini ekle
+              ripPositions.forEach((pos) => {
+                const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+                connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+                connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(connectorMesh);
+
+                const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+                ripMesh.scale.set(1, 1, 1);
+                ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+                scene.add(ripMesh);
+              });
+
+              // Ön taraftaki yatay ripler için pozisyonlar
+              const frontPositions = [
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 }
+              ];
+              
+              // Arka taraftaki yatay ripler için pozisyonlar
+              const backPositions = [
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Yatay ripleri ekle
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Ön-arka bağlantı ripleri için pozisyonlar
+              const allPositions = [
+                // Sol shelf'in köşeleri
+                { x: xOffset, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset, z: shelfBoundingBox.max.z - 5 },
+                // Orta bağlantı noktaları
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: xOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 },
+                // Sağ shelf'in köşeleri
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.min.z + 5 },
+                { x: secondShelfOffset + shelfWidth, z: shelfBoundingBox.max.z - 5 }
+              ];
+
+              // Ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, allPositions);
+            } else {
+              // Tek shelf için yatay ripler
+              const frontPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+              const backPositions = adjustedCornerPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+              
+              addHorizontalConnectingRips(baseHeight, frontPositions, true);
+              addHorizontalConnectingRips(baseHeight, backPositions, false);
+
+              // Tek shelf için ön-arka bağlantı riplerini ekle
+              addFrontToBackRips(baseHeight, adjustedCornerPositions);
+            }
+
+            adjustedCornerPositions.forEach((pos) => {
+              const connectorMesh = new THREE.Mesh(modelGeometry, materialGold);
+              connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+              connectorMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(connectorMesh);
+
+              const ripMesh = new THREE.Mesh(ripGeometry, materialGold);
+              ripMesh.scale.set(1, 1, 1);
+              ripMesh.position.set(pos.x, baseHeight, pos.z + zOffset);
+              scene.add(ripMesh);
+            });
+          }
+        }
+
+        // Kamera pozisyonunu daha da uzaktan gösterecek şekilde ayarla
+        camera.position.set(4500, 2000, 2000);     // Tüm değerleri artırdık
+        camera.lookAt(0, 600, -500);               // Hedef nokta aynı
+        controls.update();
       });
     });
 
@@ -1804,7 +1538,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       controls.dispose();
       renderer.dispose();
     };
-  }, [modelUrl, shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars]); // Add showCrossbars to dependencies
+  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars]); // Add showCrossbars to dependencies
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
