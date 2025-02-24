@@ -2,6 +2,7 @@ import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
 import ThreeDViewer from "~/components/ThreeDViewer";
+import { CrossbarSelector } from "~/components/CrossbarSelector";
 
 // Components
 import ModelSelector from "~/components/ModelSelector";
@@ -25,6 +26,9 @@ export default function Index() {
   const [mountType, setMountType] = useState<string>("Ceiling");
   const [barCount, setBarCount] = useState<number>(1);
   //const [price] = useState<number>(599.00);
+
+  // Add new state for crossbars
+  const [showCrossbars, setShowCrossbars] = useState<boolean>(true);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedModel && selectedRip;
@@ -51,6 +55,10 @@ export default function Index() {
                 <RipSelector onSelect={setSelectedRip} />
                 <MountTypeSelector onSelect={setMountType} />
                 <BarSelector onSelect={setBarCount} />
+                <CrossbarSelector
+                  showCrossbars={showCrossbars}
+                  onChange={setShowCrossbars}
+                />
                 <ModelSelector onSelect={setSelectedModel} />
               </div>
             </div>
@@ -67,6 +75,7 @@ export default function Index() {
                   shelfQuantity={shelfQuantity}
                   mountType={mountType}
                   barCount={barCount}
+                  showCrossbars={showCrossbars}
                 />
               </div>
             ) : (

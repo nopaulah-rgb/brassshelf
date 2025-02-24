@@ -10,6 +10,7 @@ interface ThreeDViewerProps {
   shelfQuantity: number;
   mountType: string;
   barCount: number;
+  showCrossbars: boolean; // Add this prop back
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -19,6 +20,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   shelfQuantity,
   mountType,
   barCount,
+  showCrossbars, // Add this prop back
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -282,6 +284,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
             positions: { x: number, z: number }[],
             isFront: boolean
           ) => {
+            // Only add horizontal rips if showCrossbars is true
+            if (!showCrossbars) return;
+
             // Her iki ardışık pozisyon arasına yatay rip ekle
             for (let i = 0; i < positions.length - 1; i++) {
               const start = positions[i];
@@ -1799,7 +1804,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       controls.dispose();
       renderer.dispose();
     };
-  }, [modelUrl, shelfUrl, ripUrl, shelfQuantity, mountType, barCount]);
+  }, [modelUrl, shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars]); // Add showCrossbars to dependencies
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
