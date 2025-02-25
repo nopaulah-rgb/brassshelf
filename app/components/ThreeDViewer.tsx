@@ -314,18 +314,19 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
             // İki nokta arasındaki mesafe
             const length = Math.abs(end.x - start.x);
             
-            // Yatay rip geometrisi
+            // Sadece üst yatay rip geometrisi
             const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
             
-            // Ripin pozisyonu (iki nokta arasının ortası)
+            // Üst pozisyon
             horizontalRip.position.set(
               start.x + (length / 2),
               baseHeight,
               (isFront ? shelfBoundingBox.min.z : shelfBoundingBox.max.z) + zOffset
             );
-            
             scene.add(horizontalRip);
+
+            // Alt yatay rip kaldırıldı
           }
         };
 
@@ -344,18 +345,19 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               // İki nokta arasındaki mesafe
               const length = Math.abs(backPoint.z - frontPoint.z);
               
-              // Yatay rip geometrisi
+              // Sadece üst yatay rip geometrisi
               const sideRipGeometry = new THREE.BoxGeometry(10, 10, length);
               const sideRip = new THREE.Mesh(sideRipGeometry, materialGold);
               
-              // Ripin pozisyonu (iki nokta arasının ortası)
+              // Üst pozisyon
               sideRip.position.set(
                 frontPoint.x,
                 baseHeight,
                 frontPoint.z + (length / 2) + zOffset
               );
-              
               scene.add(sideRip);
+
+              // Alt yatay rip kaldırıldı
             }
           });
         };

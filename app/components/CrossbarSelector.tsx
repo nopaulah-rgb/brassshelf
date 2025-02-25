@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable jsx-a11y/label-has-associated-control */
 
 interface CrossbarSelectorProps {
   showCrossbars: boolean;
@@ -9,7 +9,7 @@ export function CrossbarSelector({ showCrossbars, onChange }: CrossbarSelectorPr
   return (
     <div className="space-y-2">
       <label className="block text-lg font-medium text-gray-900">
-        Horizontal Cross Bars:
+        Horizontal Cross Bar:
       </label>
       <select
         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -26,7 +26,7 @@ export default function Index() {
   //const [price] = useState<number>(599.00);
 
   // Add new state for crossbars
-  const [showCrossbars, setShowCrossbars] = useState<boolean>(true);
+  const [showCrossbars, setShowCrossbars] = useState(true);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
