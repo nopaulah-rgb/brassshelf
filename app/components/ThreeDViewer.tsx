@@ -1056,9 +1056,32 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   scene.add(verticalRip);
                 }
               });
-            }
 
-            // Yatay bağlantı ripleri için pozisyonlar ve ekleme kodu aynı kalacak...
+              // Crossbars için tüm pozisyonları birleştir
+              if (showCrossbars) {
+                const allPositions = [
+                  ...ripPositions,
+                  ...additionalPositions
+                ];
+                
+                const frontPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, allPositions);
+              }
+            } else {
+              // Tek bay için crossbars
+              if (showCrossbars) {
+                const frontPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, ripPositions);
+              }
+            }
           }
         } else if (mountType === 'wall') {
           const topShelfHeight = 1195;
@@ -1155,7 +1178,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               const connectorMesh = new THREE.Mesh(connectorGeometry, materialGold);
               connectorMesh.scale.set(1.5, 1.5, 1.5);
               connectorMesh.position.set(
-                pos.x + (isMiddleConnector ? 45 : pos.x === xOffset ? 25 : 25),
+                pos.x + (isMiddleConnector ? 45 : 25),
                 baseHeight,
                 pos.z + zOffset
               );
@@ -1205,9 +1228,32 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   scene.add(verticalRip);
                 }
               });
-            }
 
-            // Yatay bağlantı ripleri için pozisyonlar ve ekleme kodu aynı kalacak...
+              // Crossbars için tüm pozisyonları birleştir
+              if (showCrossbars) {
+                const allPositions = [
+                  ...ripPositions,
+                  ...additionalPositions
+                ];
+                
+                const frontPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, allPositions);
+              }
+            } else {
+              // Tek bay için crossbars
+              if (showCrossbars) {
+                const frontPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, ripPositions);
+              }
+            }
           }
         } else if (mountType === 'wall to counter') {
           const topShelfHeight = 1195;
@@ -1580,7 +1626,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               const connectorMesh = new THREE.Mesh(connectorGeometry, materialGold);
               connectorMesh.scale.set(1.5, 1.5, 1.5);
               connectorMesh.position.set(
-                pos.x + (isMiddleConnector ? 45 : pos.x === xOffset ? 25 : 25),
+                pos.x + (isMiddleConnector ? 45 : 25),
                 baseHeight,
                 pos.z + zOffset
               );
@@ -1630,9 +1676,32 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
                   scene.add(verticalRip);
                 }
               });
-            }
 
-            // Yatay bağlantı ripleri için pozisyonlar ve ekleme kodu aynı kalacak...
+              // Crossbars için tüm pozisyonları birleştir
+              if (showCrossbars) {
+                const allPositions = [
+                  ...ripPositions,
+                  ...additionalPositions
+                ];
+                
+                const frontPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = allPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, allPositions);
+              }
+            } else {
+              // Tek bay için crossbars
+              if (showCrossbars) {
+                const frontPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.min.z + 5);
+                const backPositions = ripPositions.filter(pos => pos.z === shelfBoundingBox.max.z - 5);
+                
+                addHorizontalConnectingRips(baseHeight, frontPositions, true);
+                addHorizontalConnectingRips(baseHeight, backPositions, false);
+                addFrontToBackRips(baseHeight, ripPositions);
+              }
+            }
           }
         }
 
