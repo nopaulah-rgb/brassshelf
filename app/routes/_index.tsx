@@ -35,36 +35,73 @@ export default function Index() {
     <div className="min-h-screen bg-[#B5B48F]">
       <header className="p-6 border-b border-gray-800/10">
         <div className="container mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900">Origin Shelf Builder</h1>
+          <h1 className="text-2xl font-medium text-gray-900">Origin Shelf Builder</h1>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Konfigurasyon Paneli */}
-          <div className="w-full lg:w-1/3 space-y-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-8">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Configure Your Shelf Assembly
-              </h2>
-              
-              <div className="space-y-12">
-                <ShelfSelector onSelect={setSelectedShelf} />
-                <ShelfQuantitySelector onSelect={setShelfQuantity} />
-                <RipSelector onSelect={setSelectedRip} />
-                <MountTypeSelector onSelect={setMountType} />
-                <BarSelector onSelect={setBarCount} />
-                <CrossbarSelector
-                  showCrossbars={showCrossbars}
-                  onChange={setShowCrossbars}
-                />
+          {/* Configuration Panel */}
+          <div className="w-full lg:w-1/3 space-y-8">
+            {/* Bays Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-medium text-gray-900">Bays</h2>
+                <span className="text-xl font-medium text-gray-900">{barCount}</span>
               </div>
+              <div className="border-t border-gray-800/10 mb-4" />
+              <BarSelector onSelect={setBarCount} />
+            </div>
+
+            {/* Shelf Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-medium text-gray-900">Shelf</h2>
+                <span className="text-xl font-medium text-gray-900">{shelfQuantity}</span>
+              </div>
+              <div className="border-t border-gray-800/10 mb-4" />
+              <div className="space-y-6">
+                <h3 className="text-lg text-gray-800">Select a Shelf:</h3>
+                <ShelfQuantitySelector onSelect={setShelfQuantity} />
+                <ShelfSelector onSelect={setSelectedShelf} />
+              </div>
+            </div>
+
+            {/* Mount Type Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-medium text-gray-900">How would you like to mount your unit?</h2>
+                <span className="text-xl font-medium text-gray-900">{mountType}</span>
+              </div>
+              <div className="border-t border-gray-800/10 mb-4" />
+              <MountTypeSelector onSelect={setMountType} />
+            </div>
+
+            {/* Rip Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-medium text-gray-900">Rip Style</h2>
+              </div>
+              <div className="border-t border-gray-800/10 mb-4" />
+              <RipSelector onSelect={setSelectedRip} />
+            </div>
+
+            {/* Crossbar Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-medium text-gray-900">Would you like horizontal cross bars?</h2>
+              </div>
+              <div className="border-t border-gray-800/10 mb-4" />
+              <CrossbarSelector
+                showCrossbars={showCrossbars}
+                onChange={setShowCrossbars}
+              />
             </div>
           </div>
 
-          {/* 3D Viewer Paneli */}
+          {/* 3D Viewer Panel */}
           <div className="w-full lg:w-2/3">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-white/5 rounded-xl shadow-lg overflow-hidden backdrop-blur-sm">
               {isViewerReady ? (
                 <div className="w-full h-[500px] lg:h-[700px]">
                   <ThreeDViewer
@@ -78,11 +115,11 @@ export default function Index() {
                 </div>
               ) : (
                 <div className="w-full h-[500px] lg:h-[700px] flex items-center justify-center p-8">
-                  <div className="text-center max-w-md">
-                    <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-                      Please Configure Your Shelfs
+                  <div className="text-center">
+                    <h2 className="text-2xl font-medium text-white mb-2">
+                      Please Configure Your Shelf
                     </h2>
-                    <p className="text-gray-500">
+                    <p className="text-gray-200">
                       Select options from the left panel to view your custom shelf
                     </p>
                   </div>
