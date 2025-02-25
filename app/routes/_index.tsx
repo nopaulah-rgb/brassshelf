@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
 import ThreeDViewer from "~/components/ThreeDViewer";
-import { CrossbarSelector } from "~/components/CrossbarSelector";
+import CrossbarSelector from "~/components/CrossbarSelector";
 
 // Components
 import RipSelector from "~/components/RipSelector";
@@ -32,22 +32,23 @@ export default function Index() {
   const isViewerReady = selectedShelf && selectedRip;
 
   return (
-    <div className="min-h-screen bg-olive-100">
-      {/* Header */}
-      <header className="p-4 md:p-6 flex justify-between items-center">
-        <h1 className="text-lg md:text-xl lg:text-2xl">Origin Shelf Builder</h1>
+    <div className="min-h-screen bg-[#B5B48F]">
+      <header className="p-6 border-b border-gray-800/10">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900">Origin Shelf Builder</h1>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 md:px-6">
-        {/* Flex container - mobilde dikey, tablet ve üstünde yatay */}
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Sol Panel - Konfigürasyon */}
-          <div className="w-full lg:w-1/3">
-            <div className="mb-6 md:mb-8">
-              <h2 className="text-xl md:text-2xl font-bold mb-6">Configure Your Shelf Assembly</h2>
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Konfigurasyon Paneli */}
+          <div className="w-full lg:w-1/3 space-y-12">
+            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Configure Your Shelf Assembly
+              </h2>
               
-              <div className="space-y-4 md:space-y-6">
+              <div className="space-y-12">
                 <ShelfSelector onSelect={setSelectedShelf} />
                 <ShelfQuantitySelector onSelect={setShelfQuantity} />
                 <RipSelector onSelect={setSelectedRip} />
@@ -61,34 +62,36 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Sağ Panel - 3D Viewer */}
+          {/* 3D Viewer Paneli */}
           <div className="w-full lg:w-2/3">
-            {isViewerReady ? (
-              <div className="w-full h-[400px] md:h-[500px] lg:h-[600px]">
-                <ThreeDViewer
-                  shelfUrl={selectedShelf}
-                  ripUrl={selectedRip}
-                  shelfQuantity={shelfQuantity}
-                  mountType={mountType}
-                  barCount={barCount}
-                  showCrossbars={showCrossbars}
-                />
-              </div>
-            ) : (
-              <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100 flex flex-col items-center justify-center p-4 md:p-6">
-                <div className="text-center max-w-md">
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-600 mb-3 md:mb-4">
-                    Please Configure Your Shelfs
-                  </h2>
-                  <p className="text-sm md:text-base lg:text-lg text-gray-500 px-4">
-                    Select options from the left panel to view your custom shelf
-                  </p>
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              {isViewerReady ? (
+                <div className="w-full h-[500px] lg:h-[700px]">
+                  <ThreeDViewer
+                    shelfUrl={selectedShelf}
+                    ripUrl={selectedRip}
+                    shelfQuantity={shelfQuantity}
+                    mountType={mountType}
+                    barCount={barCount}
+                    showCrossbars={showCrossbars}
+                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="w-full h-[500px] lg:h-[700px] flex items-center justify-center p-8">
+                  <div className="text-center max-w-md">
+                    <h2 className="text-2xl font-semibold text-gray-600 mb-4">
+                      Please Configure Your Shelfs
+                    </h2>
+                    <p className="text-gray-500">
+                      Select options from the left panel to view your custom shelf
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
