@@ -6,7 +6,9 @@ const MountTypeSelector: React.FC<{ onSelect: (mountType: string) => void }> = (
   const mountTypes = [
     { id: 'ceiling', name: 'Ceiling' },
     { id: 'ceiling to counter', name: 'Ceiling to Counter' },
+    { id: 'ceiling to counter to wall', name: 'Ceiling to Counter to Wall' },
     { id: 'ceiling to floor', name: 'Ceiling to Floor' },
+    { id: 'ceiling to floor to wall', name: 'Ceiling to Floor to Wall' },
     { id: 'ceiling to wall', name: 'Ceiling to Wall' },
     { id: 'wall', name: 'Wall' },
     { id: 'wall to floor', name: 'Wall to Floor' },
