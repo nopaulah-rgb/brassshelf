@@ -3,6 +3,8 @@ import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
 import ThreeDViewer from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
+import HeightInput from "~/components/HeightInput";
+import UseTopShelfSelector from "~/components/UseTopShelfSelector";
 
 // Components
 import RipSelector from "~/components/RipSelector";
@@ -23,6 +25,8 @@ export default function Index() {
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [mountType, setMountType] = useState<string>("Ceiling");
   const [barCount, setBarCount] = useState<number>(1);
+  const [userHeight, setUserHeight] = useState<number>(1194); // 47 inches in mm
+  const [useTopShelf, setUseTopShelf] = useState<boolean>(false); // Default to false for wall mounts
   //const [price] = useState<number>(599.00);
 
   // Add new state for crossbars
@@ -75,6 +79,20 @@ export default function Index() {
               </div>
               <div className="border-t border-gray-800/10 mb-4" />
               <MountTypeSelector onSelect={setMountType} />
+              <div className="mt-4">
+                <UseTopShelfSelector
+                  mountType={mountType.toLowerCase()}
+                  useTopShelf={useTopShelf}
+                  onChange={setUseTopShelf}
+                />
+              </div>
+              <div className="mt-4">
+                <HeightInput
+                  mountType={mountType.toLowerCase()}
+                  value={userHeight}
+                  onChange={setUserHeight}
+                />
+              </div>
             </div>
 
             {/* Rip Section */}
@@ -108,9 +126,11 @@ export default function Index() {
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
-                    mountType={mountType}
+                    mountType={mountType.toLowerCase()}
                     barCount={barCount}
                     showCrossbars={showCrossbars}
+                    userHeight={userHeight}
+                    useTopShelf={useTopShelf}
                   />
                 </div>
               ) : (
