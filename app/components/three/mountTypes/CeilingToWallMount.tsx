@@ -36,28 +36,6 @@ export const handleCeilingToWallMount = ({
     }
   }
 
-  // Function to determine if wall connection should be added at this level
-  const shouldAddWallConnection = (currentIndex: number, totalShelves: number, heightInMm: number) => {
-    // Convert mm to inches for comparison
-    const heightInInches = heightInMm / 25.4;
-    
-    if (heightInInches <= 44) {
-      // Only top shelf connection (0-44 inches)
-      return currentIndex === 0;
-    } else if (heightInInches >= 45 && heightInInches <= 69) {
-      // Top and bottom shelf connections (45-69 inches)
-      return currentIndex === 0 || currentIndex === totalShelves - 1;
-    } else {
-      // Top, middle-ish, and bottom shelf connections (70+ inches)
-      if (currentIndex === 0 || currentIndex === totalShelves - 1) {
-        return true;
-      }
-      // Find middle shelf position (rounded down)
-      const middleIndex = Math.floor((totalShelves - 1) / 2);
-      return currentIndex === middleIndex;
-    }
-  };
-
   // Calculate total number of shelves
   const totalShelves = useTopShelf ? shelfQuantity : shelfQuantity + 1;
 
@@ -183,7 +161,7 @@ export const handleCeilingToWallMount = ({
         );
         scene.add(backCenterConnector);
 
-        // Front wall connection for center (using model11)
+        // Front wall connection for center (using model11) - NOW ADDED TO ALL SHELVES
         const frontCenterWallConnector = new THREE.Mesh(model11Geometry, materialGold);
         frontCenterWallConnector.scale.set(1.5, 1.5, 1.5);
         frontCenterWallConnector.rotation.z = Math.PI / 2;
@@ -195,7 +173,7 @@ export const handleCeilingToWallMount = ({
         );
         scene.add(frontCenterWallConnector);
 
-        // Horizontal rip from wall to back shelf edge
+        // Horizontal rip from wall to back shelf edge - NOW ADDED TO ALL SHELVES
         const centerHorizontalRipLength = Math.abs(-1000 - (shelfBoundingBox.max.z + zOffset));
         const centerHorizontalRipGeometry = new THREE.BoxGeometry(10, 10, centerHorizontalRipLength);
         const centerHorizontalRip = new THREE.Mesh(centerHorizontalRipGeometry, materialGold);
@@ -229,37 +207,35 @@ export const handleCeilingToWallMount = ({
         scene.add(connectorMesh);
       });
 
-      // Add front wall connections
+      // Add front wall connections - NOW CONNECTED TO ALL SHELVES (removed shouldAddWallConnection condition)
       const frontPositions = [
         { x: barCount === 2 ? -shelfWidth : 0, z: shelfBoundingBox.min.z + 5 },
         { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
       ];
 
       frontPositions.forEach((pos) => {
-        if (shouldAddWallConnection(i, totalShelves, topShelfHeight)) {
-          // Add wall connector (Model 11)
-          const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
-          wallConnector.scale.set(1.5, 1.5, 1.5);
-          wallConnector.rotation.z = Math.PI / 2;
-          wallConnector.rotation.y = Math.PI / 2;
-          wallConnector.position.set(
-            pos.x,
-            currentHeight + model1Height / 2 - 20,
-            -1000
-          );
-          scene.add(wallConnector);
+        // Add wall connector to ALL shelves (Model 11)
+        const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
+        wallConnector.scale.set(1.5, 1.5, 1.5);
+        wallConnector.rotation.z = Math.PI / 2;
+        wallConnector.rotation.y = Math.PI / 2;
+        wallConnector.position.set(
+          pos.x,
+          currentHeight + model1Height / 2 - 20,
+          -1000
+        );
+        scene.add(wallConnector);
 
-          // Add horizontal rip to wall
-          const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-          const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-          horizontalRip.position.set(
-            pos.x,
-            currentHeight + model1Height / 2 - 20,
-            (pos.z + zOffset - 1000) / 2
-          );
-          scene.add(horizontalRip);
-        }
+        // Add horizontal rip to wall for ALL shelves
+        const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+        const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+        const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+        horizontalRip.position.set(
+          pos.x,
+          currentHeight + model1Height / 2 - 20,
+          (pos.z + zOffset - 1000) / 2
+        );
+        scene.add(horizontalRip);
       });
 
       // Add crossbars if enabled
