@@ -38,20 +38,27 @@ export const handleWallToFloorMount = ({
     // Convert mm to inches for comparison
     const heightInInches = heightInMm / 25.4;
     
+    // Calculate actual shelf index (accounting for useTopShelf setting)
+    const actualShelfIndex = useTopShelf ? currentIndex : currentIndex - 1;
+    const actualTotalShelves = useTopShelf ? totalShelves : totalShelves - 1;
+    
+    // Only add wall connections for actual shelf levels
+    if (actualShelfIndex < 0) return false;
+    
     if (heightInInches <= 44) {
-      // Only top shelf connection (0-44 inches)
-      return currentIndex === 0;
+      // 0-44" height: Only top shelf connection (Tek duvar montesi)
+      return actualShelfIndex === 0;
     } else if (heightInInches >= 45 && heightInInches <= 69) {
-      // Top and bottom shelf connections (45-69 inches)
-      return currentIndex === 0 || currentIndex === totalShelves - 1;
+      // 45"-69" height: Top and bottom shelf connections (2 duvar bağlantısı)
+      return actualShelfIndex === 0 || actualShelfIndex === actualTotalShelves - 1;
     } else {
-      // Top, middle-ish, and bottom shelf connections (70+ inches)
-      if (currentIndex === 0 || currentIndex === totalShelves - 1) {
+      // 70"+ height: Top, middle, and bottom shelf connections (3 duvar bağlantısı)
+      if (actualShelfIndex === 0 || actualShelfIndex === actualTotalShelves - 1) {
         return true;
       }
-      // Find middle shelf position (rounded down)
-      const middleIndex = Math.floor((totalShelves - 1) / 2);
-      return currentIndex === middleIndex;
+      // Find middle shelf position (rounded down for odd numbers, exact middle for even)
+      const middleIndex = Math.floor((actualTotalShelves - 1) / 2);
+      return actualShelfIndex === middleIndex;
     }
   };
 
@@ -184,7 +191,7 @@ export const handleWallToFloorMount = ({
         frontCenterWallConnector.rotation.y = Math.PI / 2;
         frontCenterWallConnector.position.set(
           0,
-          currentHeight + model1Height / 2 - 20,
+          currentHeight, // Same level as shelf
           -1000
         );
         scene.add(frontCenterWallConnector);
@@ -195,7 +202,7 @@ export const handleWallToFloorMount = ({
         const centerHorizontalRip = new THREE.Mesh(centerHorizontalRipGeometry, materialGold);
         centerHorizontalRip.position.set(
           0,
-          currentHeight + model1Height / 2 - 20,
+          currentHeight, // Same level as shelf
           -1000 + centerHorizontalRipLength / 2
         );
         scene.add(centerHorizontalRip);
@@ -223,39 +230,6 @@ export const handleWallToFloorMount = ({
         scene.add(connectorMesh);
       });
 
-      // Add front wall connections
-      const frontPositions = [
-        { x: barCount === 2 ? -shelfWidth : 0, z: shelfBoundingBox.min.z + 5 },
-        { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
-      ];
-
-      frontPositions.forEach((pos) => {
-        if (shouldAddWallConnection(i, totalShelves, topShelfHeight)) {
-          // Add wall connector (Model 11)
-          const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
-          wallConnector.scale.set(1.5, 1.5, 1.5);
-          wallConnector.rotation.z = Math.PI / 2;
-          wallConnector.rotation.y = Math.PI / 2;
-          wallConnector.position.set(
-            pos.x,
-            currentHeight + model1Height / 2 - 20,
-            -1000
-          );
-          scene.add(wallConnector);
-
-          // Add horizontal rip to wall
-          const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-          const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-          horizontalRip.position.set(
-            pos.x,
-            currentHeight + model1Height / 2 - 20,
-            (pos.z + zOffset - 1000) / 2
-          );
-          scene.add(horizontalRip);
-        }
-      });
-
       // Add crossbars if enabled
       if (showCrossbars) {
         // Add back horizontal rip
@@ -270,6 +244,10 @@ export const handleWallToFloorMount = ({
         scene.add(backRip);
 
         // Calculate side rip length and positions like in CeilingMount
+        const frontPositions = [
+          { x: barCount === 2 ? -shelfWidth : 0, z: shelfBoundingBox.min.z + 5 },
+          { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+        ];
         const zFront = frontPositions[0].z + zOffset + 5;
         const zBack = backPositions[0].z + zOffset + 5 - model1Depth - 10;
         const sideLength = Math.abs(zBack - zFront);
@@ -293,6 +271,39 @@ export const handleWallToFloorMount = ({
         );
         scene.add(rightRip);
       }
+
+      // Add front wall connections only where there are shelves
+      const frontPositions = [
+        { x: barCount === 2 ? -shelfWidth : 0, z: shelfBoundingBox.min.z + 5 },
+        { x: shelfWidth, z: shelfBoundingBox.min.z + 5 },
+      ];
+
+      frontPositions.forEach((pos) => {
+        if (shouldAddWallConnection(i, totalShelves, topShelfHeight)) {
+          // Add wall connector (Model 11)
+          const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
+          wallConnector.scale.set(1.5, 1.5, 1.5);
+          wallConnector.rotation.z = Math.PI / 2;
+          wallConnector.rotation.y = Math.PI / 2;
+          wallConnector.position.set(
+            pos.x,
+            currentHeight, // Same level as shelf
+            -1000
+          );
+          scene.add(wallConnector);
+
+          // Add horizontal rip to wall
+          const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+          const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+          horizontalRip.position.set(
+            pos.x,
+            currentHeight, // Same level as shelf
+            (pos.z + zOffset - 1000) / 2
+          );
+          scene.add(horizontalRip);
+        }
+      });
     }
   }
 };
