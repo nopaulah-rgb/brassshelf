@@ -36,7 +36,7 @@ export default function Index() {
   const isViewerReady = selectedShelf && selectedRip;
 
   return (
-    <div className="min-h-screen bg-[#B5B48F]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <header className="p-6 border-b border-gray-800/10">
         <div className="container mx-auto">
           <h1 className="text-2xl font-medium text-gray-900">Origin Shelf Builder</h1>
