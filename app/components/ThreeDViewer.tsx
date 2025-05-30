@@ -73,13 +73,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 1000;
-    controls.maxDistance = 6000;
-    controls.maxPolarAngle = Math.PI / 2;  // Lock vertical rotation
-    controls.minPolarAngle = Math.PI / 2;  // Lock vertical rotation
+    controls.minDistance = 800;  // Minimum zoom distance
+    controls.maxDistance = 8000; // Maximum zoom distance
+    controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
+    controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
     controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
     controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
-    controls.enableZoom = false;  // Disable zooming
+    controls.enableZoom = true;  // Enable zooming
     controls.enablePan = false;   // Disable panning
     controls.target.set(0, 600, -500);
 
