@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
@@ -36,6 +36,22 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   useTopShelf = false,
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
+
+  // Scroll event handler for parallax effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const scrollSpeed = 0.5; // Adjust this value to control parallax speed (0.5 means half speed)
+      setScrollOffset(scrollY * scrollSpeed);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -173,7 +189,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
     // Set initial camera position based on room size
     const cameraDistance = Math.max(3500, roomWidth * 1.5);
-    camera.position.set(cameraDistance, roomHeight * 0.6, cameraDistance * 0.7);
+    const baseCameraY = roomHeight * 0.6;
+    camera.position.set(cameraDistance, baseCameraY, cameraDistance * 0.7);
     camera.lookAt(0, roomHeight * 0.4, -roomDepth * 0.4);
 
     // Renderer setup with container size
@@ -195,6 +212,15 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     controls.enableZoom = true;  // Enable zooming
     controls.enablePan = false;   // Disable panning
     controls.target.set(0, roomHeight * 0.4, -roomDepth * 0.4);
+
+    // Update camera position based on scroll
+    const updateCameraWithScroll = () => {
+      const scrollEffect = scrollOffset * 0.2; // Adjust multiplier for scroll sensitivity
+      camera.position.y = baseCameraY + scrollEffect;
+      camera.lookAt(0, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
+      controls.target.set(0, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
+      controls.update();
+    };
 
     // Handle window resize
     const handleResize = () => {
@@ -389,12 +415,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         }
 
         // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
+        const animate = () => {
+          requestAnimationFrame(animate);
+          updateCameraWithScroll(); // Update camera based on scroll
+          controls.update();
+          renderer.render(scene, camera);
+        };
+        animate();
       })
       .catch((error) => {
         console.error("Error loading models:", error);
