@@ -43,25 +43,20 @@ export const handleCeilingToFloorMount = ({
   for (let i = 0; i < shelfQuantity; i++) {
     const currentHeight = topShelfHeight - i * shelfSpacing;
 
-    // Add shelf if:
-    // - it's not the first iteration (i > 0) for "Do not use top as shelf"
-    // - or if useTopShelf is true (add all shelves including top)
-    if (useTopShelf || i > 0) {
-      // Normal shelf
-      const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
-      shelfMesh.position.set(
-        barCount === 2 ? -shelfWidth : 0,
-        currentHeight,
-        zOffset
-      );
-      scene.add(shelfMesh);
+    // Normal shelf
+    const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
+    shelfMesh.position.set(
+      barCount === 2 ? -shelfWidth : 0,
+      currentHeight,
+      zOffset
+    );
+    scene.add(shelfMesh);
 
-      if (barCount === 2) {
-        // Second shelf
-        const secondShelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
-        secondShelfMesh.position.set(0, currentHeight, zOffset);
-        scene.add(secondShelfMesh);
-      }
+    if (barCount === 2) {
+      // Second shelf
+      const secondShelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
+      secondShelfMesh.position.set(0, currentHeight, zOffset);
+      scene.add(secondShelfMesh);
     }
 
     // Connection positions
@@ -82,22 +77,37 @@ export const handleCeilingToFloorMount = ({
         ];
 
     positions.forEach((pos) => {
-      // Add regular connectors if shelf exists
-      if (useTopShelf || i > 0) {
-        const isMiddleConnector = pos.x === 0;
-        const connectorGeometry = isMiddleConnector && showCrossbars
-          ? model2Geometry
-          : model1Geometry;
+      // Add regular connectors
+      const isMiddleConnector = pos.x === 0;
+      const connectorGeometry = isMiddleConnector && showCrossbars
+        ? model2Geometry
+        : model1Geometry;
 
-        const connectorMesh = new THREE.Mesh(connectorGeometry, materialGold);
-        connectorMesh.scale.set(1.5, 1.5, 1.5);
-        connectorMesh.position.set(
-          pos.x + (isMiddleConnector ? 45 : 25),
-          currentHeight,
-          pos.z + zOffset
-        );
-        scene.add(connectorMesh);
+      const connectorMesh = new THREE.Mesh(connectorGeometry, materialGold);
+      connectorMesh.scale.set(1.5, 1.5, 1.5);
+
+      // Öndeki model 1'leri 180 derece, arkadakileri 90 derece döndür
+      if (pos.z === shelfBoundingBox.min.z + 5) {
+        connectorMesh.rotation.y = Math.PI + Math.PI / 2;
+      } else {
+        connectorMesh.rotation.y = Math.PI / 2;
       }
+
+      // Arka model 1'leri öne kaydır
+      let zPos = pos.z + zOffset + 5;
+      if (pos.z === shelfBoundingBox.max.z - 5) {
+        zPos -= 20;
+      }
+      if (pos.z === shelfBoundingBox.min.z + 5) {
+        zPos += 5;
+      }
+
+      connectorMesh.position.set(
+        pos.x,
+        currentHeight,
+        zPos
+      );
+      scene.add(connectorMesh);
 
       // Add vertical rips
       if (i === 0) {
@@ -123,7 +133,7 @@ export const handleCeilingToFloorMount = ({
     });
 
     // Add horizontal connecting rips if showCrossbars is true
-    if (showCrossbars && (useTopShelf || i > 0)) {
+    if (showCrossbars) {
       const frontPositions = positions.filter(
         (pos) => pos.z === shelfBoundingBox.min.z + 5
       );
