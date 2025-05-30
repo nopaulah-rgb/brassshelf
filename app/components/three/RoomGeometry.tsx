@@ -7,9 +7,9 @@ export interface RoomGeometryProps {
 export const createRoomGeometry = ({ scene }: RoomGeometryProps) => {
   // Room geometries
   const roomGeometry = {
-    floor: new THREE.PlaneGeometry(2000, 2000),
+    floor: new THREE.PlaneGeometry(200, 100),
     backWall: new THREE.PlaneGeometry(2000, 1500),
-    ceiling: new THREE.PlaneGeometry(2000, 2000),
+    ceiling: new THREE.PlaneGeometry(200, 100),
     counter: new THREE.BoxGeometry(2000, 400, 800),
     cabinetDoor: new THREE.PlaneGeometry(495, 380),
   };

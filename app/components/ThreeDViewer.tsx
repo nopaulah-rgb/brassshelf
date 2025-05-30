@@ -59,17 +59,35 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       10000
     );
 
+    // Set initial camera position
+    camera.position.set(3500, 2500, 2500);
+    camera.lookAt(0, 600, -500);
+
     // Renderer setup with container size
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(containerWidth, containerHeight);
     renderer.setClearColor(0xf5f5f5);
     container.appendChild(renderer.domElement);
 
+    // Setup OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 1000;
+    controls.maxDistance = 6000;
+    controls.maxPolarAngle = Math.PI / 2;  // Lock vertical rotation
+    controls.minPolarAngle = Math.PI / 2;  // Lock vertical rotation
+    controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
+    controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
+    controls.enableZoom = false;  // Disable zooming
+    controls.enablePan = false;   // Disable panning
+    controls.target.set(0, 600, -500);
+
     // Room geometry setup
     const roomGeometry = {
-      floor: new THREE.PlaneGeometry(2000, 2000),
+      floor: new THREE.PlaneGeometry(2000, 1200),
       backWall: new THREE.PlaneGeometry(2000, 1500),
-      ceiling: new THREE.PlaneGeometry(2000, 2000),
+      ceiling: new THREE.PlaneGeometry(2000, 1200),
       counter: new THREE.BoxGeometry(2000, 400, 800),
       cabinetDoor: new THREE.PlaneGeometry(495, 380),
     };
@@ -129,48 +147,38 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     mainLight.castShadow = true;
     scene.add(mainLight);
 
-    // Add wall spotlights
+    // Add room elements
+    const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(0, 0, -600);
+    scene.add(floor);
+
+    const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
+    backWall.position.set(0, 750, -1200);
+    scene.add(backWall);
+
+    const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.set(0, 1500, -600);
+    scene.add(ceiling);
+
+    // Adjust wall lights
     const wallLight1 = new THREE.SpotLight(0xffd6ff, 0.3);
-    wallLight1.position.set(-1000, 1500, -500);
-    wallLight1.target.position.set(0, 750, -1000);
+    wallLight1.position.set(-1000, 1500, -900);
+    wallLight1.target.position.set(0, 750, -1200);
     wallLight1.angle = Math.PI / 3;
     wallLight1.penumbra = 1;
     scene.add(wallLight1);
     scene.add(wallLight1.target);
 
     const wallLight2 = new THREE.SpotLight(0xc8b6ff, 0.3);
-    wallLight2.position.set(1000, 1500, -500);
-    wallLight2.target.position.set(0, 750, -1000);
+    wallLight2.position.set(1000, 1500, -900);
+    wallLight2.target.position.set(0, 750, -1200);
     wallLight2.angle = Math.PI / 3;
     wallLight2.penumbra = 1;
     scene.add(wallLight2);
     scene.add(wallLight2.target);
 
-    // Add room elements
-    const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(0, 0, 0);
-    scene.add(floor);
-
-    const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
-    backWall.position.set(0, 750, -1000);
-    scene.add(backWall);
-
-    const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
-    ceiling.rotation.x = Math.PI / 2;
-    ceiling.position.set(0, 1500, 0);
-    scene.add(ceiling);
-
-    // Setup OrbitControls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = 500;
-    controls.maxDistance = 15000;
-    controls.maxPolarAngle = Math.PI / 1.5;
-    controls.minPolarAngle = Math.PI / 4;
-    controls.target.set(0, 600, -500);
-    
     // Handle window resize
     const handleResize = () => {
       if (!container) return;
@@ -184,9 +192,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
       const isMobile = window.innerWidth < 768;
       camera.position.set(
-        isMobile ? 5500 : 4500,
-        isMobile ? 2500 : 2000,
-        isMobile ? 2500 : 2000
+        isMobile ? 4000 : 3500,
+        isMobile ? 3000 : 2500,
+        isMobile ? 3000 : 2500
       );
       camera.lookAt(0, 600, -500);
       controls.update();
@@ -381,7 +389,11 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     };
   }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, useTopShelf]);
 
-  return <div ref={mountRef} style={{ width: "100%", height: "300px" }} />;
+  return <div ref={mountRef} style={{ 
+    width: "100%", 
+    height: "600px",
+    maxHeight: "calc(100vh - 100px)" // Responsive height that adjusts to viewport
+  }} />;
 };
 
 export default ThreeDViewer;
