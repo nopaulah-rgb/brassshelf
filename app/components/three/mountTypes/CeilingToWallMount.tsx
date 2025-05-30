@@ -37,15 +37,18 @@ export const handleCeilingToWallMount = ({
   }
 
   // Function to determine if wall connection should be added at this level
-  const shouldAddWallConnection = (currentIndex: number, totalShelves: number, heightInInches: number) => {
+  const shouldAddWallConnection = (currentIndex: number, totalShelves: number, heightInMm: number) => {
+    // Convert mm to inches for comparison
+    const heightInInches = heightInMm / 25.4;
+    
     if (heightInInches <= 44) {
-      // Only top shelf connection
+      // Only top shelf connection (0-44 inches)
       return currentIndex === 0;
-    } else if (heightInInches <= 69) {
-      // Top and bottom shelf connections
+    } else if (heightInInches >= 45 && heightInInches <= 69) {
+      // Top and bottom shelf connections (45-69 inches)
       return currentIndex === 0 || currentIndex === totalShelves - 1;
     } else {
-      // Top, middle-ish, and bottom shelf connections
+      // Top, middle-ish, and bottom shelf connections (70+ inches)
       if (currentIndex === 0 || currentIndex === totalShelves - 1) {
         return true;
       }

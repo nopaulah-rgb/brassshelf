@@ -59,36 +59,28 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       10000
     );
 
-    // Set initial camera position
-    camera.position.set(3500, 2500, 2500);
-    camera.lookAt(0, 600, -500);
+    // Calculate dynamic room dimensions based on userHeight
+    const heightInInches = userHeight ? userHeight / 25.4 : 47; // Convert mm to inches, default 47"
+    
+    // Base room dimensions
+    let roomWidth = 2000;
+    let roomDepth = 1200;
+    let roomHeight = 1500;
+    
+    // Adjust room size for taller shelf systems
+    if (heightInInches > 60) {
+      const scaleFactor = Math.max(1.2, heightInInches / 50);
+      roomWidth = Math.max(2000, roomWidth * scaleFactor);
+      roomDepth = Math.max(1200, roomDepth * scaleFactor);
+      roomHeight = Math.max(1500, userHeight! + 300); // Add 300mm clearance above top shelf
+    }
 
-    // Renderer setup with container size
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(containerWidth, containerHeight);
-    renderer.setClearColor(0xf5f5f5);
-    container.appendChild(renderer.domElement);
-
-    // Setup OrbitControls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = 800;  // Minimum zoom distance
-    controls.maxDistance = 8000; // Maximum zoom distance
-    controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
-    controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
-    controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
-    controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
-    controls.enableZoom = true;  // Enable zooming
-    controls.enablePan = false;   // Disable panning
-    controls.target.set(0, 600, -500);
-
-    // Room geometry setup
+    // Room geometry setup with dynamic dimensions
     const roomGeometry = {
-      floor: new THREE.PlaneGeometry(2000, 1200),
-      backWall: new THREE.PlaneGeometry(2000, 1500),
-      ceiling: new THREE.PlaneGeometry(2000, 1200),
-      counter: new THREE.BoxGeometry(2000, 400, 800),
+      floor: new THREE.PlaneGeometry(roomWidth, roomDepth),
+      backWall: new THREE.PlaneGeometry(roomWidth, roomHeight),
+      ceiling: new THREE.PlaneGeometry(roomWidth, roomDepth),
+      counter: new THREE.BoxGeometry(roomWidth, 400, 800),
       cabinetDoor: new THREE.PlaneGeometry(495, 380),
     };
 
@@ -147,37 +139,62 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     mainLight.castShadow = true;
     scene.add(mainLight);
 
-    // Add room elements
+    // Add room elements with dynamic positioning
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(0, 0, -600);
+    floor.position.set(0, 0, -roomDepth / 2);
     scene.add(floor);
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
-    backWall.position.set(0, 750, -1200);
+    backWall.position.set(0, roomHeight / 2, -roomDepth);
     scene.add(backWall);
 
     const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
     ceiling.rotation.x = Math.PI / 2;
-    ceiling.position.set(0, 1500, -600);
+    ceiling.position.set(0, roomHeight, -roomDepth / 2);
     scene.add(ceiling);
 
-    // Adjust wall lights
+    // Adjust wall lights for dynamic room size
     const wallLight1 = new THREE.SpotLight(0xffd6ff, 0.3);
-    wallLight1.position.set(-1000, 1500, -900);
-    wallLight1.target.position.set(0, 750, -1200);
+    wallLight1.position.set(-roomWidth / 2, roomHeight, -roomDepth * 0.75);
+    wallLight1.target.position.set(0, roomHeight / 2, -roomDepth);
     wallLight1.angle = Math.PI / 3;
     wallLight1.penumbra = 1;
     scene.add(wallLight1);
     scene.add(wallLight1.target);
 
     const wallLight2 = new THREE.SpotLight(0xc8b6ff, 0.3);
-    wallLight2.position.set(1000, 1500, -900);
-    wallLight2.target.position.set(0, 750, -1200);
+    wallLight2.position.set(roomWidth / 2, roomHeight, -roomDepth * 0.75);
+    wallLight2.target.position.set(0, roomHeight / 2, -roomDepth);
     wallLight2.angle = Math.PI / 3;
     wallLight2.penumbra = 1;
     scene.add(wallLight2);
     scene.add(wallLight2.target);
+
+    // Set initial camera position based on room size
+    const cameraDistance = Math.max(3500, roomWidth * 1.5);
+    camera.position.set(cameraDistance, roomHeight * 0.6, cameraDistance * 0.7);
+    camera.lookAt(0, roomHeight * 0.4, -roomDepth * 0.4);
+
+    // Renderer setup with container size
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(containerWidth, containerHeight);
+    renderer.setClearColor(0xf5f5f5);
+    container.appendChild(renderer.domElement);
+
+    // Setup OrbitControls with dynamic settings
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = Math.max(800, roomWidth * 0.4);  // Minimum zoom distance
+    controls.maxDistance = Math.max(8000, roomWidth * 4); // Maximum zoom distance
+    controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
+    controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
+    controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
+    controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
+    controls.enableZoom = true;  // Enable zooming
+    controls.enablePan = false;   // Disable panning
+    controls.target.set(0, roomHeight * 0.4, -roomDepth * 0.4);
 
     // Handle window resize
     const handleResize = () => {
@@ -191,12 +208,15 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       renderer.setSize(width, height);
 
       const isMobile = window.innerWidth < 768;
+      const mobileCameraDistance = Math.max(4000, roomWidth * 2);
+      const desktopCameraDistance = Math.max(3500, roomWidth * 1.5);
+      
       camera.position.set(
-        isMobile ? 4000 : 3500,
-        isMobile ? 3000 : 2500,
-        isMobile ? 3000 : 2500
+        isMobile ? mobileCameraDistance : desktopCameraDistance,
+        isMobile ? roomHeight * 0.8 : roomHeight * 0.6,
+        isMobile ? mobileCameraDistance * 0.75 : desktopCameraDistance * 0.7
       );
-      camera.lookAt(0, 600, -500);
+      camera.lookAt(0, roomHeight * 0.4, -roomDepth * 0.4);
       controls.update();
     };
 
