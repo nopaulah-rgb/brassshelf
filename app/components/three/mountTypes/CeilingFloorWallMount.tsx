@@ -7,8 +7,6 @@ export const handleCeilingFloorWallMount = ({
   barCount,
   showCrossbars,
   userHeight,
-  roomGeometry,
-  whiteRoomMaterial,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -36,13 +34,39 @@ export const handleCeilingFloorWallMount = ({
   const baseY = userHeight || 1195;
   const shelfSpacing = 250;
 
-  // Köşe pozisyonlarını hesapla
-  const adjustedCornerPositions = [
-    { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.min.z + 5 },
-    { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.min.z + 5 },
-    { x: shelfBoundingBox.min.x + 5, z: shelfBoundingBox.max.z - 5 },
-    { x: shelfBoundingBox.max.x - 5, z: shelfBoundingBox.max.z - 5 },
-  ];
+  // Calculate shelf positions for multiple bars
+  const getShelfPositions = (barCount: number) => {
+    const positions = [];
+    if (barCount === 1) {
+      positions.push(0);
+    } else {
+      // For multiple bars, arrange them side by side
+      const startX = -(barCount - 1) * shelfWidth / 2;
+      for (let i = 0; i < barCount; i++) {
+        positions.push(startX + i * shelfWidth);
+      }
+    }
+    return positions;
+  };
+
+  const shelfPositions = getShelfPositions(barCount);
+
+  // Calculate corner positions for each shelf
+  const getAllCornerPositions = (): { x: number; z: number }[] => {
+    const allCorners: { x: number; z: number }[] = [];
+    shelfPositions.forEach((shelfX) => {
+      const corners = [
+        { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.min.z + 5 },
+        { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.min.z + 5 },
+        { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+        { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+      ];
+      allCorners.push(...corners);
+    });
+    return allCorners;
+  };
+
+  const adjustedCornerPositions = getAllCornerPositions();
 
   // Tavan ve taban bağlantıları
   adjustedCornerPositions.forEach((pos) => {
@@ -50,24 +74,8 @@ export const handleCeilingFloorWallMount = ({
     const ceilingConnector = new THREE.Mesh(model11Geometry, materialGold);
     ceilingConnector.scale.set(1.5, 1.5, 1.5);
     ceilingConnector.rotation.x = Math.PI;
-    ceilingConnector.position.set(
-      barCount === 2 ? pos.x - shelfWidth : pos.x,
-      ceilingHeight,
-      pos.z + zOffset
-    );
+    ceilingConnector.position.set(pos.x, ceilingHeight, pos.z + zOffset);
     scene.add(ceilingConnector);
-
-    // İkinci raf için tavan bağlantıları
-    if (barCount === 2) {
-      const secondCeilingConnector = new THREE.Mesh(
-        model11Geometry,
-        materialGold
-      );
-      secondCeilingConnector.scale.set(1.5, 1.5, 1.5);
-      secondCeilingConnector.rotation.x = Math.PI;
-      secondCeilingConnector.position.set(pos.x, ceilingHeight, pos.z + zOffset);
-      scene.add(secondCeilingConnector);
-    }
 
     // Dikey rip: en üst raftan tavana kadar
     const topShelfHeight = baseY - shelfSpacing;
@@ -75,25 +83,11 @@ export const handleCeilingFloorWallMount = ({
     const verticalTopRipGeometry = new THREE.BoxGeometry(10, topRipHeight, 10);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, materialGold);
     verticalTopRip.position.set(
-      barCount === 2 ? pos.x - shelfWidth : pos.x,
+      pos.x,
       topShelfHeight + topRipHeight / 2,
       pos.z + zOffset
     );
     scene.add(verticalTopRip);
-
-    // İkinci raf için üst dikey ripler
-    if (barCount === 2) {
-      const secondVerticalTopRip = new THREE.Mesh(
-        verticalTopRipGeometry,
-        materialGold
-      );
-      secondVerticalTopRip.position.set(
-        pos.x,
-        topShelfHeight + topRipHeight / 2,
-        pos.z + zOffset
-      );
-      scene.add(secondVerticalTopRip);
-    }
 
     // Dikey rip: en alt raftan tabana kadar
     const bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
@@ -101,313 +95,157 @@ export const handleCeilingFloorWallMount = ({
     const verticalBottomRipGeometry = new THREE.BoxGeometry(10, bottomRipHeight, 10);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, materialGold);
     verticalBottomRip.position.set(
-      barCount === 2 ? pos.x - shelfWidth : pos.x,
+      pos.x,
       floorHeight + bottomRipHeight / 2,
       pos.z + zOffset
     );
     scene.add(verticalBottomRip);
 
-    // İkinci raf için alt dikey ripler
-    if (barCount === 2) {
-      const secondVerticalBottomRip = new THREE.Mesh(
-        verticalBottomRipGeometry,
-        materialGold
-      );
-      secondVerticalBottomRip.position.set(
-        pos.x,
-        floorHeight + bottomRipHeight / 2,
-        pos.z + zOffset
-      );
-      scene.add(secondVerticalBottomRip);
-    }
-
     // Taban bağlantıları
     const floorConnector = new THREE.Mesh(model11Geometry, materialGold);
     floorConnector.scale.set(1.5, 1.5, 1.5);
-    floorConnector.position.set(
-      barCount === 2 ? pos.x - shelfWidth : pos.x,
-      floorHeight,
-      pos.z + zOffset
-    );
+    floorConnector.position.set(pos.x, floorHeight, pos.z + zOffset);
     scene.add(floorConnector);
-
-    // İkinci raf için taban bağlantıları
-    if (barCount === 2) {
-      const secondFloorConnector = new THREE.Mesh(
-        model11Geometry,
-        materialGold
-      );
-      secondFloorConnector.scale.set(1.5, 1.5, 1.5);
-      secondFloorConnector.position.set(pos.x, floorHeight, pos.z + zOffset);
-      scene.add(secondFloorConnector);
-    }
   });
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
     const currentHeight = baseY - i * shelfSpacing;
 
-    // İlk rafı yerleştir
-    const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
-    shelfMesh.position.set(
-      barCount === 2 ? -shelfWidth : 0,
-      currentHeight,
-      zOffset
-    );
-    scene.add(shelfMesh);
+    // Her bir bay için rafları yerleştir
+    shelfPositions.forEach((shelfX) => {
+      const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
+      shelfMesh.position.set(shelfX, currentHeight, zOffset);
+      scene.add(shelfMesh);
+    });
 
-    // Eğer barCount 2 ise, ikinci rafı ekle
-    if (barCount === 2) {
-      const secondShelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
-      secondShelfMesh.position.set(0, currentHeight, zOffset);
-      scene.add(secondShelfMesh);
-    }
+    // Her bay için köşe pozisyonlarını hesapla ve bağlantıları ekle
+    shelfPositions.forEach((shelfX) => {
+      const currentCornerPositions = [
+        { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.min.z + 5 },
+        { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.min.z + 5 },
+        { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+        { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+      ];
 
-    // 4 köşeye duvar bağlantıları ekle
-    adjustedCornerPositions.forEach((pos) => {
-      // Duvar bağlantıları
-      const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
-      wallConnector.scale.set(1.5, 1.5, 1.5);
-      wallConnector.rotation.z = Math.PI / 2;
-      wallConnector.rotation.y = Math.PI / 2;
-      wallConnector.position.set(
-        barCount === 2 ? pos.x - shelfWidth : pos.x,
-        currentHeight,
-        -1000 // Duvara bağlantı için öne al
-      );
-      scene.add(wallConnector);
+      currentCornerPositions.forEach((pos) => {
+        // Duvar bağlantıları
+        const wallConnector = new THREE.Mesh(model11Geometry, materialGold);
+        wallConnector.scale.set(1.5, 1.5, 1.5);
+        wallConnector.rotation.z = Math.PI / 2;
+        wallConnector.rotation.y = Math.PI / 2;
+        wallConnector.position.set(pos.x, currentHeight, -1000);
+        scene.add(wallConnector);
 
-      // İkinci raf için duvar bağlantısı
-      if (barCount === 2) {
-        const secondWallConnector = new THREE.Mesh(model11Geometry, materialGold);
-        secondWallConnector.scale.set(1.5, 1.5, 1.5);
-        secondWallConnector.rotation.z = Math.PI / 2;
-        secondWallConnector.rotation.y = Math.PI / 2;
-        secondWallConnector.position.set(pos.x, currentHeight, -1000);
-        scene.add(secondWallConnector);
-      }
-
-      // Duvara yatay rip ekle
-      const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
-      const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
-      const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-      horizontalRip.position.set(
-        barCount === 2 ? pos.x - shelfWidth : pos.x,
-        currentHeight,
-        (pos.z + zOffset - 1000) / 2
-      );
-      scene.add(horizontalRip);
-
-      // İkinci raf için yatay rip
-      if (barCount === 2) {
-        const secondHorizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
-        secondHorizontalRip.position.set(
+        // Duvara yatay rip ekle
+        const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+        const horizontalRipGeometry = new THREE.BoxGeometry(10, 10, horizontalRipLength);
+        const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+        horizontalRip.position.set(
           pos.x,
           currentHeight,
           (pos.z + zOffset - 1000) / 2
         );
-        scene.add(secondHorizontalRip);
-      }
+        scene.add(horizontalRip);
 
-      // Arka bağlantılar için Model 1
-      if (pos.z === shelfBoundingBox.max.z - 5) {
-        const backConnectorMesh = new THREE.Mesh(model1Geometry, materialGold);
-        backConnectorMesh.scale.set(1.5, 1.5, 1.5);
-        backConnectorMesh.rotation.y = Math.PI / 2;
-        
-        // Arka model 1'leri öne kaydır
-        let backZPos = pos.z + zOffset + 5;
-        backZPos -= model1Depth + 20;
+        // Arka bağlantılar için Model 1
+        if (pos.z === shelfBoundingBox.max.z - 5 + zOffset) {
+          const backConnectorMesh = new THREE.Mesh(model1Geometry, materialGold);
+          backConnectorMesh.scale.set(1.5, 1.5, 1.5);
+          backConnectorMesh.rotation.y = Math.PI / 2;
+          
+          // Arka model 1'leri öne kaydır
+          let backZPos = pos.z + 5;
+          backZPos -= model1Depth + 20;
 
-        backConnectorMesh.position.set(
-          barCount === 2 ? pos.x - shelfWidth : pos.x,
-          currentHeight,
-          backZPos
-        );
-        scene.add(backConnectorMesh);
-
-        // İkinci raf için arka Model 1'ler
-        if (barCount === 2) {
-          const secondBackConnectorMesh = new THREE.Mesh(model1Geometry, materialGold);
-          secondBackConnectorMesh.scale.set(1.5, 1.5, 1.5);
-          secondBackConnectorMesh.rotation.y = Math.PI / 2;
-          secondBackConnectorMesh.position.set(pos.x, currentHeight, backZPos);
-          scene.add(secondBackConnectorMesh);
+          backConnectorMesh.position.set(pos.x, currentHeight, backZPos);
+          scene.add(backConnectorMesh);
         }
-      }
 
-      // Dikey ripler
-      if (i === shelfQuantity - 1) {
-        // En alt raftan tabana kadar olan rip
-        const ripHeight = currentHeight - floorHeight;
-        const verticalRipGeometry = new THREE.BoxGeometry(10, ripHeight, 10);
-        const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-        verticalRip.position.set(
-          barCount === 2 ? pos.x - shelfWidth : pos.x,
-          floorHeight + ripHeight / 2,
-          pos.z + zOffset
-        );
-        scene.add(verticalRip);
-
-        // İkinci raf için dikey rip
-        if (barCount === 2) {
-          const secondVerticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-          secondVerticalRip.position.set(
+        // Dikey ripler
+        if (i === shelfQuantity - 1) {
+          // En alt raftan tabana kadar olan rip
+          const ripHeight = currentHeight - floorHeight;
+          const verticalRipGeometry = new THREE.BoxGeometry(10, ripHeight, 10);
+          const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+          verticalRip.position.set(
             pos.x,
             floorHeight + ripHeight / 2,
             pos.z + zOffset
           );
-          scene.add(secondVerticalRip);
-        }
-      } else {
-        // Raflar arası normal ripler
-        const verticalRipGeometry = new THREE.BoxGeometry(10, shelfSpacing, 10);
-        const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-        verticalRip.position.set(
-          barCount === 2 ? pos.x - shelfWidth : pos.x,
-          currentHeight - shelfSpacing / 2,
-          pos.z + zOffset
-        );
-        scene.add(verticalRip);
-
-        // İkinci raf için dikey ripler
-        if (barCount === 2) {
-          const secondVerticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
-          secondVerticalRip.position.set(
+          scene.add(verticalRip);
+        } else {
+          // Raflar arası normal ripler
+          const verticalRipGeometry = new THREE.BoxGeometry(10, shelfSpacing, 10);
+          const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
+          verticalRip.position.set(
             pos.x,
             currentHeight - shelfSpacing / 2,
             pos.z + zOffset
           );
-          scene.add(secondVerticalRip);
+          scene.add(verticalRip);
         }
-      }
+      });
     });
 
     // Crossbar'ları ekle
     if (showCrossbars) {
-      const backPositions = adjustedCornerPositions.filter(
-        (pos) => pos.z === shelfBoundingBox.max.z - 5
-      );
-      if (backPositions.length === 2) {
-        // Arka model 1'lerin yeni z konumlarını bul
-        const start = backPositions[0];
-        const end = backPositions[1];
-        let zStart = start.z + zOffset + 5;
-        let zEnd = end.z + zOffset + 5;
-        zStart -= model1Depth + 10;
-        zEnd -= model1Depth + 10;
+      // Her bay için arka crossbar'ları ekle
+      shelfPositions.forEach((shelfX) => {
+        const backPositions = [
+          { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+          { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
+        ];
+        
+        if (backPositions.length === 2) {
+          const start = backPositions[0];
+          const end = backPositions[1];
+          let zStart = start.z + zOffset + 5;
+          let zEnd = end.z + zOffset + 5;
+          zStart -= model1Depth + 10;
+          zEnd -= model1Depth + 10;
 
-        const length = Math.abs(end.x - start.x);
-        const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
-        const horizontalRip = new THREE.Mesh(
-          horizontalRipGeometry,
-          materialGold
-        );
-        horizontalRip.position.set(
-          barCount === 2
-            ? start.x - shelfWidth + (end.x - start.x) / 2
-            : start.x + (end.x - start.x) / 2,
-          currentHeight + model1Height / 2 - 20,
-          (zStart + zEnd) / 2
-        );
-        scene.add(horizontalRip);
-
-        // İkinci raf için arka yatay rip
-        if (barCount === 2) {
-          const secondHorizontalRip = new THREE.Mesh(
-            horizontalRipGeometry,
-            materialGold
-          );
-          secondHorizontalRip.position.set(
+          const length = Math.abs(end.x - start.x);
+          const horizontalRipGeometry = new THREE.BoxGeometry(length, 10, 10);
+          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, materialGold);
+          horizontalRip.position.set(
             start.x + (end.x - start.x) / 2,
             currentHeight + model1Height / 2 - 20,
             (zStart + zEnd) / 2
           );
-          scene.add(secondHorizontalRip);
+          scene.add(horizontalRip);
         }
-      }
 
-      // Kısa kenarlara yatay rip ekle
-      const leftFront = adjustedCornerPositions.find(
-        (pos) =>
-          pos.x === shelfBoundingBox.min.x + 5 &&
-          pos.z === shelfBoundingBox.min.z + 5
-      );
-      const leftBack = adjustedCornerPositions.find(
-        (pos) =>
-          pos.x === shelfBoundingBox.min.x + 5 &&
-          pos.z === shelfBoundingBox.max.z - 5
-      );
-      const rightFront = adjustedCornerPositions.find(
-        (pos) =>
-          pos.x === shelfBoundingBox.max.x - 5 &&
-          pos.z === shelfBoundingBox.min.z + 5
-      );
-      const rightBack = adjustedCornerPositions.find(
-        (pos) =>
-          pos.x === shelfBoundingBox.max.x - 5 &&
-          pos.z === shelfBoundingBox.max.z - 5
-      );
+        // Kısa kenarlara yatay rip ekle
+        const leftFront = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
+        const leftBack = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 };
+        const rightFront = { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
 
-      if (leftFront && leftBack) {
+        // Sol kısa kenar
         let zFront = leftFront.z + zOffset + 5;
         let zBack = leftBack.z + zOffset + 5;
         zFront += model1Depth + 5;
         zBack -= model1Depth + 20;
-        const length = Math.abs(zBack - zFront);
-        const shortRipGeometry = new THREE.BoxGeometry(10, 10, length);
-        const shortRip = new THREE.Mesh(shortRipGeometry, materialGold);
-        shortRip.position.set(
-          barCount === 2 ? leftFront.x - shelfWidth : leftFront.x,
+        const leftLength = Math.abs(zBack - zFront);
+        const leftRipGeometry = new THREE.BoxGeometry(10, 10, leftLength);
+        const leftRip = new THREE.Mesh(leftRipGeometry, materialGold);
+        leftRip.position.set(
+          leftFront.x,
           currentHeight + model1Height / 2 - 18,
           zFront + (zBack - zFront) / 2
         );
-        scene.add(shortRip);
+        scene.add(leftRip);
 
-        // İkinci raf için sol kısa rip
-        if (barCount === 2) {
-          const secondShortRip = new THREE.Mesh(
-            shortRipGeometry,
-            materialGold
-          );
-          secondShortRip.position.set(
-            leftFront.x,
-            currentHeight + model1Height / 2 - 18,
-            zFront + (zBack - zFront) / 2
-          );
-          scene.add(secondShortRip);
-        }
-      }
-
-      if (rightFront && rightBack) {
-        let zFront = rightFront.z + zOffset + 5;
-        let zBack = rightBack.z + zOffset + 5;
-        zFront += model1Depth + 5;
-        zBack -= model1Depth + 20;
-        const length = Math.abs(zBack - zFront);
-        const shortRipGeometry = new THREE.BoxGeometry(10, 10, length);
-        const shortRip = new THREE.Mesh(shortRipGeometry, materialGold);
-        shortRip.position.set(
-          barCount === 2 ? rightFront.x - shelfWidth : rightFront.x,
+        // Sağ kısa kenar
+        const rightRipGeometry = new THREE.BoxGeometry(10, 10, leftLength);
+        const rightRip = new THREE.Mesh(rightRipGeometry, materialGold);
+        rightRip.position.set(
+          rightFront.x,
           currentHeight + model1Height / 2 - 5,
           zFront + (zBack - zFront) / 2
         );
-        scene.add(shortRip);
-
-        // İkinci raf için sağ kısa rip
-        if (barCount === 2) {
-          const secondShortRip = new THREE.Mesh(
-            shortRipGeometry,
-            materialGold
-          );
-          secondShortRip.position.set(
-            rightFront.x,
-            currentHeight + model1Height / 2 - 5,
-            zFront + (zBack - zFront) / 2
-          );
-          scene.add(secondShortRip);
-        }
-      }
+        scene.add(rightRip);
+      });
     }
   }
 }; 
