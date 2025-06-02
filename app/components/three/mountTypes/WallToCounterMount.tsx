@@ -18,6 +18,7 @@ export const handleWallToCounterMount = ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  useTopShelf = true,
 }: MountTypeProps) => {
   // Model 1 yüksekliğini hesapla
   let model1Height = 0;
@@ -68,6 +69,11 @@ export const handleWallToCounterMount = ({
 
   // Function to determine if wall connection should be added at this level
   const shouldAddWallConnection = (currentIndex: number, totalShelves: number, heightInMm: number) => {
+    if (!useTopShelf) {
+      // When top is not used as shelf, no wall connections at the top
+      return false;
+    }
+
     // Convert mm to inches for comparison
     const heightInInches = heightInMm / 25.4;
     
@@ -159,11 +165,16 @@ export const handleWallToCounterMount = ({
 
         // Dikey ripler (son raf değilse)
         if (i < shelfQuantity - 1) {
-          const verticalRipGeometry = new THREE.BoxGeometry(10, shelfSpacing, 10);
+          const shouldExtendRip = !useTopShelf && i === 0;
+          const verticalRipGeometry = new THREE.BoxGeometry(
+            10, 
+            shelfSpacing + (shouldExtendRip ? 100 : 0), 
+            10
+          );
           const verticalRip = new THREE.Mesh(verticalRipGeometry, materialGold);
           verticalRip.position.set(
             pos.x,
-            currentHeight - shelfSpacing / 2,
+            currentHeight - shelfSpacing / 2 + (shouldExtendRip ? 50 : 0),
             pos.z + zOffset
           );
           scene.add(verticalRip);
