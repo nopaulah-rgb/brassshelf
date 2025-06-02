@@ -9,31 +9,22 @@ const BarSelector: React.FC<{ onSelect: (barCount: number) => void }> = ({ onSel
   };
 
   return (
-    <div className="flex gap-4">
-      <button
-        onClick={() => handleBarChange(1)}
-        className={`w-32 h-16 border-2 rounded-lg transition-colors duration-200
-                   flex items-center justify-center text-xl
+    <div className="grid grid-cols-3 gap-2">
+      {[1, 2, 3, 4, 5].map((value) => (
+        <button
+          key={value}
+          onClick={() => handleBarChange(value)}
+          className={`h-14 border-2 rounded-lg transition-colors duration-200
+                   flex items-center justify-center text-lg
                    focus:outline-none ${
-                     selectedBar === 1 
+                     selectedBar === value 
                        ? 'border-white bg-gray-800/5 text-gray-800' 
                        : 'border-gray-800/20 text-gray-600 hover:border-gray-800/40'
                    }`}
-      >
-        1
-      </button>
-      <button
-        onClick={() => handleBarChange(2)}
-        className={`w-32 h-16 border-2 rounded-lg transition-colors duration-200
-                   flex items-center justify-center text-xl
-                   focus:outline-none ${
-                     selectedBar === 2 
-                       ? 'border-white bg-gray-800/5 text-gray-800' 
-                       : 'border-gray-800/20 text-gray-600 hover:border-gray-800/40'
-                   }`}
-      >
-        2
-      </button>
+        >
+          {value}
+        </button>
+      ))}
     </div>
   );
 };

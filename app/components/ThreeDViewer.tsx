@@ -83,10 +83,17 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     let roomDepth = 1200;
     let roomHeight = 1500;
     
+    // Adjust room width dynamically based on barCount for all mount types
+    if (barCount > 1) {
+      // Each additional shelf needs more width - increase the multiplier for more space
+      const additionalWidth = (barCount - 1) * 950; // Increased from 600mm to 800mm per additional shelf
+      roomWidth = Math.max(2000, roomWidth + additionalWidth);
+    }
+    
     // Adjust room size for taller shelf systems
     if (heightInInches > 60) {
       const scaleFactor = Math.max(1.2, heightInInches / 50);
-      roomWidth = Math.max(2000, roomWidth * scaleFactor);
+      roomWidth = Math.max(roomWidth, roomWidth * scaleFactor); // Use the already adjusted width
       roomDepth = Math.max(1200, roomDepth * scaleFactor);
       roomHeight = Math.max(1500, userHeight! + 300); // Add 300mm clearance above top shelf
     }
@@ -188,10 +195,20 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(wallLight2.target);
 
     // Set initial camera position based on room size
-    const cameraDistance = Math.max(3500, roomWidth * 1.5);
+    // Optimize camera distance for multiple bays - closer view for better visibility
+    const baseCameraDistance = Math.max(2500, roomWidth * 0.8); // Reduced multiplier from 1.5 to 0.8
+    const cameraDistance = Math.min(baseCameraDistance, 4500); // Cap maximum distance
     const baseCameraY = roomHeight * 0.6;
-    camera.position.set(cameraDistance, baseCameraY, cameraDistance * 0.7);
-    camera.lookAt(0, roomHeight * 0.4, -roomDepth * 0.4);
+    
+    // Adjust camera position based on bay count for optimal viewing
+    const cameraX = barCount > 2 ? cameraDistance * 0.9 : cameraDistance; // Closer for multiple bays
+    const cameraZ = barCount > 2 ? cameraDistance * 0.6 : cameraDistance * 0.7; // Closer Z position
+    
+    camera.position.set(cameraX, baseCameraY, cameraZ);
+    
+    // Center the camera target on the shelf system, not the room
+    const shelfSystemCenterX = 0; // Shelves are centered at x=0
+    camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
 
     // Renderer setup with container size
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -199,26 +216,26 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     renderer.setClearColor(0xf5f5f5);
     container.appendChild(renderer.domElement);
 
-    // Setup OrbitControls with dynamic settings
+    // Setup OrbitControls with dynamic settings optimized for multiple bays
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = Math.max(800, roomWidth * 0.4);  // Minimum zoom distance
-    controls.maxDistance = Math.max(8000, roomWidth * 4); // Maximum zoom distance
+    controls.minDistance = Math.max(600, roomWidth * 0.2);  // Closer minimum distance
+    controls.maxDistance = Math.max(6000, roomWidth * 2.5); // Reduced maximum distance
     controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
     controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
     controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
     controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
     controls.enableZoom = true;  // Enable zooming
     controls.enablePan = false;   // Disable panning
-    controls.target.set(0, roomHeight * 0.4, -roomDepth * 0.4);
+    controls.target.set(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
 
     // Update camera position based on scroll
     const updateCameraWithScroll = () => {
       const scrollEffect = scrollOffset * 0.2; // Adjust multiplier for scroll sensitivity
       camera.position.y = baseCameraY + scrollEffect;
-      camera.lookAt(0, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
-      controls.target.set(0, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
+      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
+      controls.target.set(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
       controls.update();
     };
 
@@ -234,15 +251,21 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       renderer.setSize(width, height);
 
       const isMobile = window.innerWidth < 768;
-      const mobileCameraDistance = Math.max(4000, roomWidth * 2);
-      const desktopCameraDistance = Math.max(3500, roomWidth * 1.5);
+      
+      // Optimized camera distances for better visibility
+      const mobileDistance = Math.max(3000, roomWidth * 1.2); // Closer for mobile
+      const desktopDistance = Math.max(2500, roomWidth * 0.8); // Closer for desktop
+      
+      // Adjust position based on bay count
+      const finalMobileDistance = barCount > 2 ? mobileDistance * 0.85 : mobileDistance;
+      const finalDesktopDistance = barCount > 2 ? desktopDistance * 0.9 : desktopDistance;
       
       camera.position.set(
-        isMobile ? mobileCameraDistance : desktopCameraDistance,
+        isMobile ? finalMobileDistance : finalDesktopDistance,
         isMobile ? roomHeight * 0.8 : roomHeight * 0.6,
-        isMobile ? mobileCameraDistance * 0.75 : desktopCameraDistance * 0.7
+        isMobile ? finalMobileDistance * 0.65 : finalDesktopDistance * 0.6
       );
-      camera.lookAt(0, roomHeight * 0.4, -roomDepth * 0.4);
+      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
       controls.update();
     };
 
