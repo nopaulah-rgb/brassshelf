@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
@@ -36,22 +36,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   useTopShelf = false,
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);
-
-  // Scroll event handler for parallax effect
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const scrollSpeed = 0.5; // Adjust this value to control parallax speed (0.5 means half speed)
-      setScrollOffset(scrollY * scrollSpeed);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+  // Removed scroll-based parallax effect - 3D viewer now has independent controls
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -153,14 +138,23 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       envMapIntensity: 0.8,
     });
 
-    // Setup lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // Setup lighting - Güçlü ışıklandırma GLB modeller için
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Artırdım
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2); // Artırdım
     mainLight.position.set(500, 1000, 500);
     mainLight.castShadow = true;
     scene.add(mainLight);
+
+    // Ek ışık kaynaklarını ekle
+    const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    frontLight.position.set(0, 800, 1000);
+    scene.add(frontLight);
+
+    const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    sideLight.position.set(-800, 600, 0);
+    scene.add(sideLight);
 
     // Add room elements with dynamic positioning
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
@@ -220,24 +214,19 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = Math.max(600, roomWidth * 0.2);  // Closer minimum distance
-    controls.maxDistance = Math.max(6000, roomWidth * 2.5); // Reduced maximum distance
-    controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
-    controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
-    controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
-    controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
+    // Remove zoom distance restrictions - allow unlimited zoom
+    controls.minDistance = 0;
+    controls.maxDistance = Infinity;
+    // Remove angle restrictions - allow free rotation to see all angles
+    controls.maxPolarAngle = Math.PI; // Allow full rotation down
+    controls.minPolarAngle = 0;       // Allow full rotation up
+    controls.maxAzimuthAngle = Infinity; // Allow unlimited horizontal rotation
+    controls.minAzimuthAngle = -Infinity; // Allow unlimited horizontal rotation
     controls.enableZoom = true;  // Enable zooming
-    controls.enablePan = false;   // Disable panning
+    controls.enablePan = true;    // Enable panning for internal scrolling
     controls.target.set(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
 
-    // Update camera position based on scroll
-    const updateCameraWithScroll = () => {
-      const scrollEffect = scrollOffset * 0.2; // Adjust multiplier for scroll sensitivity
-      camera.position.y = baseCameraY + scrollEffect;
-      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
-      controls.target.set(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
-      controls.update();
-    };
+    // Remove scroll-based camera updates - 3D viewer now has independent controls
 
     // Handle window resize
     const handleResize = () => {
@@ -407,44 +396,50 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         };
 
         // Handle different mount types
-        switch (mountType) {
-          case "ceiling":
-            handleCeilingMount(mountTypeProps);
-            break;
-          case "wall to counter":
-            handleWallToCounterMount(mountTypeProps);
-            break;
-          case "wall to floor":
-            handleWallToFloorMount(mountTypeProps);
-            break;
-          case "wall":
-            handleWallMount(mountTypeProps);
-            break;
-          case "ceiling to wall":
-            handleCeilingToWallMount(mountTypeProps);
-            break;
-          case "ceiling to floor":
-            handleCeilingToFloorMount(mountTypeProps);
-            break;
-          case "ceiling to counter":
-            handleCeilingToCounterMount(mountTypeProps);
-            break;
-          case "ceiling to counter to wall":
-            handleCeilingToCounterToWallMount(mountTypeProps);
-            break;
-          case "ceiling to floor to wall":
-            handleCeilingFloorWallMount(mountTypeProps);
-            break;
-        }
-
-        // Animation loop
-        const animate = () => {
-          requestAnimationFrame(animate);
-          updateCameraWithScroll(); // Update camera based on scroll
-          controls.update();
-          renderer.render(scene, camera);
+        const handleMountType = async () => {
+          switch (mountType) {
+            case "ceiling":
+              await handleCeilingMount(mountTypeProps);
+              break;
+            case "wall to counter":
+              handleWallToCounterMount(mountTypeProps);
+              break;
+            case "wall to floor":
+              handleWallToFloorMount(mountTypeProps);
+              break;
+            case "wall":
+              handleWallMount(mountTypeProps);
+              break;
+            case "ceiling to wall":
+              handleCeilingToWallMount(mountTypeProps);
+              break;
+            case "ceiling to floor":
+              handleCeilingToFloorMount(mountTypeProps);
+              break;
+            case "ceiling to counter":
+              handleCeilingToCounterMount(mountTypeProps);
+              break;
+            case "ceiling to counter to wall":
+              handleCeilingToCounterToWallMount(mountTypeProps);
+              break;
+            case "ceiling to floor to wall":
+              handleCeilingFloorWallMount(mountTypeProps);
+              break;
+          }
         };
-        animate();
+
+        // Execute mount type handling and then start animation
+        handleMountType().then(() => {
+          // Animation loop
+          const animate = () => {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+          };
+          animate();
+                 }).catch((error) => {
+           console.error("Error handling mount type:", error);
+         });
       })
       .catch((error) => {
         console.error("Error loading models:", error);
