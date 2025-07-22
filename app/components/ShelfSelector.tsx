@@ -2,7 +2,7 @@
 import React from 'react';
 
 const ShelfSelector: React.FC<{ onSelect: (shelfUrl: string) => void }> = ({ onSelect }) => {
-  const glassShelfUrl = '/models/glassShelf.stl';
+  const glassShelfUrl = '/models/Glass Shelf v1_B.glb';
   
   // Component mount olduğunda otomatik olarak Glass Shelf'i seç
   React.useEffect(() => {

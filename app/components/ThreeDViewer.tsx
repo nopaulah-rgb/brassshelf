@@ -2,6 +2,9 @@ import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+
 import {
   handleCeilingMount,
   handleWallToCounterMount,
@@ -261,12 +264,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     window.addEventListener("resize", handleResize);
 
     // Load models and handle mount type
-    const loader = new STLLoader();
+    const stlLoader = new STLLoader();
+    const gltfLoader = new GLTFLoader();
 
     // Load all models using Promise.all
     Promise.all([
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(
+        stlLoader.load(
           "/models/model1.stl",
           (geometry) => {
       geometry.rotateX(-Math.PI / 2);
@@ -278,7 +282,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         );
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(
+        stlLoader.load(
           "/models/model2.stl",
           (geometry) => {
       geometry.rotateX(-Math.PI / 2);
@@ -290,25 +294,72 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         );
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load("/models/model11.stl", resolve, undefined, reject);
+        stlLoader.load("/models/model11.stl", resolve, undefined, reject);
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load("/models/model12.stl", resolve, undefined, reject);
+        stlLoader.load("/models/model12.stl", resolve, undefined, reject);
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(shelfUrl, resolve, undefined, reject);
+        // Check if shelfUrl is GLB file
+        if (shelfUrl.endsWith('.glb') || shelfUrl.endsWith('.gltf')) {
+          gltfLoader.load(
+            shelfUrl,
+            (gltf) => {
+              // Extract geometry from the first mesh in the GLB file
+              const mesh = gltf.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+              if (mesh && mesh.geometry) {
+
+                
+                // Apply rotations to make the shelf horizontal like the old STL models
+                const geometry = mesh.geometry.clone();
+                geometry.rotateX(-Math.PI / 2);
+                geometry.rotateY(Math.PI); // 90 derece daha sağa çevirmek için PI kullanıyoruz
+                resolve(geometry);
+              } else {
+                reject(new Error('No mesh geometry found in GLB file'));
+              }
+            },
+            undefined,
+            reject
+          );
+        } else {
+          stlLoader.load(shelfUrl, resolve, undefined, reject);
+        }
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(ripUrl, resolve, undefined, reject);
+        // Rod v2.glb modelini yükle
+        gltfLoader.load(
+          "/models/Rod v2.glb",
+          (gltf) => {
+            // Extract geometry from the first mesh in the GLB file
+            const mesh = gltf.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+            if (mesh && mesh.geometry) {
+              const geometry = mesh.geometry.clone();
+              // Rod modelini doğru yönde konumlandır
+              geometry.rotateX(-Math.PI / 2);
+              resolve(geometry);
+            } else {
+              reject(new Error('No mesh geometry found in Rod GLB file'));
+            }
+          },
+          undefined,
+          reject
+        );
       }),
     ])
       .then(([model1Geometry, model2Geometry, model11Geometry, model12Geometry, shelfGeometry, ripGeometry]) => {
-        const materialShelf = new THREE.MeshStandardMaterial({
-          color: 0x9bc3c9,
-          opacity: 0.7,
+        // Gerçekçi cam malzemesi oluştur
+        const materialShelf = new THREE.MeshPhysicalMaterial({
+          color: 0xccddff, // Daha mavi cam rengi
+          metalness: 0.0,
+          roughness: 0.0,
           transparent: true,
-          metalness: 0.1,
-          roughness: 0.2,
+          opacity: 0.2,
+          transmission: 1.0, // Tam geçirgenlik
+          thickness: 0.5,
+          ior: 1.5, // Cam kırılma indeksi
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.0,
           side: THREE.DoubleSide,
         });
 
@@ -383,7 +434,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           shelfGeometry,
           shelfMaterial: materialShelf,
           ripGeometry,
-          zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2 + 200,
+          zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2  -220,
           shelfWidth: shelfBoundingBox.max.x - shelfBoundingBox.min.x,
           shelfBoundingBox,
           model1Geometry,
