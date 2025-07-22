@@ -189,9 +189,9 @@ export default function Index() {
                     mountType={mountType}
                     barCount={barCount}
                     showCrossbars={frontBars}
-                    userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight}
-                    userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth}
-                    shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth}
+                    userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
+                    userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
+                    shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
                     useTopShelf={useTopShelf}
                     pipeDiameter={pipeDiameter}
                     frontBars={frontBars}

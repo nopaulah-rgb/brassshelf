@@ -569,12 +569,28 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           new THREE.Mesh(shelfGeometry)
         );
         
+        // Scale shelf geometry based on user dimensions
+        // Get original shelf dimensions
+        const originalShelfWidth = shelfBoundingBox.max.x - shelfBoundingBox.min.x;
+        const originalShelfDepth = shelfBoundingBox.max.z - shelfBoundingBox.min.z;
+        
+        // Default dimensions (based on original model)
+        const defaultShelfWidth = 914.4; // 36 inches in mm
+        const defaultShelfDepth = 304.8; // 12 inches in mm
+        
+        // Calculate scaling factors
+        const widthScale = (userWidth || defaultShelfWidth) / originalShelfWidth;
+        const depthScale = (shelfDepth || defaultShelfDepth) / originalShelfDepth;
+        
+        // Apply scaling to the shelf geometry
+        shelfGeometry.scale(widthScale, 1, depthScale);
+        
         // Center the shelf geometry on the x-axis
         const shelfCenter = new THREE.Vector3();
         shelfBoundingBox.getCenter(shelfCenter);
         shelfGeometry.translate(-shelfCenter.x, 0, 0);
         
-        // Recalculate bounding box after centering
+        // Recalculate bounding box after scaling and centering
         shelfBoundingBox.setFromObject(new THREE.Mesh(shelfGeometry));
 
         // Helper functions for rips
@@ -626,13 +642,40 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           });
         };
 
+        // Calculate height-based scaling for system width
+        // Taller systems should be proportionally wider for structural stability and aesthetics
+        const calculateEffectiveWidth = (baseWidth: number, height: number): number => {
+          const defaultHeight = 1067; // 42 inches in mm (default height)
+          const heightInInches = height / 25.4; // Convert mm to inches for calculation
+          
+          // Apply scaling factor based on height
+          if (heightInInches <= 48) {
+            // Small systems: no scaling needed
+            return baseWidth;
+          } else if (heightInInches <= 72) {
+            // Medium systems: 10-20% wider
+            const scaleFactor = 1 + (heightInInches - 48) * 0.008; // 0.8% per inch above 48"
+            return baseWidth * scaleFactor;
+          } else {
+            // Large systems: 20-40% wider
+            const mediumScale = 1.2; // 20% for 72" systems
+            const additionalScale = (heightInInches - 72) * 0.01; // 1% per inch above 72"
+            const scaleFactor = mediumScale + additionalScale;
+            return baseWidth * Math.min(scaleFactor, 1.4); // Cap at 40% increase
+          }
+        };
+
+        // Calculate effective width based on height scaling
+        const baseUserWidth = userWidth || 914.4; // Default 36 inches in mm
+        const effectiveUserWidth = calculateEffectiveWidth(baseUserWidth, userHeight || 1067);
+
         const mountTypeProps = {
           scene,
           shelfQuantity,
           barCount,
           showCrossbars,
           userHeight,
-          userWidth: userWidth || 914.4, // Default 36 inches in mm
+          userWidth: effectiveUserWidth,
           shelfDepth: shelfDepth || 304.8, // Default 12 inches in mm
           useTopShelf,
           roomGeometry,
