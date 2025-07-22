@@ -1,34 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const RipSelector: React.FC<{ onSelect: (ripUrl: string) => void }> = ({ onSelect }) => {
-  const [selectedRip, setSelectedRip] = useState<string | null>(null);
+  const [selectedRip, setSelectedRip] = useState<string>('/models/30cmRib.stl');
 
-  const ripOptions = [
-    { name: '30 cm', url: '/models/30cmRib.stl' },
-  ];
+  const ripOption = { name: '30 cm', url: '/models/30cmRib.stl' };
 
-  const handleRipSelect = (url: string) => {
-    setSelectedRip(url);
-    onSelect(url);
-  };
+  // Auto-select the only rip option on mount
+  useEffect(() => {
+    onSelect(selectedRip);
+  }, []);
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {ripOptions.map((rip) => (
-        <button
-          key={rip.url}
-          onClick={() => handleRipSelect(rip.url)}
-          className={`h-16 border-2 rounded-lg transition-colors duration-200
-                   flex items-center justify-center text-sm
-                   focus:outline-none ${
-                     selectedRip === rip.url 
-                       ? 'border-white bg-gray-800/5 text-gray-800' 
-                       : 'border-gray-800/20 text-gray-600 hover:border-gray-800/40'
-                   }`}
-        >
-          {rip.name}
-        </button>
-      ))}
+    <div className="flex justify-center">
+      <div className="h-12 border-2 border-[#1E3A5F] bg-[#1E3A5F] text-white rounded-lg
+                      flex items-center justify-center text-sm font-medium px-6">
+        {ripOption.name}
+      </div>
     </div>
   );
 };

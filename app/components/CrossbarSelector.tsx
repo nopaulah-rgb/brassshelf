@@ -3,37 +3,32 @@
 import React from 'react';
 
 interface CrossbarSelectorProps {
-  showCrossbars: boolean;
-  onChange: (value: boolean) => void;
+  frontBars: boolean;
+  onFrontBarsChange: (value: boolean) => void;
 }
 
-const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({ showCrossbars, onChange }) => {
+const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({ 
+  frontBars, 
+  onFrontBarsChange
+}) => {
   return (
-    <div className="flex gap-4">
-      <button
-        onClick={() => onChange(true)}
-        className={`flex-1 h-16 border-2 rounded-lg transition-colors duration-200
-                   flex items-center justify-center text-lg
-                   focus:outline-none ${
-                     showCrossbars 
-                       ? 'border-white bg-gray-800/5 text-gray-800' 
-                       : 'border-gray-800/20 text-gray-600 hover:border-gray-800/40'
-                   }`}
-      >
-        Yes
-      </button>
-      <button
-        onClick={() => onChange(false)}
-        className={`flex-1 h-16 border-2 rounded-lg transition-colors duration-200
-                   flex items-center justify-center text-lg
-                   focus:outline-none ${
-                     !showCrossbars 
-                       ? 'border-gray-800 bg-gray-800/5 text-gray-800' 
-                       : 'border-gray-800/20 text-gray-600 hover:border-gray-800/40'
-                   }`}
-      >
-        No
-      </button>
+    <div className="space-y-4">
+      {/* Front Horizontal Bars */}
+      <div className="bg-[#8BBBD9] rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[#1E3A5F] font-medium">Front Horizontal Bars:</span>
+          <button
+            onClick={() => onFrontBarsChange(!frontBars)}
+            className={`px-4 py-1 rounded-full text-sm font-medium transition-colors ${
+              frontBars 
+                ? 'bg-[#28A745] text-white' 
+                : 'bg-[#DC3545] text-white'
+            }`}
+          >
+            {frontBars ? 'YES' : 'NO'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

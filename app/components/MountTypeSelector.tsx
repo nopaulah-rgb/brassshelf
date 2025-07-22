@@ -6,13 +6,12 @@ const MountTypeSelector: React.FC<{ onSelect: (mountType: string) => void }> = (
   const mountTypes = [
     { id: 'ceiling', name: 'Ceiling' },
     { id: 'ceiling to counter', name: 'Ceiling to Counter' },
-    { id: 'ceiling to counter to wall', name: 'Ceiling to Counter to Wall' },
     { id: 'ceiling to floor', name: 'Ceiling to Floor' },
-    { id: 'ceiling to floor to wall', name: 'Ceiling to Floor to Wall' },
-    { id: 'ceiling to wall', name: 'Ceiling to Wall' },
+    { id: 'wall to counter', name: 'Wall to counter' },
     { id: 'wall', name: 'Wall' },
     { id: 'wall to floor', name: 'Wall to Floor' },
-    { id: 'wall to counter', name: 'Wall to Counter' },
+    { id: 'ceiling & counter & wall', name: 'Ceiling & Counter & Wall' },
+    { id: 'ceiling & floor & wall', name: 'Ceiling & Floor & Wall' },
   ];
 
   const handleSelect = (id: string) => {
@@ -21,22 +20,24 @@ const MountTypeSelector: React.FC<{ onSelect: (mountType: string) => void }> = (
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {mountTypes.map((type) => (
-        <button
-          key={type.id}
-          onClick={() => handleSelect(type.id)}
-          className={`px-4 py-3 border-2 rounded-lg text-left
-                   hover:border-gray-800/40 transition-colors duration-200
-                   text-sm focus:outline-none ${
-                     selectedMount === type.id 
-                       ? 'border-white bg-gray-800/5 text-gray-800' 
-                       : 'border-gray-800/20 text-gray-600'
-                   }`}
-        >
-          {type.name}
-        </button>
-      ))}
+    <div className="bg-[#8BBBD9] rounded-lg p-4">
+      <h3 className="text-[#1E3A5F] font-semibold mb-3">Mount Type:</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {mountTypes.map((type) => (
+          <button
+            key={type.id}
+            onClick={() => handleSelect(type.id)}
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200
+                     focus:outline-none ${
+                       selectedMount === type.id 
+                         ? 'bg-[#1E3A5F] text-white' 
+                         : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+                     }`}
+          >
+            {type.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

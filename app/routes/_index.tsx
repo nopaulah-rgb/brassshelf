@@ -1,6 +1,7 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
+import React from "react";
 import ThreeDViewer from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import HeightInput from "~/components/HeightInput";
@@ -12,6 +13,9 @@ import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import MountTypeSelector from "~/components/MountTypeSelector";
 import BarSelector from "~/components/BarSelector";
+import DimensionInputs from "~/components/DimensionInputs";
+import PipeDiameterSelector from "~/components/PipeDiameterSelector";
+import PriceAndActions from "~/components/PriceAndActions";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -19,133 +23,220 @@ export const loader = async () => {
 };
 
 export default function Index() {
-  // State for storing user selections - başlangıç değerlerini null yap
-  const [selectedShelf, setSelectedShelf] = useState<string | null>(null);
-  const [selectedRip, setSelectedRip] = useState<string | null>(null);
+  // State for storing user selections
+  const [selectedShelf, setSelectedShelf] = useState<string | null>('/models/Glass Shelf v1_B.glb');
+  const [selectedRip, setSelectedRip] = useState<string | null>('/models/50cmRib.stl');
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
-  const [mountType, setMountType] = useState<string>("Ceiling");
+  const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
-  const [userHeight, setUserHeight] = useState<number>(1194); // 47 inches in mm
-  const [useTopShelf, setUseTopShelf] = useState<boolean>(false); // Default to false for wall mounts
-  //const [price] = useState<number>(599.00);
+  const [userHeight, setUserHeight] = useState<number>(42); // in inches
+  const [userWidth, setUserWidth] = useState<number>(36); // in inches
+  const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
+  const [totalDepth, setTotalDepth] = useState<number>(12); // in inches
+  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
+  const [price, setPrice] = useState<number>(599);
 
-  // Add new state for crossbars
-  const [showCrossbars, setShowCrossbars] = useState(true);
+  // Material selections
+  const [pipeDiameter, setPipeDiameter] = useState<string>('5/8');
+
+  // Crossbar settings
+  const [frontBars, setFrontBars] = useState<boolean>(true);
+
+  // Space adjustments (simplified - keeping only essential ones)
+  const [verticalBarsAtBack, setVerticalBarsAtBack] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
 
+  // Set loading false after a short delay
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handler functions
+  const handleExport = () => {
+    // Get the canvas element from ThreeJS
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // Create download link
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `shelf-configuration-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    }
+  };
+
+  const handleAddToCart = () => {
+    // Prepare configuration data
+    const configuration = {
+      mountType,
+      dimensions: {
+        height: userHeight,
+        width: userWidth,
+        shelfDepth,
+        totalDepth,
+        unit
+      },
+      shelfQuantity,
+      barCount,
+      materials: {
+        pipeDiameter
+      },
+      crossbars: {
+        front: frontBars
+      },
+      price
+    };
+    
+    console.log('Adding to cart:', configuration);
+    // Here you would typically send this data to your cart/backend
+    alert('Configuration added to cart!');
+  };
+
   return (
-    <div className="min-h-screen bg-[#FFFFFF]">
-      <header className="p-6 border-b border-gray-800/10">
-        <div className="container mx-auto">
-          <h1 className="text-2xl font-medium text-gray-900">Origin Shelf Builder</h1>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Configuration Panel */}
-          <div className="w-full lg:w-1/3 space-y-8">
-            {/* Bays Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">Bays</h2>
-                <span className="text-xl font-medium text-gray-900">{barCount}</span>
-              </div>
-              <div className="border-t border-gray-800/10 mb-4" />
-              <BarSelector onSelect={setBarCount} />
-            </div>
-
-            {/* Shelf Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">Shelf</h2>
-                <span className="text-xl font-medium text-gray-900">{shelfQuantity}</span>
-              </div>
-              <div className="border-t border-gray-800/10 mb-4" />
-              <div className="space-y-6">
-                <h3 className="text-lg text-gray-800">Select a Shelf:</h3>
-                <ShelfQuantitySelector onSelect={setShelfQuantity} />
-                <ShelfSelector onSelect={setSelectedShelf} />
-              </div>
-            </div>
-
-            {/* Mount Type Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">How would you like to mount your unit?</h2>
-                <span className="text-xl font-medium text-gray-900">{mountType}</span>
-              </div>
-              <div className="border-t border-gray-800/10 mb-4" />
+          <div className="w-full lg:w-1/2 space-y-4">
+            {/* Left Column - Configuration Options */}
+            <div className="space-y-4">
               <MountTypeSelector onSelect={setMountType} />
-              <div className="mt-4">
+              
+              <DimensionInputs
+                height={userHeight}
+                width={userWidth}
+                shelfDepth={shelfDepth}
+                totalDepth={totalDepth}
+                unit={unit}
+                onHeightChange={setUserHeight}
+                onWidthChange={setUserWidth}
+                onShelfDepthChange={setShelfDepth}
+                onTotalDepthChange={setTotalDepth}
+                onUnitChange={setUnit}
+              />
+
+              <ShelfQuantitySelector onSelect={setShelfQuantity} />
+              
+              <BarSelector onSelect={setBarCount} />
+              
+              <PipeDiameterSelector
+                pipeDiameter={pipeDiameter}
+                onChange={setPipeDiameter}
+              />
+
+              {/* Hidden ShelfSelector for logic */}
+              <ShelfSelector 
+                onSelect={setSelectedShelf} 
+                shelfMaterial="glass"
+              />
+              
+              {/* Rip Selector */}
+              <div className="bg-[#8BBBD9] rounded-lg p-4">
+                <h3 className="text-[#1E3A5F] font-semibold mb-3">Rip Length:</h3>
+                <RipSelector onSelect={setSelectedRip} />
+              </div>
+
+              <CrossbarSelector
+                frontBars={frontBars}
+                onFrontBarsChange={setFrontBars}
+              />
+
+              <div className="bg-[#8BBBD9] rounded-lg p-4">
                 <UseTopShelfSelector
-                  mountType={mountType.toLowerCase()}
+                  mountType={mountType}
                   useTopShelf={useTopShelf}
                   onChange={setUseTopShelf}
                 />
               </div>
-              <div className="mt-4">
-                <HeightInput
-                  mountType={mountType.toLowerCase()}
-                  value={userHeight}
-                  onChange={setUserHeight}
-                />
-              </div>
-            </div>
-
-            {/* Rip Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">Rip Style</h2>
-              </div>
-              <div className="border-t border-gray-800/10 mb-4" />
-              <RipSelector onSelect={setSelectedRip} />
-            </div>
-
-            {/* Crossbar Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">Would you like horizontal cross bars?</h2>
-              </div>
-              <div className="border-t border-gray-800/10 mb-4" />
-              <CrossbarSelector
-                showCrossbars={showCrossbars}
-                onChange={setShowCrossbars}
-              />
             </div>
           </div>
 
-          {/* 3D Viewer Panel */}
-          <div className="w-full lg:w-2/3">
-            <div className="bg-white/5 rounded-xl shadow-lg overflow-hidden backdrop-blur-sm">
-              {isViewerReady ? (
-                <div className="w-full h-[500px] lg:h-[700px]">
+          {/* Right Column - 3D Viewer and Actions */}
+          <div className="w-full lg:w-1/2 space-y-4">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              {isLoading ? (
+                <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
+                  <div className="text-center">
+                    <h2 className="text-xl font-medium text-gray-700 mb-2">
+                      Loading 3D Model...
+                    </h2>
+                    <p className="text-gray-500">
+                      Please wait
+                    </p>
+                  </div>
+                </div>
+              ) : isViewerReady ? (
+                <div className="w-full h-[400px]">
                   <ThreeDViewer
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
-                    mountType={mountType.toLowerCase()}
+                    mountType={mountType}
                     barCount={barCount}
-                    showCrossbars={showCrossbars}
-                    userHeight={userHeight}
+                    showCrossbars={frontBars}
+                    userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
+                    userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
+                    shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
                     useTopShelf={useTopShelf}
+                    pipeDiameter={pipeDiameter}
+                    frontBars={frontBars}
+                    verticalBarsAtBack={verticalBarsAtBack}
                   />
                 </div>
               ) : (
-                <div className="w-full h-[500px] lg:h-[700px] flex items-center justify-center p-8">
+                <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
                   <div className="text-center">
-                    <h2 className="text-2xl font-medium text-white mb-2">
-                      Please Configure Your Shelf
+                    <h2 className="text-xl font-medium text-gray-700 mb-2">
+                      Configuration Preview
                     </h2>
-                    <p className="text-gray-200">
-                      Select options from the left panel to view your custom shelf
+                    <p className="text-gray-500">
+                      Your custom shelf will appear here
                     </p>
                   </div>
                 </div>
               )}
+              
+              {/* Show Dimensions Button */}
+              <div className="p-4 border-t">
+                <button 
+                  onClick={() => {
+                    const dimensionInfo = `
+                      Height: ${userHeight}${unit === 'inch' ? '"' : 'cm'}
+                      Width: ${userWidth}${unit === 'inch' ? '"' : 'cm'}
+                      Shelf Depth: ${shelfDepth}${unit === 'inch' ? '"' : 'cm'}
+                      Number of Shelves: ${shelfQuantity}
+                      Number of Bays: ${barCount}
+                    `;
+                    alert(dimensionInfo);
+                  }}
+                  className="w-full py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Show Dimensions
+                </button>
+              </div>
             </div>
+
+            {/* Price and Actions */}
+            <PriceAndActions
+              price={price}
+              onExport={handleExport}
+              onAddToCart={handleAddToCart}
+            />
           </div>
         </div>
       </main>

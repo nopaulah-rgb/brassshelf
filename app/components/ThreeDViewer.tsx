@@ -1,7 +1,10 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+
 import {
   handleCeilingMount,
   handleWallToCounterMount,
@@ -22,7 +25,12 @@ interface ThreeDViewerProps {
   barCount: number;
   showCrossbars: boolean;
   userHeight?: number;
+  userWidth?: number;
+  shelfDepth?: number;
   useTopShelf?: boolean;
+  pipeDiameter?: string;
+  frontBars?: boolean;
+  verticalBarsAtBack?: boolean;
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -33,28 +41,154 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
+  shelfDepth,
   useTopShelf = false,
+  pipeDiameter = '5/8',
+  frontBars = false,
+  verticalBarsAtBack = true,
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const animationIdRef = useRef<number | null>(null);
+  
+  console.log('ThreeDViewer props:', {
+    shelfUrl,
+    ripUrl,
+    shelfQuantity,
+    mountType,
+    barCount,
+    showCrossbars,
+    userHeight,
+    userWidth,
+    shelfDepth,
+    useTopShelf,
+    pipeDiameter,
+    frontBars,
+    verticalBarsAtBack
+  });
 
-  // Scroll event handler for parallax effect
+  // Control functions
+  const handleZoomIn = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      
+      // Calculate new position closer to target
+      const direction = new THREE.Vector3();
+      direction.subVectors(camera.position, controls.target);
+      const distance = direction.length();
+      const newDistance = Math.max(controls.minDistance, distance * 0.8);
+      
+      direction.normalize();
+      camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+      controls.update();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      
+      // Calculate new position farther from target
+      const direction = new THREE.Vector3();
+      direction.subVectors(camera.position, controls.target);
+      const distance = direction.length();
+      const newDistance = Math.min(controls.maxDistance, distance * 1.2);
+      
+      direction.normalize();
+      camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
+      controls.update();
+    }
+  };
+
+  const handleRotateLeft = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const angle = Math.PI / 8; // 22.5 degrees
+      
+      // Rotate around the target (Y axis)
+      const offset = new THREE.Vector3();
+      offset.copy(camera.position).sub(controls.target);
+      
+      // Apply rotation
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const x = offset.x;
+      const z = offset.z;
+      
+      offset.x = x * cos + z * sin;
+      offset.z = -x * sin + z * cos;
+      
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+      controls.update();
+    }
+  };
+
+  const handleRotateRight = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const angle = -Math.PI / 8; // -22.5 degrees
+      
+      // Rotate around the target (Y axis)
+      const offset = new THREE.Vector3();
+      offset.copy(camera.position).sub(controls.target);
+      
+      // Apply rotation
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const x = offset.x;
+      const z = offset.z;
+      
+      offset.x = x * cos + z * sin;
+      offset.z = -x * sin + z * cos;
+      
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+      controls.update();
+    }
+  };
+
+  const handleFitToScreen = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Reset camera to initial position
+      const shelfHeightFactor = (userHeight || 1194) / 1000;
+      const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
+      const bayCountFactor = Math.max(1, barCount / 2);
+      
+      const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
+      const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 3500));
+      
+      const cameraX = cameraDistance * 0.6;
+      const cameraY = (userHeight || 1194) * 0.6;
+      const cameraZ = cameraDistance * 0.8;
+      
+      cameraRef.current.position.set(cameraX, cameraY, cameraZ);
+      
+      const shelfSystemCenterX = 0;
+      const shelfSystemCenterY = (userHeight || 1194) / 2;
+      const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+      
+      cameraRef.current.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      controlsRef.current.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      controlsRef.current.update();
+    }
+  };
+
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const scrollSpeed = 0.5; // Adjust this value to control parallax speed (0.5 means half speed)
-      setScrollOffset(scrollY * scrollSpeed);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    let isMounted = true;
     
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current) {
+      console.error('Mount ref is null');
+      return;
+    }
 
     // Clear previous content
     mountRef.current.innerHTML = "";
@@ -66,14 +200,16 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
     // Scene setup
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     
     // Camera setup with container aspect ratio
     const camera = new THREE.PerspectiveCamera(
-      35,
+      45, // FOV'u 35'ten 45'e çıkardık - daha geniş görüş açısı
       containerWidth / containerHeight,
       0.1,
       10000
     );
+    cameraRef.current = camera;
 
     // Calculate dynamic room dimensions based on userHeight
     const heightInInches = userHeight ? userHeight / 25.4 : 47; // Convert mm to inches, default 47"
@@ -123,9 +259,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     canvas.height = 1024;
 
     const gradient = context!.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#ffd6ff");
-    gradient.addColorStop(0.5, "#e7c6ff");
-    gradient.addColorStop(1, "#c8b6ff");
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.5, "#f8f8f8");
+    gradient.addColorStop(1, "#f0f0f0");
 
     context!.fillStyle = gradient;
     context!.fillRect(0, 0, canvas.width, canvas.height);
@@ -153,14 +289,23 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       envMapIntensity: 0.8,
     });
 
-    // Setup lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // Setup lighting - Güçlü ışıklandırma GLB modeller için
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Artırdım
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2); // Artırdım
     mainLight.position.set(500, 1000, 500);
     mainLight.castShadow = true;
     scene.add(mainLight);
+
+    // Ek ışık kaynaklarını ekle
+    const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    frontLight.position.set(0, 800, 1000);
+    scene.add(frontLight);
+
+    const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    sideLight.position.set(-800, 600, 0);
+    scene.add(sideLight);
 
     // Add room elements with dynamic positioning
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
@@ -178,7 +323,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(ceiling);
 
     // Adjust wall lights for dynamic room size
-    const wallLight1 = new THREE.SpotLight(0xffd6ff, 0.3);
+    const wallLight1 = new THREE.SpotLight(0xffffff, 0.3);
     wallLight1.position.set(-roomWidth / 2, roomHeight, -roomDepth * 0.75);
     wallLight1.target.position.set(0, roomHeight / 2, -roomDepth);
     wallLight1.angle = Math.PI / 3;
@@ -186,7 +331,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(wallLight1);
     scene.add(wallLight1.target);
 
-    const wallLight2 = new THREE.SpotLight(0xc8b6ff, 0.3);
+    const wallLight2 = new THREE.SpotLight(0xffffff, 0.3);
     wallLight2.position.set(roomWidth / 2, roomHeight, -roomDepth * 0.75);
     wallLight2.target.position.set(0, roomHeight / 2, -roomDepth);
     wallLight2.angle = Math.PI / 3;
@@ -194,90 +339,129 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(wallLight2);
     scene.add(wallLight2.target);
 
-    // Set initial camera position based on room size
-    // Optimize camera distance for multiple bays - closer view for better visibility
-    const baseCameraDistance = Math.max(2500, roomWidth * 0.8); // Reduced multiplier from 1.5 to 0.8
-    const cameraDistance = Math.min(baseCameraDistance, 4500); // Cap maximum distance
-    const baseCameraY = roomHeight * 0.6;
+    // Set initial camera position for perfect centering
+    // Adjust distance based on shelf quantity and bay count for optimal framing
+    const shelfHeightFactor = (userHeight || 1194) / 1000; // Height scaling factor
+    const shelfQuantityFactor = Math.max(1, shelfQuantity / 3); // More shelves = further back
+    const bayCountFactor = Math.max(1, barCount / 2); // More bays = further back
     
-    // Adjust camera position based on bay count for optimal viewing
-    const cameraX = barCount > 2 ? cameraDistance * 0.9 : cameraDistance; // Closer for multiple bays
-    const cameraZ = barCount > 2 ? cameraDistance * 0.6 : cameraDistance * 0.7; // Closer Z position
+    const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
+    const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 3500));
     
-    camera.position.set(cameraX, baseCameraY, cameraZ);
+    // Position camera for optimal centered view
+    const cameraX = 0; // Center camera on x-axis for perfect alignment
+    const cameraY = (userHeight || 1194) * 0.6; // Above the shelf system center
+    const cameraZ = cameraDistance * 0.8; // Forward position for good perspective
     
-    // Center the camera target on the shelf system, not the room
+    camera.position.set(cameraX, cameraY, cameraZ);
+    
+    // Calculate perfect center based on actual shelf dimensions and quantity
     const shelfSystemCenterX = 0; // Shelves are centered at x=0
-    camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+    const shelfSystemCenterY = (userHeight || 1194) / 2; // Half of actual shelf height
+    const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+    
+    camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
 
     // Renderer setup with container size
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true // For export functionality
+    });
+    rendererRef.current = renderer;
     renderer.setSize(containerWidth, containerHeight);
-    renderer.setClearColor(0xf5f5f5);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Better quality on high DPI
+    renderer.setClearColor(0xf5f5f5, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Make sure canvas fills the container
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
+    
     container.appendChild(renderer.domElement);
 
     // Setup OrbitControls with dynamic settings optimized for multiple bays
     const controls = new OrbitControls(camera, renderer.domElement);
+    controlsRef.current = controls;
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = Math.max(600, roomWidth * 0.2);  // Closer minimum distance
-    controls.maxDistance = Math.max(6000, roomWidth * 2.5); // Reduced maximum distance
-    controls.maxPolarAngle = Math.PI / 1.5;  // Allow rotation down to about 120 degrees
-    controls.minPolarAngle = Math.PI / 3;    // Allow rotation up to about 60 degrees
-    controls.maxAzimuthAngle = Math.PI / 4;  // Limit right rotation to 45 degrees
-    controls.minAzimuthAngle = -Math.PI / 4; // Limit left rotation to -45 degrees
-    controls.enableZoom = true;  // Enable zooming
-    controls.enablePan = false;   // Disable panning
-    controls.target.set(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+    controls.dampingFactor = 0.08;
+    // Reasonable zoom limits for better usability
+    controls.minDistance = 300;
+    controls.maxDistance = 5000;
+    // Angle restrictions - prevent going behind the shelf
+    controls.maxPolarAngle = Math.PI * 0.8; // Daha fazla dikey hareket
+    controls.minPolarAngle = 0.1; // Can't go too low
+    controls.maxAzimuthAngle = Math.PI / 2; // Daha fazla yatay hareket
+    controls.minAzimuthAngle = -Math.PI / 2; // Daha fazla yatay hareket
+    controls.enableZoom = true;
+    controls.enablePan = true; // Pan'i tekrar açtık - kullanıcı isterse kaydırabilsin
+    controls.enableRotate = true;
+    controls.autoRotate = false;
+    // Center target on the shelf system - same as camera lookAt
+    controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+    controls.update();
 
-    // Update camera position based on scroll
-    const updateCameraWithScroll = () => {
-      const scrollEffect = scrollOffset * 0.2; // Adjust multiplier for scroll sensitivity
-      camera.position.y = baseCameraY + scrollEffect;
-      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
-      controls.target.set(shelfSystemCenterX, roomHeight * 0.4 + scrollEffect * 0.5, -roomDepth * 0.4);
-      controls.update();
-    };
+    // Remove scroll-based camera updates - 3D viewer now has independent controls
 
     // Handle window resize
     const handleResize = () => {
       if (!container) return;
       
       const width = container.clientWidth;
-      const height = container.clientHeight || window.innerHeight * 0.6;
+      const height = container.clientHeight || 400;
       
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      // Ensure canvas still fills container after resize
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
 
       const isMobile = window.innerWidth < 768;
       
-      // Optimized camera distances for better visibility
-      const mobileDistance = Math.max(3000, roomWidth * 1.2); // Closer for mobile
-      const desktopDistance = Math.max(2500, roomWidth * 0.8); // Closer for desktop
+      // Recalculate optimal camera position for centered view after resize
+      const currentShelfHeightFactor = (userHeight || 1194) / 1000;
+      const currentShelfQuantityFactor = Math.max(1, shelfQuantity / 3);
+      const currentBayCountFactor = Math.max(1, barCount / 2);
       
-      // Adjust position based on bay count
-      const finalMobileDistance = barCount > 2 ? mobileDistance * 0.85 : mobileDistance;
-      const finalDesktopDistance = barCount > 2 ? desktopDistance * 0.9 : desktopDistance;
+      // Redefine center points for resize
+      const shelfSystemCenterX = 0;
+      const shelfSystemCenterY = (userHeight || 1194) / 2;
+      const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
       
+      const responsiveDistance = isMobile ? 
+        1800 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor :
+        1500 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor;
+      
+      const finalDistance = Math.max(1800, Math.min(responsiveDistance, isMobile ? 4000 : 3500));
+      
+      // Update camera position maintaining centered view
       camera.position.set(
-        isMobile ? finalMobileDistance : finalDesktopDistance,
-        isMobile ? roomHeight * 0.8 : roomHeight * 0.6,
-        isMobile ? finalMobileDistance * 0.65 : finalDesktopDistance * 0.6
+        0, // X position centered for perfect alignment
+        (userHeight || 1194) * 0.6, // Y position above center
+        finalDistance * 0.8 // Z position for perspective
       );
-      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+      
+      // Maintain centered target
+      camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
       controls.update();
     };
 
     window.addEventListener("resize", handleResize);
 
     // Load models and handle mount type
-    const loader = new STLLoader();
+    const stlLoader = new STLLoader();
+    const gltfLoader = new GLTFLoader();
 
     // Load all models using Promise.all
     Promise.all([
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(
+        stlLoader.load(
           "/models/model1.stl",
           (geometry) => {
       geometry.rotateX(-Math.PI / 2);
@@ -289,7 +473,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         );
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(
+        stlLoader.load(
           "/models/model2.stl",
           (geometry) => {
       geometry.rotateX(-Math.PI / 2);
@@ -301,37 +485,113 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         );
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load("/models/model11.stl", resolve, undefined, reject);
+        stlLoader.load("/models/model11.stl", resolve, undefined, reject);
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load("/models/model12.stl", resolve, undefined, reject);
+        stlLoader.load("/models/model12.stl", resolve, undefined, reject);
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(shelfUrl, resolve, undefined, reject);
+        // Check if shelfUrl is GLB file
+        if (shelfUrl.endsWith('.glb') || shelfUrl.endsWith('.gltf')) {
+          gltfLoader.load(
+            shelfUrl,
+            (gltf) => {
+              // Extract geometry from the first mesh in the GLB file
+              const mesh = gltf.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+              if (mesh && mesh.geometry) {
+
+                
+                // Apply rotations to make the shelf horizontal like the old STL models
+                const geometry = mesh.geometry.clone();
+                geometry.rotateX(-Math.PI / 2);
+                geometry.rotateY(Math.PI); // 90 derece daha sağa çevirmek için PI kullanıyoruz
+                resolve(geometry);
+              } else {
+                reject(new Error('No mesh geometry found in GLB file'));
+              }
+            },
+            undefined,
+            reject
+          );
+        } else {
+          stlLoader.load(shelfUrl, resolve, undefined, reject);
+        }
       }),
       new Promise<THREE.BufferGeometry>((resolve, reject) => {
-        loader.load(ripUrl, resolve, undefined, reject);
+        // Rod v2.glb modelini yükle
+        gltfLoader.load(
+          "/models/Rod v2.glb",
+          (gltf) => {
+            // Extract geometry from the first mesh in the GLB file
+            const mesh = gltf.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+            if (mesh && mesh.geometry) {
+              const geometry = mesh.geometry.clone();
+              // Rod modelini doğru yönde konumlandır
+              geometry.rotateX(-Math.PI / 2);
+              resolve(geometry);
+            } else {
+              reject(new Error('No mesh geometry found in Rod GLB file'));
+            }
+          },
+          undefined,
+          reject
+        );
       }),
     ])
       .then(([model1Geometry, model2Geometry, model11Geometry, model12Geometry, shelfGeometry, ripGeometry]) => {
-        const materialShelf = new THREE.MeshStandardMaterial({
-          color: 0x9bc3c9,
-          opacity: 0.7,
+        // Gerçekçi cam malzemesi oluştur
+        const materialShelf = new THREE.MeshPhysicalMaterial({
+          color: 0xccddff, // Daha mavi cam rengi
+          metalness: 0.0,
+          roughness: 0.0,
           transparent: true,
-          metalness: 0.1,
-          roughness: 0.2,
+          opacity: 0.2,
+          transmission: 1.0, // Tam geçirgenlik
+          thickness: 0.5,
+          ior: 1.5, // Cam kırılma indeksi
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.0,
           side: THREE.DoubleSide,
         });
 
+        // Metal material - always polished brass
+        const metalColor = 0xf7ef8a; // Brass
+        const metalRoughness = 0.2; // Polished
+        const metalMetalness = 0.8; // Polished
+        
         const materialGold = new THREE.MeshStandardMaterial({
-          color: 0xf7ef8a,
-          metalness: 0.3,
-          roughness: 0.8,
+          color: metalColor,
+          metalness: metalMetalness,
+          roughness: metalRoughness,
         });
 
         const shelfBoundingBox = new THREE.Box3().setFromObject(
           new THREE.Mesh(shelfGeometry)
         );
+        
+        // Scale shelf geometry based on user dimensions
+        // Get original shelf dimensions
+        const originalShelfWidth = shelfBoundingBox.max.x - shelfBoundingBox.min.x;
+        const originalShelfDepth = shelfBoundingBox.max.z - shelfBoundingBox.min.z;
+        
+        // Default dimensions (based on original model)
+        const defaultShelfWidth = 914.4; // 36 inches in mm
+        const defaultShelfDepth = 304.8; // 12 inches in mm
+        
+        // Calculate scaling factors
+        const widthScale = (userWidth || defaultShelfWidth) / originalShelfWidth;
+        const depthScale = (shelfDepth || defaultShelfDepth) / originalShelfDepth;
+        
+        // Apply scaling to the shelf geometry
+        shelfGeometry.scale(widthScale, 1, depthScale);
+        
+        // Center the shelf geometry on the x-axis
+        const shelfCenter = new THREE.Vector3();
+        shelfBoundingBox.getCenter(shelfCenter);
+        shelfGeometry.translate(-shelfCenter.x, 0, 0);
+        
+        // Recalculate bounding box after scaling and centering
+        shelfBoundingBox.setFromObject(new THREE.Mesh(shelfGeometry));
 
         // Helper functions for rips
         const addHorizontalConnectingRips = (
@@ -382,19 +642,48 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           });
         };
 
+        // Calculate height-based scaling for system width
+        // Taller systems should be proportionally wider for structural stability and aesthetics
+        const calculateEffectiveWidth = (baseWidth: number, height: number): number => {
+          const defaultHeight = 1067; // 42 inches in mm (default height)
+          const heightInInches = height / 25.4; // Convert mm to inches for calculation
+          
+          // Apply scaling factor based on height
+          if (heightInInches <= 48) {
+            // Small systems: no scaling needed
+            return baseWidth;
+          } else if (heightInInches <= 72) {
+            // Medium systems: 10-20% wider
+            const scaleFactor = 1 + (heightInInches - 48) * 0.008; // 0.8% per inch above 48"
+            return baseWidth * scaleFactor;
+          } else {
+            // Large systems: 20-40% wider
+            const mediumScale = 1.2; // 20% for 72" systems
+            const additionalScale = (heightInInches - 72) * 0.01; // 1% per inch above 72"
+            const scaleFactor = mediumScale + additionalScale;
+            return baseWidth * Math.min(scaleFactor, 1.4); // Cap at 40% increase
+          }
+        };
+
+        // Calculate effective width based on height scaling
+        const baseUserWidth = userWidth || 914.4; // Default 36 inches in mm
+        const effectiveUserWidth = calculateEffectiveWidth(baseUserWidth, userHeight || 1067);
+
         const mountTypeProps = {
           scene,
           shelfQuantity,
           barCount,
           showCrossbars,
           userHeight,
+          userWidth: effectiveUserWidth,
+          shelfDepth: shelfDepth || 304.8, // Default 12 inches in mm
           useTopShelf,
           roomGeometry,
           whiteRoomMaterial,
           shelfGeometry,
           shelfMaterial: materialShelf,
           ripGeometry,
-          zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2 + 200,
+          zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2  -220,
           shelfWidth: shelfBoundingBox.max.x - shelfBoundingBox.min.x,
           shelfBoundingBox,
           model1Geometry,
@@ -404,47 +693,62 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           materialGold,
           addHorizontalConnectingRips,
           addFrontToBackRips,
+          frontBars,
+          verticalBarsAtBack,
+          pipeDiameter,
+          roomDepth,
         };
 
         // Handle different mount types
-        switch (mountType) {
-          case "ceiling":
-            handleCeilingMount(mountTypeProps);
-            break;
-          case "wall to counter":
-            handleWallToCounterMount(mountTypeProps);
-            break;
-          case "wall to floor":
-            handleWallToFloorMount(mountTypeProps);
-            break;
-          case "wall":
-            handleWallMount(mountTypeProps);
-            break;
-          case "ceiling to wall":
-            handleCeilingToWallMount(mountTypeProps);
-            break;
-          case "ceiling to floor":
-            handleCeilingToFloorMount(mountTypeProps);
-            break;
-          case "ceiling to counter":
-            handleCeilingToCounterMount(mountTypeProps);
-            break;
-          case "ceiling to counter to wall":
-            handleCeilingToCounterToWallMount(mountTypeProps);
-            break;
-          case "ceiling to floor to wall":
-            handleCeilingFloorWallMount(mountTypeProps);
-            break;
-        }
-
-        // Animation loop
-        const animate = () => {
-          requestAnimationFrame(animate);
-          updateCameraWithScroll(); // Update camera based on scroll
-          controls.update();
-          renderer.render(scene, camera);
+        const handleMountType = async () => {
+          switch (mountType) {
+            case "ceiling":
+              await handleCeilingMount(mountTypeProps);
+              break;
+            case "wall to counter":
+              handleWallToCounterMount(mountTypeProps);
+              break;
+            case "wall to floor":
+              handleWallToFloorMount(mountTypeProps);
+              break;
+            case "wall":
+              handleWallMount(mountTypeProps);
+              break;
+            case "ceiling to wall":
+              handleCeilingToWallMount(mountTypeProps);
+              break;
+            case "ceiling to floor":
+              handleCeilingToFloorMount(mountTypeProps);
+              break;
+            case "ceiling to counter":
+              handleCeilingToCounterMount(mountTypeProps);
+              break;
+            case "ceiling to counter to wall":
+            case "ceiling & counter & wall":
+              handleCeilingToCounterToWallMount(mountTypeProps);
+              break;
+            case "ceiling to floor to wall":
+            case "ceiling & floor & wall":
+              handleCeilingFloorWallMount(mountTypeProps);
+              break;
+          }
         };
-        animate();
+
+        // Execute mount type handling and then start animation
+        handleMountType().then(() => {
+          if (!isMounted) return;
+          
+          // Animation loop
+          const animate = () => {
+            if (!isMounted) return;
+            animationIdRef.current = requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+          };
+          animate();
+        }).catch((error) => {
+          console.error("Error handling mount type:", error);
+        });
       })
       .catch((error) => {
         console.error("Error loading models:", error);
@@ -452,18 +756,161 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
     // Cleanup
     return () => {
+      isMounted = false;
       window.removeEventListener("resize", handleResize);
+      
+      // Cancel animation frame
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = null;
+      }
+      
+      // Dispose of Three.js resources
+      if (controlsRef.current) {
+        controlsRef.current.dispose();
+        controlsRef.current = null;
+      }
+      
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+        rendererRef.current.forceContextLoss();
+        rendererRef.current = null;
+      }
+      
+      if (sceneRef.current) {
+        sceneRef.current.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            if (object.geometry) {
+              object.geometry.dispose();
+            }
+            if (object.material) {
+              if (Array.isArray(object.material)) {
+                object.material.forEach((material) => material.dispose());
+              } else {
+                object.material.dispose();
+              }
+            }
+          }
+        });
+        sceneRef.current = null;
+      }
+      
       if (mountRef.current) {
         mountRef.current.innerHTML = "";
       }
+      
+      cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, useTopShelf]);
+  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack]);
 
-  return <div ref={mountRef} style={{ 
-    width: "100%", 
-    height: "600px",
-    maxHeight: "calc(100vh - 100px)" // Responsive height that adjusts to viewport
-  }} />;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div ref={mountRef} style={{ 
+        width: "100%", 
+        height: "100%",
+        minHeight: "400px",
+        overflow: "hidden"
+      }} />
+      
+      {/* Control Buttons */}
+      <div style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        zIndex: 1000
+      }}>
+        <button
+          onClick={handleFitToScreen}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#1E3A5F',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 'bold'
+          }}
+          title="Üniteyi Sığdır"
+        >
+          Sığdır
+        </button>
+        
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            onClick={handleZoomIn}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#1E3A5F',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '18px',
+              fontWeight: 'bold'
+            }}
+            title="Yakınlaştır"
+          >
+            +
+          </button>
+          <button
+            onClick={handleZoomOut}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#1E3A5F',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '18px',
+              fontWeight: 'bold'
+            }}
+            title="Uzaklaştır"
+          >
+            −
+          </button>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            onClick={handleRotateLeft}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#1E3A5F',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+            title="Sola Döndür"
+          >
+            ←
+          </button>
+          <button
+            onClick={handleRotateRight}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#1E3A5F',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+            title="Sağa Döndür"
+          >
+            →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ThreeDViewer;
