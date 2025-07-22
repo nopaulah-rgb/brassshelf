@@ -8,6 +8,8 @@ export const handleCeilingMount = async ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
+  shelfDepth,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -16,6 +18,9 @@ export const handleCeilingMount = async ({
   model1Geometry,
   model12Geometry,
   materialGold,
+  frontBars,
+  verticalBarsAtBack,
+  pipeDiameter,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -154,16 +159,28 @@ export const handleCeilingMount = async ({
   const baseY = userHeight || 1195;
   const shelfSpacing = 250;
 
+  // Calculate pipe radius based on pipeDiameter
+  const getPipeRadius = () => {
+    if (pipeDiameter === '1') {
+      return 12.5; // 1 inch = 25mm diameter = 12.5mm radius
+    }
+    return 8; // 5/8 inch = 16mm diameter = 8mm radius (default)
+  };
+  const pipeRadius = getPipeRadius();
+
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
     const positions = [];
+    // Use userWidth if provided, otherwise use default shelfWidth
+    const effectiveWidth = userWidth || shelfWidth;
+    
     if (barCount === 1) {
       positions.push(0);
     } else {
       // For multiple bars, arrange them side by side
-      const startX = -(barCount - 1) * shelfWidth / 2;
+      const startX = -(barCount - 1) * effectiveWidth / 2;
       for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * shelfWidth);
+        positions.push(startX + i * effectiveWidth);
       }
     }
     return positions;
@@ -221,7 +238,10 @@ export const handleCeilingMount = async ({
       
       let geometryToUse, materialToUse;
       
-      if (showCrossbars) {
+      // Check if crossbars should be shown for this position (only front bars now)
+      const shouldShowCrossbar = isFrente && frontBars;
+      
+      if (shouldShowCrossbar) {
         if (isFrente && type16AGeometry) {
           // Horizontal bar açık ve ön pozisyon -> Type16A kullan
           geometryToUse = type16AGeometry;
@@ -325,7 +345,7 @@ export const handleCeilingMount = async ({
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
         const extendedHeight = shelfSpacing + extensionDown;
-        const verticalRipGeometry = new THREE.CylinderGeometry(10, 10, extendedHeight, 16);
+        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 16);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
@@ -466,7 +486,7 @@ export const handleCeilingMount = async ({
   );
 
   allBottomCornerPositions.forEach((pos) => {
-    const downwardRipGeometry = new THREE.CylinderGeometry(10, 10, downwardExtension, 16);
+            const downwardRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, downwardExtension, 16);
     const downwardRip = new THREE.Mesh(downwardRipGeometry, ripMaterial);
     downwardRip.position.set(
       pos.x,
@@ -506,7 +526,7 @@ export const handleCeilingMount = async ({
     // Dikey rip: en üst raftan tavana kadar
     const topShelfHeight = baseY;
     const ripHeight = 1500 - topShelfHeight;
-    const verticalRipGeometry = new THREE.CylinderGeometry(10, 10, ripHeight, 16);
+            const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, ripHeight, 16);
     const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
     verticalRip.position.set(
       pos.x,

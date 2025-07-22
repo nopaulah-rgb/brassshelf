@@ -25,7 +25,12 @@ interface ThreeDViewerProps {
   barCount: number;
   showCrossbars: boolean;
   userHeight?: number;
+  userWidth?: number;
+  shelfDepth?: number;
   useTopShelf?: boolean;
+  pipeDiameter?: string;
+  frontBars?: boolean;
+  verticalBarsAtBack?: boolean;
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -36,13 +41,36 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
+  shelfDepth,
   useTopShelf = false,
+  pipeDiameter = '5/8',
+  frontBars = false,
+  verticalBarsAtBack = true,
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
-  // Removed scroll-based parallax effect - 3D viewer now has independent controls
+  
+  console.log('ThreeDViewer props:', {
+    shelfUrl,
+    ripUrl,
+    shelfQuantity,
+    mountType,
+    barCount,
+    showCrossbars,
+    userHeight,
+    userWidth,
+    shelfDepth,
+    useTopShelf,
+    pipeDiameter,
+    frontBars,
+    verticalBarsAtBack
+  });
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current) {
+      console.error('Mount ref is null');
+      return;
+    }
 
     // Clear previous content
     mountRef.current.innerHTML = "";
@@ -191,43 +219,65 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(wallLight2);
     scene.add(wallLight2.target);
 
-    // Set initial camera position based on room size
-    // Optimize camera distance for multiple bays - closer view for better visibility
-    const baseCameraDistance = Math.max(2500, roomWidth * 0.8); // Reduced multiplier from 1.5 to 0.8
-    const cameraDistance = Math.min(baseCameraDistance, 4500); // Cap maximum distance
-    const baseCameraY = roomHeight * 0.6;
+    // Set initial camera position for perfect centering
+    // Adjust distance based on shelf quantity and bay count for optimal framing
+    const shelfHeightFactor = (userHeight || 1194) / 1000; // Height scaling factor
+    const shelfQuantityFactor = Math.max(1, shelfQuantity / 3); // More shelves = further back
+    const bayCountFactor = Math.max(1, barCount / 2); // More bays = further back
     
-    // Adjust camera position based on bay count for optimal viewing
-    const cameraX = barCount > 2 ? cameraDistance * 0.9 : cameraDistance; // Closer for multiple bays
-    const cameraZ = barCount > 2 ? cameraDistance * 0.6 : cameraDistance * 0.7; // Closer Z position
+    const baseCameraDistance = 1000 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
+    const cameraDistance = Math.max(1200, Math.min(baseCameraDistance, 2500));
     
-    camera.position.set(cameraX, baseCameraY, cameraZ);
+    // Position camera for optimal centered view
+    const cameraX = cameraDistance * 0.7; // Slightly to the right for 3/4 view
+    const cameraY = (userHeight || 1194) * 0.8; // Above the shelf system center
+    const cameraZ = cameraDistance * 0.7; // Forward position for good perspective
     
-    // Center the camera target on the shelf system, not the room
+    camera.position.set(cameraX, cameraY, cameraZ);
+    
+    // Calculate perfect center based on actual shelf dimensions and quantity
     const shelfSystemCenterX = 0; // Shelves are centered at x=0
-    camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+    const shelfSystemCenterY = (userHeight || 1194) / 2; // Half of actual shelf height
+    const shelfSystemCenterZ = -roomDepth * 0.3; // Optimal depth for viewing
+    
+    camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
 
     // Renderer setup with container size
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true // For export functionality
+    });
     renderer.setSize(containerWidth, containerHeight);
-    renderer.setClearColor(0xf5f5f5);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Better quality on high DPI
+    renderer.setClearColor(0xf5f5f5, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Make sure canvas fills the container
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
+    
     container.appendChild(renderer.domElement);
 
     // Setup OrbitControls with dynamic settings optimized for multiple bays
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    // Remove zoom distance restrictions - allow unlimited zoom
-    controls.minDistance = 0;
-    controls.maxDistance = Infinity;
-    // Remove angle restrictions - allow free rotation to see all angles
-    controls.maxPolarAngle = Math.PI; // Allow full rotation down
-    controls.minPolarAngle = 0;       // Allow full rotation up
-    controls.maxAzimuthAngle = Infinity; // Allow unlimited horizontal rotation
-    controls.minAzimuthAngle = -Infinity; // Allow unlimited horizontal rotation
-    controls.enableZoom = true;  // Enable zooming
-    controls.enablePan = true;    // Enable panning for internal scrolling
-    controls.target.set(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+    controls.dampingFactor = 0.08;
+    // Reasonable zoom limits for better usability
+    controls.minDistance = 200;
+    controls.maxDistance = 5000;
+    // Angle restrictions for better viewing
+    controls.maxPolarAngle = Math.PI * 0.9; // Slight restriction for better angles
+    controls.minPolarAngle = 0.1;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.enableRotate = true;
+    controls.autoRotate = false;
+    // Center target on the shelf system - same as camera lookAt
+    controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+    controls.update();
 
     // Remove scroll-based camera updates - 3D viewer now has independent controls
 
@@ -236,28 +286,45 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       if (!container) return;
       
       const width = container.clientWidth;
-      const height = container.clientHeight || window.innerHeight * 0.6;
+      const height = container.clientHeight || 400;
       
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      // Ensure canvas still fills container after resize
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
 
       const isMobile = window.innerWidth < 768;
       
-      // Optimized camera distances for better visibility
-      const mobileDistance = Math.max(3000, roomWidth * 1.2); // Closer for mobile
-      const desktopDistance = Math.max(2500, roomWidth * 0.8); // Closer for desktop
+      // Recalculate optimal camera position for centered view after resize
+      const currentShelfHeightFactor = (userHeight || 1194) / 1000;
+      const currentShelfQuantityFactor = Math.max(1, shelfQuantity / 3);
+      const currentBayCountFactor = Math.max(1, barCount / 2);
       
-      // Adjust position based on bay count
-      const finalMobileDistance = barCount > 2 ? mobileDistance * 0.85 : mobileDistance;
-      const finalDesktopDistance = barCount > 2 ? desktopDistance * 0.9 : desktopDistance;
+      // Redefine center points for resize
+      const shelfSystemCenterX = 0;
+      const shelfSystemCenterY = (userHeight || 1194) / 2;
+      const shelfSystemCenterZ = -roomDepth * 0.3;
       
+      const responsiveDistance = isMobile ? 
+        1200 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor :
+        1000 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor;
+      
+      const finalDistance = Math.max(1200, Math.min(responsiveDistance, isMobile ? 3000 : 2500));
+      
+      // Update camera position maintaining centered view
       camera.position.set(
-        isMobile ? finalMobileDistance : finalDesktopDistance,
-        isMobile ? roomHeight * 0.8 : roomHeight * 0.6,
-        isMobile ? finalMobileDistance * 0.65 : finalDesktopDistance * 0.6
+        finalDistance * 0.7, // X position for 3/4 view
+        (userHeight || 1194) * 0.8, // Y position above center
+        finalDistance * 0.7 // Z position for perspective
       );
-      camera.lookAt(shelfSystemCenterX, roomHeight * 0.4, -roomDepth * 0.4);
+      
+      // Maintain centered target
+      camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
       controls.update();
     };
 
@@ -363,10 +430,15 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           side: THREE.DoubleSide,
         });
 
+        // Metal material - always polished brass
+        let metalColor = 0xf7ef8a; // Brass
+        let metalRoughness = 0.2; // Polished
+        let metalMetalness = 0.8; // Polished
+        
         const materialGold = new THREE.MeshStandardMaterial({
-          color: 0xf7ef8a,
-          metalness: 0.3,
-          roughness: 0.8,
+          color: metalColor,
+          metalness: metalMetalness,
+          roughness: metalRoughness,
         });
 
         const shelfBoundingBox = new THREE.Box3().setFromObject(
@@ -428,6 +500,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           barCount,
           showCrossbars,
           userHeight,
+          userWidth: userWidth || 914.4, // Default 36 inches in mm
+          shelfDepth: shelfDepth || 304.8, // Default 12 inches in mm
           useTopShelf,
           roomGeometry,
           whiteRoomMaterial,
@@ -444,6 +518,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           materialGold,
           addHorizontalConnectingRips,
           addFrontToBackRips,
+          frontBars,
+          verticalBarsAtBack,
+          pipeDiameter,
         };
 
         // Handle different mount types
@@ -471,9 +548,11 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
               handleCeilingToCounterMount(mountTypeProps);
               break;
             case "ceiling to counter to wall":
+            case "ceiling & counter & wall":
               handleCeilingToCounterToWallMount(mountTypeProps);
               break;
             case "ceiling to floor to wall":
+            case "ceiling & floor & wall":
               handleCeilingFloorWallMount(mountTypeProps);
               break;
           }
@@ -503,12 +582,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         mountRef.current.innerHTML = "";
       }
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, useTopShelf]);
+  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack]);
 
   return <div ref={mountRef} style={{ 
     width: "100%", 
-    height: "600px",
-    maxHeight: "calc(100vh - 100px)" // Responsive height that adjusts to viewport
+    height: "100%",
+    minHeight: "400px",
+    overflow: "hidden"
   }} />;
 };
 

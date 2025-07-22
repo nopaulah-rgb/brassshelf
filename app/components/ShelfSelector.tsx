@@ -1,25 +1,25 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
+import React, { useState } from 'react';
 
-const ShelfSelector: React.FC<{ onSelect: (shelfUrl: string) => void }> = ({ onSelect }) => {
+interface ShelfSelectorProps {
+  onSelect: (shelfUrl: string) => void;
+  shelfMaterial: string;
+}
+
+const ShelfSelector: React.FC<ShelfSelectorProps> = ({ onSelect, shelfMaterial }) => {
   const glassShelfUrl = '/models/Glass Shelf v1_B.glb';
+  const woodShelfUrl = '/models/woodenShelf.stl';
   
-  // Component mount olduğunda otomatik olarak Glass Shelf'i seç
+  // Update shelf URL when material changes
   React.useEffect(() => {
-    onSelect(glassShelfUrl);
-  }, []);
+    if (shelfMaterial === 'glass') {
+      onSelect(glassShelfUrl);
+    } else if (shelfMaterial === 'wood') {
+      onSelect(woodShelfUrl);
+    }
+  }, [shelfMaterial]);
 
-  return (
-    <div className="grid grid-cols-1 gap-3">
-      <button
-        className="px-6 py-4 border-2 rounded-lg text-left
-                 border-white bg-gray-800/5 text-gray-800
-                 text-lg focus:outline-none"
-      >
-        Glass Shelf
-      </button>
-    </div>
-  );
+  return null; // This component is now just a logic handler
 };
 
 export default ShelfSelector;

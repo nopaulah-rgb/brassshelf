@@ -6,6 +6,8 @@ export interface MountTypeProps {
   barCount: number;
   showCrossbars: boolean;
   userHeight?: number;
+  userWidth?: number;
+  shelfDepth?: number;
   useTopShelf?: boolean;
   roomGeometry: {
     floor: THREE.PlaneGeometry;
@@ -28,6 +30,9 @@ export interface MountTypeProps {
   materialGold: THREE.Material;
   addHorizontalConnectingRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
   addFrontToBackRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
+  frontBars?: boolean;
+  verticalBarsAtBack?: boolean;
+  pipeDiameter?: string;
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";
