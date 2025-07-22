@@ -8,6 +8,7 @@ export const handleCeilingToWallMount = async ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -16,6 +17,7 @@ export const handleCeilingToWallMount = async ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  roomDepth = 1200,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -190,17 +192,22 @@ export const handleCeilingToWallMount = async ({
   const ceilingHeight = 1500; // Ceiling height in mm
   const baseY = userHeight || 1195;
   const shelfSpacing = 250;
+  
+  // Calculate pipe radius based on pipeDiameter
 
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
     const positions = [];
+    // Use userWidth if provided, otherwise use default shelfWidth
+    const effectiveWidth = userWidth || shelfWidth;
+    
     if (barCount === 1) {
       positions.push(0);
     } else {
       // For multiple bars, arrange them side by side
-      const startX = -(barCount - 1) * shelfWidth / 2;
+      const startX = -(barCount - 1) * effectiveWidth / 2;
       for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * shelfWidth);
+        positions.push(startX + i * effectiveWidth);
       }
     }
     return positions;
@@ -297,18 +304,18 @@ export const handleCeilingToWallMount = async ({
           wallConnector.rotation.y = Math.PI / 2;
         }
         
-        wallConnector.position.set(pos.x, currentHeight, -1055); // 20 birim geri alındı
+        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 50); // Duvarı bağlantı noktalarına yaklaştır (145'ten 50'ye)
         scene.add(wallConnector);
 
         // Duvara yatay rip ekle
-        const horizontalRipLength = Math.abs(pos.z + zOffset + 1000);
+        const horizontalRipLength = Math.abs(pos.z + zOffset + roomDepth - 105); // 200'den 105'e güncellendi
         const horizontalRipGeometry = new THREE.CylinderGeometry(10, 10, horizontalRipLength, 32);
         const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
         horizontalRip.rotation.x = Math.PI / 2; // Yatay pozisyon için X ekseninde 90 derece döndür
         horizontalRip.position.set(
           pos.x,
           currentHeight,
-          (pos.z + zOffset - 1000) / 2
+          (pos.z + zOffset - roomDepth + 105) / 2 // 200'den 105'e güncellendi
         );
         scene.add(horizontalRip);
 

@@ -8,6 +8,8 @@ export const handleCeilingToFloorMount = async ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
+  shelfDepth,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -16,6 +18,9 @@ export const handleCeilingToFloorMount = async ({
   model1Geometry,
   model12Geometry,
   materialGold,
+  frontBars,
+  verticalBarsAtBack,
+  pipeDiameter,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -159,13 +164,16 @@ export const handleCeilingToFloorMount = async ({
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
     const positions = [];
+    // Use userWidth if provided, otherwise use default shelfWidth
+    const effectiveWidth = userWidth || shelfWidth;
+    
     if (barCount === 1) {
       positions.push(0);
     } else {
       // For multiple bars, arrange them side by side
-      const startX = -(barCount - 1) * shelfWidth / 2;
+      const startX = -(barCount - 1) * effectiveWidth / 2;
       for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * shelfWidth);
+        positions.push(startX + i * effectiveWidth);
       }
     }
     return positions;
@@ -421,18 +429,16 @@ export const handleCeilingToFloorMount = async ({
         scene.add(leftRip);
       }
 
-      // Sağ kısa kenar - sadece en sağdaki bay veya tek bay durumunda ekle
-      if (bayIndex === barCount - 1) {
-        const rightRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
-        const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
-        rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
-        rightRip.position.set(
-          rightFront.x,
-          currentHeight + model13Height / 2 - 5,
-          zFront + (zBack - zFront) / 2
-        );
-        scene.add(rightRip);
-      }
+      // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
+      const rightRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
+      const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
+      rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
+      rightRip.position.set(
+        rightFront.x,
+        currentHeight + model13Height / 2 - 5,
+        zFront + (zBack - zFront) / 2
+      );
+      scene.add(rightRip);
     });
   }
 
@@ -497,13 +503,17 @@ export const handleCeilingToFloorMount = async ({
     if (type16FGeometry) {
       // Type16F modelini dik durdurmak için 90 derece rotasyon
       ceilingConnector.rotation.x = Math.PI / 2;
+      // 180 derece döndür
+      ceilingConnector.rotation.y = Math.PI;
     } else {
       // Eski model rotasyonu
       ceilingConnector.rotation.x = Math.PI;
+      // 180 derece döndür
+      ceilingConnector.rotation.y = Math.PI;
     }
     
     // Type16F modeli için pozisyon ayarı
-    const ceilingY = type16FGeometry ? 1428 : ceilingHeight;
+    const ceilingY = type16FGeometry ? 1500 : 1505;
     ceilingConnector.position.set(pos.x, ceilingY, pos.z + zOffset);
     scene.add(ceilingConnector);
 

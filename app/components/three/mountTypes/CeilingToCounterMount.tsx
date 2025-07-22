@@ -9,6 +9,7 @@ export const handleCeilingToCounterMount = async ({
   barCount,
   showCrossbars,
   userHeight,
+  userWidth,
   roomGeometry,
   whiteRoomMaterial,
   shelfGeometry,
@@ -19,6 +20,7 @@ export const handleCeilingToCounterMount = async ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  pipeDiameter,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -158,6 +160,9 @@ export const handleCeilingToCounterMount = async ({
   const ceilingHeight = 1500; // Ceiling height in mm
   const baseY = userHeight || 1195;
   const shelfSpacing = 250;
+  
+  // Calculate pipe radius based on pipeDiameter
+  const pipeRadius = pipeDiameter === '1' ? 12.5 : 8;
 
   // Add counter and doors
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
@@ -177,13 +182,14 @@ export const handleCeilingToCounterMount = async ({
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
     const positions = [];
+    const effectiveWidth = userWidth || shelfWidth;
     if (barCount === 1) {
       positions.push(0);
     } else {
       // For multiple bars, arrange them side by side
-      const startX = -(barCount - 1) * shelfWidth / 2;
+      const startX = -(barCount - 1) * effectiveWidth / 2;
       for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * shelfWidth);
+        positions.push(startX + i * effectiveWidth);
       }
     }
     return positions;
@@ -343,7 +349,7 @@ export const handleCeilingToCounterMount = async ({
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
         const extendedHeight = shelfSpacing + extensionDown;
-        const verticalRipGeometry = new THREE.CylinderGeometry(10, 10, extendedHeight, 16);
+                    const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 16);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
@@ -439,18 +445,16 @@ export const handleCeilingToCounterMount = async ({
         scene.add(leftRip);
       }
 
-      // Sağ kısa kenar - sadece en sağdaki bay veya tek bay durumunda ekle
-      if (bayIndex === barCount - 1) {
-        const rightRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
-        const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
-        rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
-        rightRip.position.set(
-          rightFront.x,
-          currentHeight + model13Height / 2 - 5,
-          zFront + (zBack - zFront) / 2
-        );
-        scene.add(rightRip);
-      }
+      // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
+      const rightRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
+      const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
+      rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
+      rightRip.position.set(
+        rightFront.x,
+        currentHeight + model13Height / 2 - 5,
+        zFront + (zBack - zFront) / 2
+      );
+      scene.add(rightRip);
     });
   }
 
@@ -515,13 +519,17 @@ export const handleCeilingToCounterMount = async ({
     if (type16EGeometry) {
       // Type16E modelini dik durdurmak için 90 derece rotasyon
       ceilingConnector.rotation.x = Math.PI / 2;
+      // 180 derece döndür
+      ceilingConnector.rotation.y = Math.PI;
     } else {
       // Eski model rotasyonu
       ceilingConnector.rotation.x = Math.PI;
+      // 180 derece döndür
+      ceilingConnector.rotation.y = Math.PI;
     }
     
     // Type16E modeli için pozisyon ayarı
-    const ceilingY = type16EGeometry ? 1428 : ceilingHeight;
+    const ceilingY = type16EGeometry ? 1500 : 1505;
     ceilingConnector.position.set(pos.x, ceilingY, pos.z + zOffset);
     scene.add(ceilingConnector);
 
