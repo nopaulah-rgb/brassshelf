@@ -153,13 +153,7 @@ export const handleWallMount = async ({
   const shelfSpacing = 250;
 
   // Calculate pipe radius based on pipeDiameter
-  const getPipeRadius = () => {
-    if (pipeDiameter === '1') {
-      return 12.5; // 1 inch = 25mm diameter = 12.5mm radius
-    }
-    return 8; // 5/8 inch = 16mm diameter = 8mm radius (default)
-  };
-  const pipeRadius = getPipeRadius();
+  const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
 
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
@@ -241,20 +235,8 @@ export const handleWallMount = async ({
           wallConnector.rotation.y = Math.PI / 2;
         }
         
-        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 50); // Duvarı bağlantı noktalarına yaklaştır (145'ten 50'ye)
+        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Duvar bağlantısını 90 birim öne getir (-50'den -140'a)
         scene.add(wallConnector);
-
-        // Duvara yatay rip ekle
-        const horizontalRipLength = Math.abs(pos.z + zOffset + roomDepth - 105); // 200'den 105'e güncellendi
-        const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, horizontalRipLength, 32);
-        const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-        horizontalRip.rotation.x = Math.PI / 2;
-        horizontalRip.position.set(
-          pos.x,
-          currentHeight,
-          (pos.z + zOffset - roomDepth + 105) / 2 // 200'den 105'e güncellendi
-        );
-        scene.add(horizontalRip);
       }
 
       // Arka bağlantılar için Model seçimi
@@ -303,7 +285,7 @@ export const handleWallMount = async ({
           
           if (showCrossbars) {
             // Horizontal bar açık
-            backZPos -= model13Depth + 8 - 15; // Model13'ü geri çek ama 15 birim öne getir
+            backZPos -= model13Depth + 8; // Model13'ü geri çek
           } else {
             // Horizontal bar kapalı
             if (type16AGeometry) {
@@ -318,13 +300,24 @@ export const handleWallMount = async ({
         }
       }
 
-      // Dikey ripler (raflar arası)
+      // Dikey ripler
       if (i < shelfQuantity - 1) {
-        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, shelfSpacing, 32);
+        // Raflar arası normal ripler
+        const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
+        const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü
+        
+        const edgeExtension = (isFront || isBack) ? 120 : 0; // Ön ve arka ripler için toplam 120 birim uzatma (yukarı+aşağı)
+        
+        const verticalRipGeometry = new THREE.CylinderGeometry(
+          pipeRadius, 
+          pipeRadius, 
+          shelfSpacing + edgeExtension, 
+          32
+        );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - shelfSpacing / 2,
+          currentHeight - shelfSpacing / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
           pos.z + zOffset
         );
         scene.add(verticalRip);
@@ -345,8 +338,8 @@ export const handleWallMount = async ({
           const end = backPositions[1];
           let zStart = start.z + zOffset + 5;
           let zEnd = end.z + zOffset + 5;
-          zStart -= model13Depth + 10 - 50; // 15 birim öne getir
-          zEnd -= model13Depth + 10 - 50; // 15 birim öne getir
+          zStart -= model13Depth + 10;
+          zEnd -= model13Depth + 10;
 
           const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
           const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, length, 32);
@@ -355,7 +348,7 @@ export const handleWallMount = async ({
           horizontalRip.position.set(
             start.x + (end.x - start.x) / 2,
             currentHeight + model13Height / 2 - 20,
-            (zStart + zEnd) / 2 + 15
+            (zStart + zEnd) / 2 + 34 // Horizontal bar'ı arkadaki modelin içinden geçir
           );
           scene.add(horizontalRip);
         }
@@ -370,12 +363,12 @@ export const handleWallMount = async ({
       let zFront = leftFront.z + zOffset + 5;
       let zBack = leftBack.z + zOffset + 5;
       
-      // Ön modellerin pozisyonunu hesapla - Type16F duvar bağlantısı için minimal offset
-      zFront += 5;
+      // Ön modellerin pozisyonunu hesapla - duvar bağlantısının gerçek pozisyonuna göre
+      zFront = -roomDepth + 140; // Duvar bağlantısının pozisyonuyla tam eşleş
       
       // Arka modellerin pozisyonunu hesapla
       if (showCrossbars) {
-        zBack -= model13Depth - 15; // Arkadaki modeli öne yaklaştır (15 birim daha öne)
+        zBack -= model13Depth; // Arkadaki modeli öne yaklaştır
       } else {
         if (type16AGeometry) {
           zBack += model13Depth - 108; // Type16A arkadaki pozisyon

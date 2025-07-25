@@ -9,7 +9,6 @@ export const handleCeilingToFloorMount = async ({
   showCrossbars,
   userHeight,
   userWidth,
-  shelfDepth,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -18,9 +17,6 @@ export const handleCeilingToFloorMount = async ({
   model1Geometry,
   model12Geometry,
   materialGold,
-  frontBars,
-  verticalBarsAtBack,
-  pipeDiameter,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();

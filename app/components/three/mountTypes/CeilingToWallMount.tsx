@@ -315,7 +315,7 @@ export const handleCeilingToWallMount = async ({
         horizontalRip.position.set(
           pos.x,
           currentHeight,
-          (pos.z + zOffset - roomDepth + 105) / 2 // 200'den 105'e güncellendi
+          (pos.z + zOffset - roomDepth + 50) / 2 // Ripi duvar bağlantısının merkezine kadar getir
         );
         scene.add(horizontalRip);
 
@@ -406,8 +406,8 @@ export const handleCeilingToWallMount = async ({
       let zFront = leftFront.z + zOffset + 5;
       let zBack = leftBack.z + zOffset + 5;
       
-      // Ön modellerin pozisyonunu hesapla - Type16F duvar bağlantısı için minimal offset
-      zFront += 5; // Minimal offset
+      // Ön modellerin pozisyonunu hesapla - duvar bağlantısının gerçek pozisyonuna göre
+      zFront = -roomDepth + 50; // Duvar bağlantısının pozisyonuyla tam eşleş
       
       // Arka modellerin pozisyonunu hesapla
       if (showCrossbars) {

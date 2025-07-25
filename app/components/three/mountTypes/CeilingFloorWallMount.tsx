@@ -196,7 +196,7 @@ export const handleCeilingFloorWallMount = async ({
   const shelfSpacing = 250;
   
   // Calculate pipe radius based on pipeDiameter
-  const pipeRadius = pipeDiameter === '1' ? 12.5 : 8;
+  const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
 
   // Calculate shelf positions for multiple bars
   const getShelfPositions = (barCount: number) => {
@@ -218,6 +218,8 @@ export const handleCeilingFloorWallMount = async ({
 
   // Ripler için kullanılacak materyali belirle - modeller ile aynı olsun
   const ripMaterial = model13Material || materialGold;
+
+
 
   // Calculate shared corner positions for multiple bays (avoiding duplicates)
   const getAllCornerPositions = (): { x: number; z: number }[] => {
@@ -271,7 +273,7 @@ export const handleCeilingFloorWallMount = async ({
     // Dikey rip: en üst raftan tavana kadar
     const topShelfHeight = baseY - shelfSpacing;
     const topRipHeight = ceilingHeight - topShelfHeight;
-    const verticalTopRipGeometry = new THREE.CylinderGeometry(10, 10, topRipHeight, 32);
+    const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, topRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
     verticalTopRip.position.set(
       pos.x,
@@ -283,7 +285,7 @@ export const handleCeilingFloorWallMount = async ({
     // Dikey rip: en alt raftan tabana kadar
     const bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
     const bottomRipHeight = bottomShelfHeight - floorHeight;
-    const verticalBottomRipGeometry = new THREE.CylinderGeometry(10, 10, bottomRipHeight, 32);
+    const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
     verticalBottomRip.position.set(
       pos.x,
@@ -344,36 +346,41 @@ export const handleCeilingFloorWallMount = async ({
     );
 
     allCornerPositions.forEach((pos) => {
-      // Duvar bağlantıları
-      const wallGeometry = type16FGeometry || model11Geometry;
-      const wallMaterial = type16FMaterial || materialGold;
-      const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
-      wallConnector.scale.set(1.5, 1.5, 1.5);
-      
-      // Type16F modeli için rotasyonlar
-      if (type16FGeometry) {
-        wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
-        wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
-      } else {
-        // Eski model rotasyonları
-        wallConnector.rotation.z = Math.PI / 2;
-        wallConnector.rotation.y = Math.PI / 2;
+      // Add wall connections for all front positions
+      if (pos.z === shelfBoundingBox.min.z + 5) {
+        // Duvar bağlantıları
+        const wallGeometry = type16FGeometry || model11Geometry;
+        const wallMaterial = type16FMaterial || materialGold;
+        const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
+        wallConnector.scale.set(1.5, 1.5, 1.5);
+        
+        // Type16F modeli için rotasyonlar
+        if (type16FGeometry) {
+          wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
+          wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+        } else {
+          // Eski model rotasyonları
+          wallConnector.rotation.z = Math.PI / 2;
+          wallConnector.rotation.y = Math.PI / 2;
+        }
+        
+        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Duvar bağlantısını 20 birim öne getir (-50'den -70'e)
+        scene.add(wallConnector);
       }
-      
-      wallConnector.position.set(pos.x, currentHeight, -roomDepth + 50); // Duvarı bağlantı noktalarına yaklaştır (145'ten 50'ye)
-      scene.add(wallConnector);
 
-      // Duvara yatay rip ekle
-      const horizontalRipLength = Math.abs(pos.z + zOffset + roomDepth - 105); // 200'den 105'e güncellendi
-      const horizontalRipGeometry = new THREE.CylinderGeometry(10, 10, horizontalRipLength, 32);
-      const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-      horizontalRip.rotation.x = Math.PI / 2; // Yatay pozisyon için X ekseninde 90 derece döndür
-      horizontalRip.position.set(
-        pos.x,
-        currentHeight,
-        (pos.z + zOffset - roomDepth + 105) / 2 // 200'den 105'e güncellendi
-      );
-      scene.add(horizontalRip);
+      // Duvara yatay rip ekle - tüm ön pozisyonlarda
+      if (pos.z === shelfBoundingBox.min.z + 5) {
+        const horizontalRipLength = Math.abs(pos.z + zOffset + roomDepth - 140); // 105'ten 140'a güncellendi
+        const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, horizontalRipLength, 32);
+        const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+        horizontalRip.rotation.x = Math.PI / 2; // Yatay pozisyon için X ekseninde 90 derece döndür
+        horizontalRip.position.set(
+          pos.x,
+          currentHeight,
+          (pos.z + zOffset - roomDepth + 140) / 2 // 105'ten 140'a güncellendi
+        );
+        scene.add(horizontalRip);
+      }
 
       // Arka bağlantılar için Model seçimi
       const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon
@@ -461,7 +468,73 @@ export const handleCeilingFloorWallMount = async ({
       }
     });
 
-    // Crossbar'ları ekle
+    // Kısa kenarlara yatay rip ekle (her durumda - horizontal bar durumundan bağımsız)
+    shelfPositions.forEach((shelfX) => {
+      const leftFront = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
+      const leftBack = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 };
+      const rightFront = { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
+
+      // Sol ve sağ kısa kenarlar için ripler - modellerin gerçek pozisyonlarını kullan
+      let zFront = leftFront.z + zOffset + 5;
+      let zBack = leftBack.z + zOffset + 5;
+      
+      // Ön modellerin pozisyonunu hesapla
+      if (showCrossbars) {
+        if (type16AGeometry) {
+          zFront += model13Depth - 20; // Type16A modelini daha öne kaydır
+        } else {
+          zFront += model13Depth + 3; // Normal öndeki modeli kaydır
+        }
+      } else {
+        if (type16AGeometry) {
+          zFront += model13Depth - 20; // Type16A öndeki pozisyon
+        } else {
+          zFront += model13Depth + 3;
+        }
+      }
+      
+      // Arka modellerin pozisyonunu hesapla
+      if (showCrossbars) {
+        zBack -= model13Depth; // Arkadaki modeli öne yaklaştır
+      } else {
+        if (type16AGeometry) {
+          zBack += model13Depth - 108; // Type16A arkadaki pozisyon
+        } else {
+          zBack += model13Depth - 85; // Normal arkadaki pozisyon
+        }
+      }
+      
+      const length = Math.abs(zBack - zFront);
+
+      // Bay'in pozisyonunu kontrol et
+      const bayIndex = shelfPositions.indexOf(shelfX);
+      
+      // Sol kısa kenar - sadece en soldaki bay için ekle
+      if (bayIndex === 0) {
+        const leftRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
+        const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
+        leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
+        leftRip.position.set(
+          leftFront.x,
+          currentHeight + model13Height / 2 - 18,
+          zFront + (zBack - zFront) / 2
+        );
+        scene.add(leftRip);
+      }
+
+      // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
+      const rightRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
+      const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
+      rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
+      rightRip.position.set(
+        rightFront.x,
+        currentHeight + model13Height / 2 - 5,
+        zFront + (zBack - zFront) / 2
+      );
+      scene.add(rightRip);
+    });
+
+    // Crossbar'ları ekle (sadece horizontal bar açık olduğunda)
     if (showCrossbars) {
       // Her bay için arka crossbar'ları ekle
       shelfPositions.forEach((shelfX) => {
@@ -489,72 +562,6 @@ export const handleCeilingFloorWallMount = async ({
           );
           scene.add(horizontalRip);
         }
-      });
-
-      // Kısa kenarlara yatay rip ekle (her durumda)
-      shelfPositions.forEach((shelfX) => {
-        const leftFront = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
-        const leftBack = { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 };
-        const rightFront = { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.min.z + 5 };
-
-        // Sol ve sağ kısa kenarlar için ripler - modellerin gerçek pozisyonlarını kullan
-        let zFront = leftFront.z + zOffset + 5;
-        let zBack = leftBack.z + zOffset + 5;
-        
-        // Ön modellerin pozisyonunu hesapla
-        if (showCrossbars) {
-          if (type16AGeometry) {
-            zFront += model13Depth - 20; // Type16A modelini daha öne kaydır
-          } else {
-            zFront += model13Depth + 3; // Normal öndeki modeli kaydır
-          }
-        } else {
-          if (type16AGeometry) {
-            zFront += model13Depth - 20; // Type16A öndeki pozisyon
-          } else {
-            zFront += model13Depth + 3;
-          }
-        }
-        
-        // Arka modellerin pozisyonunu hesapla
-        if (showCrossbars) {
-          zBack -= model13Depth; // Arkadaki modeli öne yaklaştır
-        } else {
-          if (type16AGeometry) {
-            zBack += model13Depth - 108; // Type16A arkadaki pozisyon
-          } else {
-            zBack += model13Depth - 85; // Normal arkadaki pozisyon
-          }
-        }
-        
-        const length = Math.abs(zBack - zFront);
-
-        // Bay'in pozisyonunu kontrol et
-        const bayIndex = shelfPositions.indexOf(shelfX);
-        
-        // Sol kısa kenar - sadece en soldaki bay için ekle
-        if (bayIndex === 0) {
-          const leftRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
-          const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
-          leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
-          leftRip.position.set(
-            leftFront.x,
-            currentHeight + model13Height / 2 - 18,
-            zFront + (zBack - zFront) / 2
-          );
-          scene.add(leftRip);
-        }
-
-        // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
-        const rightRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
-        const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
-        rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
-        rightRip.position.set(
-          rightFront.x,
-          currentHeight + model13Height / 2 - 5,
-          zFront + (zBack - zFront) / 2
-        );
-        scene.add(rightRip);
       });
     }
   }
