@@ -16,6 +16,7 @@ import BarSelector from "~/components/BarSelector";
 import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
 import PriceAndActions from "~/components/PriceAndActions";
+import WallConnectionSelector from "~/components/WallConnectionSelector";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -46,6 +47,9 @@ export default function Index() {
   // Space adjustments (simplified - keeping only essential ones)
   const [verticalBarsAtBack, setVerticalBarsAtBack] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Wall connection point selection
+  const [wallConnectionPoint, setWallConnectionPoint] = useState<string>('all');
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
@@ -116,6 +120,11 @@ export default function Index() {
             {/* Left Column - Configuration Options */}
             <div className="space-y-4">
               <MountTypeSelector onSelect={setMountType} />
+              
+              <WallConnectionSelector 
+                onSelect={setWallConnectionPoint}
+                mountType={mountType}
+              />
               
               <DimensionInputs
                 height={userHeight}
@@ -196,6 +205,7 @@ export default function Index() {
                     pipeDiameter={pipeDiameter}
                     frontBars={frontBars}
                     verticalBarsAtBack={verticalBarsAtBack}
+                    wallConnectionPoint={wallConnectionPoint}
                   />
                 </div>
               ) : (

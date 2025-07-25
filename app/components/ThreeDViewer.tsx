@@ -31,6 +31,7 @@ interface ThreeDViewerProps {
   pipeDiameter?: string;
   frontBars?: boolean;
   verticalBarsAtBack?: boolean;
+  wallConnectionPoint?: string;
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -47,6 +48,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   pipeDiameter = '5/8',
   frontBars = false,
   verticalBarsAtBack = true,
+  wallConnectionPoint = 'all',
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -697,6 +699,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           verticalBarsAtBack,
           pipeDiameter,
           roomDepth,
+          wallConnectionPoint,
         };
 
         // Handle different mount types
@@ -801,7 +804,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack]);
+  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

@@ -20,7 +20,26 @@ export const handleWallToFloorMount = async ({
   frontBars,
   pipeDiameter,
   roomDepth = 1200,
+  wallConnectionPoint = 'all',
 }: MountTypeProps) => {
+  // Check if wall connection should be added for current shelf level
+  const shouldAddWallConnection = (currentShelfIndex: number, totalShelves: number) => {
+    switch (wallConnectionPoint) {
+      case 'all':
+        return true; // Connect to all shelf levels
+      case 'first':
+        return currentShelfIndex === 0; // Only first shelf
+      case 'second':
+        return currentShelfIndex === 1 && totalShelves > 1; // Only second shelf if exists
+      case 'third':
+        return currentShelfIndex === 2 && totalShelves > 2; // Only third shelf if exists
+      case 'top':
+        return currentShelfIndex === totalShelves - 1; // Only top (highest) shelf
+      default:
+        return true; // Default: all levels
+    }
+  };
+
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
   let model13Geometry: THREE.BufferGeometry | null = null;
@@ -219,7 +238,7 @@ export const handleWallToFloorMount = async ({
     // Tüm köşe pozisyonları için modelleri ekle
     allCornerPositions.forEach((pos) => {
       // Add wall connections for front positions - her raf seviyesinde görünmeli
-      if (pos.z === shelfBoundingBox.min.z + 5) {
+      if (pos.z === shelfBoundingBox.min.z + 5 && shouldAddWallConnection(i, shelfQuantity)) {
         // Duvar bağlantıları
         const wallGeometry = type16FGeometry || model11Geometry;
         const wallMaterial = type16FMaterial || materialGold;
@@ -236,7 +255,28 @@ export const handleWallToFloorMount = async ({
           wallConnector.rotation.y = Math.PI / 2;
         }
         
-        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Duvar bağlantısını 90 birim öne getir (-50'den -140'a)
+        wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Wall connection position
+        scene.add(wallConnector);
+      }
+      
+      // Duvar bağlantısı olmayan seviyeler için model13.glb ekle
+      if (pos.z === shelfBoundingBox.min.z + 5 && !shouldAddWallConnection(i, shelfQuantity)) {
+        const wallGeometry = model13Geometry || model11Geometry;
+        const wallMaterial = model13Material || materialGold;
+        const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
+        wallConnector.scale.set(1.5, 1.5, 1.5);
+        
+        // Model13 için rotasyonlar
+        if (model13Geometry) {
+          wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
+          wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+        } else {
+          // Fallback rotasyonları
+          wallConnector.rotation.z = Math.PI / 2;
+          wallConnector.rotation.y = Math.PI / 2;
+        }
+        
+        wallConnector.position.set(pos.x, currentHeight, pos.z + zOffset-65); // Normal pozisyon
         scene.add(wallConnector);
       }
 

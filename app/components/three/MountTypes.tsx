@@ -34,6 +34,7 @@ export interface MountTypeProps {
   verticalBarsAtBack?: boolean;
   pipeDiameter?: string;
   roomDepth?: number;
+  wallConnectionPoint?: string;
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";
