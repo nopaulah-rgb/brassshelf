@@ -3,6 +3,7 @@ import * as THREE from "three";
 export interface MountTypeProps {
   scene: THREE.Scene;
   shelfQuantity: number;
+  shelfSpacing?: number;
   barCount: number;
   showCrossbars: boolean;
   userHeight?: number;
@@ -34,6 +35,8 @@ export interface MountTypeProps {
   verticalBarsAtBack?: boolean;
   pipeDiameter?: string;
   roomDepth?: number;
+  roomHeight?: number;
+  dynamicFloorY?: number;
   wallConnectionPoint?: string;
 }
 
