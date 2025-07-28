@@ -6,6 +6,7 @@ import { createCabinetDoor } from "../CabinetDoor";
 export const handleCeilingToCounterMount = async ({
   scene,
   shelfQuantity,
+  shelfSpacing = 250,
   barCount,
   showCrossbars,
   userHeight,
@@ -21,6 +22,8 @@ export const handleCeilingToCounterMount = async ({
   model11Geometry,
   materialGold,
   pipeDiameter,
+  roomHeight = 1500,
+  dynamicFloorY = 0,
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -156,17 +159,22 @@ export const handleCeilingToCounterMount = async ({
     }
   }
 
-  const counterHeight = 400; // Counter height in mm
-  const ceilingHeight = 1500; // Ceiling height in mm
-  const baseY = userHeight || 1195;
-  const shelfSpacing = 250;
+  // Ceiling mount için sabit tavan seviyesi
+  const baseCeilingY = roomHeight || 1500;
+  const baseY = baseCeilingY - shelfSpacing; // İlk shelf pozisyonu (tavan'dan shelfSpacing kadar aşağı)
+  // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
+  void userHeight;
+  // dynamicFloorY artık kullanılmıyor - ceiling to counter'da sistem sabit
+  void dynamicFloorY;
+  // shelfSpacing now comes from props
   
   // Calculate pipe radius based on pipeDiameter
-  const pipeRadius = pipeDiameter === '1' ? 12.5 : 8;
+  const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
 
-  // Add counter and doors
+  // Add counter and doors with FIXED positioning (ceiling to counter = sabit sistem)
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-  counter.position.set(0, 200, -600);
+  const fixedCounterY = 200; // Counter position is FIXED in ceiling-to-counter mount
+  counter.position.set(0, fixedCounterY, -600);
   scene.add(counter);
 
   const doorPositions = [-750, -250, 250, 750];
@@ -349,7 +357,7 @@ export const handleCeilingToCounterMount = async ({
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
         const extendedHeight = shelfSpacing + extensionDown;
-                    const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 16);
+                    const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
@@ -379,7 +387,7 @@ export const handleCeilingToCounterMount = async ({
           zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
           const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 16);
+          const horizontalRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
           const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
           horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
           horizontalRip.position.set(
@@ -427,14 +435,13 @@ export const handleCeilingToCounterMount = async ({
       }
       
       const length = Math.abs(zBack - zFront);
-      const modelRadius = 12.5; // Modelin yarıçapına uygun yarıçap
 
       // Bay'in pozisyonunu kontrol et
       const bayIndex = shelfPositions.indexOf(shelfX);
       
       // Sol kısa kenar - sadece en soldaki bay veya tek bay durumunda ekle
       if (bayIndex === 0) {
-        const leftRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
+        const leftRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
         const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
         leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         leftRip.position.set(
@@ -446,7 +453,7 @@ export const handleCeilingToCounterMount = async ({
       }
 
       // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
-      const rightRipGeometry = new THREE.CylinderGeometry(modelRadius, modelRadius, length, 16);
+      const rightRipGeometry = new THREE.CylinderGeometry(10, 10, length, 32);
       const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
       rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
       rightRip.position.set(
@@ -485,26 +492,28 @@ export const handleCeilingToCounterMount = async ({
   );
 
   allCornerPositions.forEach((pos) => {
-    // Dikey rip: en üst raftan tavana kadar
-    const topShelfHeight = baseY;
-    const topRipHeight = ceilingHeight - topShelfHeight;
-    const verticalTopRipGeometry = new THREE.CylinderGeometry(10, 10, topRipHeight, 16);
+    // Dikey rip: en üst raftan tavana kadar - dinamik uzunluk
+    const topShelfHeight = baseY; // İlk shelf pozisyonu (en üst shelf)
+    const actualTopRipHeight = baseCeilingY - topShelfHeight; // Tavan ile üst shelf arası mesafe
+    const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
+    
     verticalTopRip.position.set(
       pos.x,
-      topShelfHeight + topRipHeight / 2,
+      topShelfHeight + actualTopRipHeight / 2, // Rip'in merkezi
       pos.z + zOffset
     );
     scene.add(verticalTopRip);
 
-    // Dikey rip: en alt raftan tezgaha kadar
+    // Dikey rip: en alt raftan counter'ın üst yüzeyine kadar
     const bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
-    const bottomRipHeight = bottomShelfHeight - counterHeight;
-    const verticalBottomRipGeometry = new THREE.CylinderGeometry(10, 10, bottomRipHeight, 16);
+    const counterTopY = fixedCounterY + 200; // Counter'ın üst yüzeyi (sabit pozisyon + yarı yükseklik)
+    const bottomRipHeight = bottomShelfHeight - counterTopY;
+    const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
     verticalBottomRip.position.set(
       pos.x,
-      counterHeight + bottomRipHeight / 2,
+      counterTopY + bottomRipHeight / 2,
       pos.z + zOffset
     );
     scene.add(verticalBottomRip);
@@ -517,20 +526,14 @@ export const handleCeilingToCounterMount = async ({
     
     // Type16E modeli için farklı rotasyon, eski model için eskisi
     if (type16EGeometry) {
-      // Type16E modelini dik durdurmak için 90 derece rotasyon
-      ceilingConnector.rotation.x = Math.PI / 2;
-      // 180 derece döndür
-      ceilingConnector.rotation.y = Math.PI;
+      ceilingConnector.rotation.x = Math.PI * 1.5; // Type16E için 270 derece rotasyon
     } else {
-      // Eski model rotasyonu
-      ceilingConnector.rotation.x = Math.PI;
-      // 180 derece döndür
-      ceilingConnector.rotation.y = Math.PI;
+      ceilingConnector.rotation.x = Math.PI; // Eski model rotasyonu
     }
     
-    // Type16E modeli için pozisyon ayarı
-    const ceilingY = type16EGeometry ? 1500 : 1505;
-    ceilingConnector.position.set(pos.x, ceilingY, pos.z + zOffset);
+    // Ceiling connector pozisyonu - her zaman sabit tavan seviyesinde
+    const connectorCeilingY = baseCeilingY; // Sabit tavan seviyesi
+    ceilingConnector.position.set(pos.x, connectorCeilingY, pos.z + zOffset);
     scene.add(ceilingConnector);
 
     // Tezgah bağlantıları - Type16E v1.glb kullan (tavan ile aynı)
@@ -541,11 +544,10 @@ export const handleCeilingToCounterMount = async ({
     
     // Type16E modeli için farklı rotasyon, eski model için normal
     if (type16EGeometry) {
-      // Type16E modelini 450 derece döndür (counter için)
-      counterConnector.rotation.x = 2 * Math.PI + Math.PI / 2;
+      counterConnector.rotation.x = Math.PI / 2; // Type16E için counter'da 90 derece öne rotasyon
     }
     
-    counterConnector.position.set(pos.x, counterHeight, pos.z + zOffset);
+    counterConnector.position.set(pos.x, counterTopY, pos.z + zOffset);
     scene.add(counterConnector);
   });
 };
