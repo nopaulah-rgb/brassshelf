@@ -21,6 +21,7 @@ interface ThreeDViewerProps {
   shelfUrl: string;
   ripUrl: string;
   shelfQuantity: number;
+  shelfSpacing?: number;
   mountType: string;
   barCount: number;
   showCrossbars: boolean;
@@ -38,6 +39,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   shelfUrl,
   ripUrl,
   shelfQuantity,
+  shelfSpacing = 250,
   mountType,
   barCount,
   showCrossbars,
@@ -228,12 +230,18 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       roomWidth = Math.max(2000, roomWidth + additionalWidth);
     }
     
-    // Adjust room size for taller shelf systems
+    // Calculate dynamic room height based on shelf quantity and spacing
+    const baseRoomHeight = 1500;
+    const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
+    const heightExtension = Math.max(0, totalShelfSystemHeight - 500); // Extend if system is taller than 500mm
+    roomHeight = baseRoomHeight + heightExtension;
+    
+    // Adjust room size for taller shelf systems (existing logic)
     if (heightInInches > 60) {
       const scaleFactor = Math.max(1.2, heightInInches / 50);
       roomWidth = Math.max(roomWidth, roomWidth * scaleFactor); // Use the already adjusted width
       roomDepth = Math.max(1200, roomDepth * scaleFactor);
-      roomHeight = Math.max(1500, userHeight! + 300); // Add 300mm clearance above top shelf
+      roomHeight = Math.max(roomHeight, userHeight! + 400); // Ensure enough space above shelves
     }
 
     // Room geometry setup with dynamic dimensions
@@ -309,10 +317,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     sideLight.position.set(-800, 600, 0);
     scene.add(sideLight);
 
+    // Calculate dynamic floor position based on shelf system height
+    const dynamicFloorY = -heightExtension; // Floor moves down as room extends
+    
     // Add room elements with dynamic positioning
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(0, 0, -roomDepth / 2);
+    floor.position.set(0, dynamicFloorY, -roomDepth / 2);
     scene.add(floor);
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
@@ -341,25 +352,26 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     scene.add(wallLight2);
     scene.add(wallLight2.target);
 
-    // Set initial camera position for perfect centering
-    // Adjust distance based on shelf quantity and bay count for optimal framing
+    // Set initial camera position for perfect centering with dynamic room height
+    // Adjust distance based on shelf quantity, bay count, and room height for optimal framing
     const shelfHeightFactor = (userHeight || 1194) / 1000; // Height scaling factor
     const shelfQuantityFactor = Math.max(1, shelfQuantity / 3); // More shelves = further back
     const bayCountFactor = Math.max(1, barCount / 2); // More bays = further back
+    const roomHeightFactor = roomHeight / 1500; // Dynamic room height factor
     
-    const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
-    const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 3500));
+    const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
+    const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 4500)); // Increased max distance for taller rooms
     
-    // Position camera for optimal centered view
+    // Position camera for optimal centered view - adjust Y based on dynamic room height and floor position
     const cameraX = 0; // Center camera on x-axis for perfect alignment
-    const cameraY = (userHeight || 1194) * 0.6; // Above the shelf system center
+    const cameraY = Math.max((userHeight || 1194) * 0.6, roomHeight * 0.4) + Math.abs(dynamicFloorY); // Above the shelf system center, adjusted for room height and floor position
     const cameraZ = cameraDistance * 0.8; // Forward position for good perspective
     
     camera.position.set(cameraX, cameraY, cameraZ);
     
-    // Calculate perfect center based on actual shelf dimensions and quantity
+    // Calculate perfect center based on actual shelf dimensions, quantity and room height
     const shelfSystemCenterX = 0; // Shelves are centered at x=0
-    const shelfSystemCenterY = (userHeight || 1194) / 2; // Half of actual shelf height
+    const shelfSystemCenterY = Math.min((userHeight || 1194) / 2, roomHeight * 0.3) + Math.abs(dynamicFloorY); // Half of actual shelf height, but adjust for room height and floor position
     const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
     
     camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
@@ -674,6 +686,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         const mountTypeProps = {
           scene,
           shelfQuantity,
+          shelfSpacing,
           barCount,
           showCrossbars,
           userHeight,
@@ -699,6 +712,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           verticalBarsAtBack,
           pipeDiameter,
           roomDepth,
+          roomHeight,
+          dynamicFloorY,
           wallConnectionPoint,
         };
 
@@ -804,7 +819,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint]);
+  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

@@ -5,6 +5,7 @@ import { MountTypeProps } from "../MountTypes";
 export const handleWallToFloorMount = async ({
   scene,
   shelfQuantity,
+  shelfSpacing = 250,
   barCount,
   showCrossbars,
   userHeight,
@@ -171,7 +172,7 @@ export const handleWallToFloorMount = async ({
   }
 
   const baseY = userHeight || 1195;
-  const shelfSpacing = 250;
+  // shelfSpacing now comes from props
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
@@ -259,25 +260,25 @@ export const handleWallToFloorMount = async ({
         scene.add(wallConnector);
       }
       
-      // Duvar bağlantısı olmayan seviyeler için model13.glb ekle
+      // Duvar bağlantısı olmayan seviyeler için - WallToCounter mantığını kullan
       if (pos.z === shelfBoundingBox.min.z + 5 && !shouldAddWallConnection(i, shelfQuantity)) {
-        const wallGeometry = model13Geometry || model11Geometry;
-        const wallMaterial = model13Material || materialGold;
-        const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
-        wallConnector.scale.set(1.5, 1.5, 1.5);
+        const geometryToUse = type16AGeometry || model13Geometry || model1Geometry;
+        const materialToUse = type16AMaterial || model13Material || materialGold;
         
-        // Model13 için rotasyonlar
-        if (model13Geometry) {
-          wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
-          wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
-        } else {
-          // Fallback rotasyonları
-          wallConnector.rotation.z = Math.PI / 2;
-          wallConnector.rotation.y = Math.PI / 2;
+        if (geometryToUse) {
+          const connectorMesh = new THREE.Mesh(geometryToUse, materialToUse);
+          connectorMesh.scale.set(1.5, 1.5, 1.5);
+          
+          // WallToCounter ile aynı rotasyon
+          connectorMesh.rotation.y = Math.PI;
+          
+          // WallToCounter ile aynı pozisyon hesaplaması
+          let zPos = pos.z + zOffset + 5;
+          zPos += model13Depth - 110; // Duvara yakın pozisyon
+          
+          connectorMesh.position.set(pos.x, currentHeight, zPos);
+          scene.add(connectorMesh);
         }
-        
-        wallConnector.position.set(pos.x, currentHeight, pos.z + zOffset-65); // Normal pozisyon
-        scene.add(wallConnector);
       }
 
       // Arka bağlantılar için Model seçimi
@@ -409,7 +410,8 @@ export const handleWallToFloorMount = async ({
           zEnd -= model1Depth + 10;
 
           const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, length, 32);
+          const horizontalRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
+          const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, length, 32);
           const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
           horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
           horizontalRip.position.set(
@@ -451,7 +453,8 @@ export const handleWallToFloorMount = async ({
       
       // Sol kısa kenar - sadece en soldaki bay için ekle
       if (bayIndex === 0) {
-        const leftRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, length, 32);
+        const leftEdgeRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
+        const leftRipGeometry = new THREE.CylinderGeometry(leftEdgeRipRadius, leftEdgeRipRadius, length, 32);
         const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
         leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         leftRip.position.set(
@@ -463,7 +466,8 @@ export const handleWallToFloorMount = async ({
       }
 
       // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
-      const rightRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, length, 32);
+      const rightEdgeRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
+      const rightRipGeometry = new THREE.CylinderGeometry(rightEdgeRipRadius, rightEdgeRipRadius, length, 32);
       const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
       rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
       rightRip.position.set(

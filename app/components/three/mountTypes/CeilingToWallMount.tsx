@@ -5,6 +5,7 @@ import { MountTypeProps } from "../MountTypes";
 export const handleCeilingToWallMount = async ({
   scene,
   shelfQuantity,
+  shelfSpacing = 250,
   barCount,
   showCrossbars,
   userHeight,
@@ -18,6 +19,7 @@ export const handleCeilingToWallMount = async ({
   model11Geometry,
   materialGold,
   roomDepth = 1200,
+  roomHeight = 1500,
   wallConnectionPoint = 'all',
 }: MountTypeProps) => {
   // Check if wall connection should be added for current shelf level
@@ -208,9 +210,12 @@ export const handleCeilingToWallMount = async ({
     }
   }
 
-  const ceilingHeight = 1500; // Ceiling height in mm
-  const baseY = userHeight || 1195;
-  const shelfSpacing = 250;
+  // Ceiling mount için shelf sistemini yukarı çıkar ki ripler ceiling connectorlara ulaşsın
+  const baseCeilingY = roomHeight || 1500;
+  const baseY = baseCeilingY - shelfSpacing; // Ceiling'den rip uzunluğu kadar aşağı
+  // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
+  void userHeight;
+  // shelfSpacing now comes from props
   
   // Calculate pipe radius based on pipeDiameter
 
@@ -269,18 +274,20 @@ export const handleCeilingToWallMount = async ({
       ceilingConnector.rotation.x = Math.PI; // Eski model rotasyonu
     }
     
-    ceilingConnector.position.set(pos.x, ceilingHeight, pos.z + zOffset);
+    // Ceiling connector pozisyonu - tek shelf durumunda asıl tavan seviyesinde
+    const connectorCeilingY = shelfQuantity === 1 ? baseCeilingY : baseY + shelfSpacing;
+    ceilingConnector.position.set(pos.x, connectorCeilingY, pos.z + zOffset);
     scene.add(ceilingConnector);
 
-    // Dikey rip: en üst raftan tavana kadar (kısaltılmış)
-    const topShelfHeight = baseY - shelfSpacing;
-    const fullTopRipHeight = ceilingHeight - topShelfHeight;
-    const topRipHeight = fullTopRipHeight * 0.7; // Ripi %70'e kısalt
-    const verticalTopRipGeometry = new THREE.CylinderGeometry(10, 10, topRipHeight, 32);
+    // Dikey rip: en üst raftan tavana kadar - shelf spacing uzunluğunda
+    const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : baseY;
+    const actualTopRipHeight = shelfSpacing;
+    const verticalTopRipGeometry = new THREE.CylinderGeometry(10, 10, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
+    
     verticalTopRip.position.set(
       pos.x,
-      ceilingHeight - topRipHeight / 2, // Tavandan aşağı doğru pozisyonla
+      topShelfHeight + actualTopRipHeight / 2, // Shelf'ten yukarı doğru pozisyonla
       pos.z + zOffset
     );
     scene.add(verticalTopRip);
@@ -288,7 +295,11 @@ export const handleCeilingToWallMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    const currentHeight = baseY - i * shelfSpacing;
+    // Tek raf olduğunda ceiling connector'dan shelfSpacing kadar aşağı
+    // Çoklu raf olduğunda normal hesaplama (i=0 ilk raf, i=1 ikinci raf vs.)
+    const currentHeight = shelfQuantity === 1 ? 
+      baseCeilingY - shelfSpacing : // Tek raf: ceiling'den shelfSpacing kadar aşağı
+      baseY - i * shelfSpacing; // Çoklu raf: her raf shelfSpacing kadar aralıklı
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {
