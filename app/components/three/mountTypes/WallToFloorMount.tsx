@@ -10,6 +10,7 @@ export const handleWallToFloorMount = async ({
   showCrossbars,
   userHeight,
   userWidth,
+  useTopShelf = false,
   shelfGeometry,
   shelfMaterial,
   zOffset,
@@ -374,12 +375,16 @@ export const handleWallToFloorMount = async ({
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
         const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü
         
+        // useTopShelf true ise ve ilk raf ise ripi uzat (top shelf kullanılıyor)
+        const shouldExtendRip = useTopShelf && i === 0;
+        const baseExtension = shouldExtendRip ? 100 : 0;
         const edgeExtension = (isFront || isBack) ? 60 : 0; // Ön ve arka ripler için ekstra uzatma
+        const totalExtension = baseExtension + edgeExtension;
         
         const verticalRipGeometry = new THREE.CylinderGeometry(
           pipeRadius, 
           pipeRadius, 
-          shelfSpacing + edgeExtension, 
+          shelfSpacing + totalExtension, 
           32
         );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);

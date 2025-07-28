@@ -11,7 +11,7 @@ export const handleWallToCounterMount = async ({
   showCrossbars,
   userHeight,
   userWidth,
-  useTopShelf = true,
+  useTopShelf = false,
   roomGeometry,
   whiteRoomMaterial,
   shelfGeometry,
@@ -367,7 +367,7 @@ export const handleWallToCounterMount = async ({
           scene.add(verticalRip);
         } else {
           // Raflar arası normal ripler
-          const shouldExtendRip = !useTopShelf && i === 0;
+          const shouldExtendRip = useTopShelf && i === 0;
           const baseExtension = shouldExtendRip ? 100 : 0;
                       const edgeExtension = (isWallSide || isBackSide) ? 35 : 0; // Ön ve arka ripler için ekstra uzatma
           const totalExtension = baseExtension + edgeExtension;
