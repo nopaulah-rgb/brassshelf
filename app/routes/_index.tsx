@@ -4,18 +4,19 @@ import { useState } from "react";
 import React from "react";
 import ThreeDViewer from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
-import HeightInput from "~/components/HeightInput";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
 
 // Components
 import RipSelector from "~/components/RipSelector";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
+import ShelfSpacingSelector from "~/components/ShelfSpacingSelector";
 import MountTypeSelector from "~/components/MountTypeSelector";
 import BarSelector from "~/components/BarSelector";
 import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
 import PriceAndActions from "~/components/PriceAndActions";
+import WallConnectionSelector from "~/components/WallConnectionSelector";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -27,6 +28,7 @@ export default function Index() {
   const [selectedShelf, setSelectedShelf] = useState<string | null>('/models/Glass Shelf v1_B.glb');
   const [selectedRip, setSelectedRip] = useState<string | null>('/models/50cmRib.stl');
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
+  const [shelfSpacing, setShelfSpacing] = useState<number>(250); // in mm
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
@@ -35,7 +37,7 @@ export default function Index() {
   const [totalDepth, setTotalDepth] = useState<number>(12); // in inches
   const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
   const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
-  const [price, setPrice] = useState<number>(599);
+  const [price] = useState<number>(599);
 
   // Material selections
   const [pipeDiameter, setPipeDiameter] = useState<string>('5/8');
@@ -44,8 +46,11 @@ export default function Index() {
   const [frontBars, setFrontBars] = useState<boolean>(true);
 
   // Space adjustments (simplified - keeping only essential ones)
-  const [verticalBarsAtBack, setVerticalBarsAtBack] = useState<boolean>(true);
+  const [verticalBarsAtBack] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Wall connection point selection
+  const [wallConnectionPoint, setWallConnectionPoint] = useState<string>('all');
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
@@ -117,6 +122,11 @@ export default function Index() {
             <div className="space-y-4">
               <MountTypeSelector onSelect={setMountType} />
               
+              <WallConnectionSelector 
+                onSelect={setWallConnectionPoint}
+                mountType={mountType}
+              />
+              
               <DimensionInputs
                 height={userHeight}
                 width={userWidth}
@@ -131,6 +141,8 @@ export default function Index() {
               />
 
               <ShelfQuantitySelector onSelect={setShelfQuantity} />
+              
+              <ShelfSpacingSelector onSelect={setShelfSpacing} />
               
               <BarSelector onSelect={setBarCount} />
               
@@ -186,6 +198,7 @@ export default function Index() {
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
+                    shelfSpacing={shelfSpacing}
                     mountType={mountType}
                     barCount={barCount}
                     showCrossbars={frontBars}
@@ -196,6 +209,7 @@ export default function Index() {
                     pipeDiameter={pipeDiameter}
                     frontBars={frontBars}
                     verticalBarsAtBack={verticalBarsAtBack}
+                    wallConnectionPoint={wallConnectionPoint}
                   />
                 </div>
               ) : (

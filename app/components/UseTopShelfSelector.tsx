@@ -7,8 +7,8 @@ interface UseTopShelfSelectorProps {
 }
 
 const UseTopShelfSelector: React.FC<UseTopShelfSelectorProps> = ({ mountType, useTopShelf, onChange }) => {
-  // Only show for wall to floor and wall to counter mount types
-  if (mountType !== 'wall to floor' && mountType !== 'wall to counter') {
+  // Only show for wall mount types (wall, wall to floor, wall to counter)
+  if (mountType !== 'wall to floor' && mountType !== 'wall to counter' && mountType !== 'wall') {
     return null;
   }
 
