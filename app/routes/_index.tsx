@@ -11,6 +11,7 @@ import RipSelector from "~/components/RipSelector";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import ShelfSpacingSelector from "~/components/ShelfSpacingSelector";
+import IndividualShelfSpacingSelector from "~/components/IndividualShelfSpacingSelector";
 import MountTypeSelector from "~/components/MountTypeSelector";
 import BarSelector from "~/components/BarSelector";
 import DimensionInputs from "~/components/DimensionInputs";
@@ -29,6 +30,8 @@ export default function Index() {
   const [selectedRip, setSelectedRip] = useState<string | null>('/models/50cmRib.stl');
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [shelfSpacing, setShelfSpacing] = useState<number>(250); // in mm
+  const [useIndividualSpacing, setUseIndividualSpacing] = useState<boolean>(false);
+  const [shelfSpacings, setShelfSpacings] = useState<number[]>([250]); // in mm - array for individual spacing
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
@@ -143,7 +146,43 @@ export default function Index() {
 
               <ShelfQuantitySelector onSelect={setShelfQuantity} />
               
-              <ShelfSpacingSelector onSelect={setShelfSpacing} />
+              {/* Spacing Mode Toggle */}
+              <div className="bg-[#8BBBD9] rounded-lg p-4">
+                <h3 className="text-[#1E3A5F] font-semibold mb-3">Shelf Spacing Mode:</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setUseIndividualSpacing(false)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      !useIndividualSpacing
+                        ? 'bg-[#1E3A5F] text-white'
+                        : 'bg-white/60 text-[#1E3A5F] border border-[#1E3A5F]/20'
+                    }`}
+                  >
+                    Equal Spacing
+                  </button>
+                  <button
+                    onClick={() => setUseIndividualSpacing(true)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      useIndividualSpacing
+                        ? 'bg-[#1E3A5F] text-white'
+                        : 'bg-white/60 text-[#1E3A5F] border border-[#1E3A5F]/20'
+                    }`}
+                  >
+                    Individual Spacing
+                  </button>
+                </div>
+              </div>
+
+              {/* Conditional Spacing Selector */}
+              {!useIndividualSpacing ? (
+                <ShelfSpacingSelector onSelect={setShelfSpacing} />
+              ) : (
+                <IndividualShelfSpacingSelector 
+                  shelfQuantity={shelfQuantity}
+                  onSpacingChange={setShelfSpacings}
+                  defaultSpacing={shelfSpacing}
+                />
+              )}
               
               <BarSelector onSelect={setBarCount} />
               
@@ -199,11 +238,10 @@ export default function Index() {
               ) : isViewerReady ? (
                 <div className="w-full h-[400px]">
                   <ThreeDViewer
-                    key={`${mountType}-${shelfQuantity}-${frontBars}-${selectedShelvesForBars.join(',')}`}
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
-                    shelfSpacing={shelfSpacing}
+                    shelfSpacing={useIndividualSpacing ? shelfSpacings[0] || 250 : shelfSpacing}
                     mountType={mountType}
                     barCount={barCount}
                     showCrossbars={frontBars}

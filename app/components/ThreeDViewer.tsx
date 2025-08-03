@@ -653,6 +653,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           if (!showCrossbars || !frontBars) return;
           
           // Calculate which shelf this height corresponds to
+          // Calculate which shelf this height corresponds to
           const shelfIndex = Math.round((baseHeight - 100) / shelfSpacing);
           
           // Only add horizontal bars if this shelf is selected
@@ -765,9 +766,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
         // Handle different mount types
         const handleMountType = async () => {
+          console.log("Handling mount type:", mountType);
+          console.log("Mount type props:", mountTypeProps);
           switch (mountType) {
             case "ceiling":
+              console.log("Calling handleCeilingMount...");
               await handleCeilingMount(mountTypeProps);
+              console.log("handleCeilingMount completed");
               break;
             case "wall to counter":
               handleWallToCounterMount(mountTypeProps);
