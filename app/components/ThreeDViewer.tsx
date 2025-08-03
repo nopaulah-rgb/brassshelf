@@ -162,26 +162,62 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
   const handleFitToScreen = () => {
     if (cameraRef.current && controlsRef.current) {
-      // Reset camera to initial position
+      // Calculate dynamic room dimensions (same logic as in useEffect)
+      const heightInInches = userHeight ? userHeight / 25.4 : 47;
+      
+      // Base room dimensions
+      let roomWidth = 2000;
+      let roomDepth = 1200;
+      let roomHeight = 1500;
+      
+      // Adjust room width dynamically based on barCount
+      if (barCount > 1) {
+        const additionalWidth = (barCount - 1) * 950;
+        roomWidth = Math.max(2000, roomWidth + additionalWidth);
+      }
+      
+      // Calculate dynamic room height based on shelf quantity and spacing
+      const baseRoomHeight = 1500;
+      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
+      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
+      roomHeight = baseRoomHeight + heightExtension;
+      
+      // Adjust room size for taller shelf systems
+      if (heightInInches > 60) {
+        const scaleFactor = Math.max(1.2, heightInInches / 50);
+        roomWidth = Math.max(roomWidth, roomWidth * scaleFactor);
+        roomDepth = Math.max(1200, roomDepth * scaleFactor);
+        roomHeight = Math.max(roomHeight, userHeight! + 400);
+      }
+      
+      // Calculate dynamic floor position
+      const dynamicFloorY = -heightExtension;
+      
+      // Calculate camera distance based on room dimensions to ensure entire room is visible
+      const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
       const shelfHeightFactor = (userHeight || 1194) / 1000;
       const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
       const bayCountFactor = Math.max(1, barCount / 2);
+      const roomHeightFactor = roomHeight / 1500;
       
-      const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
-      const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 3500));
+      // Use room diagonal as base for camera distance to ensure full room visibility
+      const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
+      const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
       
-      const cameraX = cameraDistance * 0.6;
-      const cameraY = (userHeight || 1194) * 0.6;
-      const cameraZ = cameraDistance * 0.8;
+      // Position camera to show entire room
+      const cameraX = 0; // Center on x-axis
+      const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
+      const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
       
       cameraRef.current.position.set(cameraX, cameraY, cameraZ);
       
-      const shelfSystemCenterX = 0;
-      const shelfSystemCenterY = (userHeight || 1194) / 2;
-      const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+      // Calculate room center for camera target
+      const roomCenterX = 0;
+      const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
+      const roomCenterZ = -roomDepth / 2; // Center of the room depth
       
-      cameraRef.current.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
-      controlsRef.current.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      cameraRef.current.lookAt(roomCenterX, roomCenterY, roomCenterZ);
+      controlsRef.current.target.set(roomCenterX, roomCenterY, roomCenterZ);
       controlsRef.current.update();
     }
   };
