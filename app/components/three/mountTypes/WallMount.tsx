@@ -210,14 +210,15 @@ export const handleWallMount = async ({
   // Ripler için kullanılacak materyali belirle - modeller ile aynı olsun
   const ripMaterial = model13Material || materialGold;
 
-  // Her raf için döngü
-  for (let i = 0; i < shelfQuantity; i++) {
+  // Her raf için döngü - shelfQuantity + 1 oluşturulmalı ve en üst raf boş görünmeli
+  const totalShelves = shelfQuantity + 1;
+  for (let i = 0; i < totalShelves; i++) {
     // Individual spacing kullan veya fallback olarak tek spacing kullan
     const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
     
     // İlk raf her zaman baseY pozisyonunda kalmalı, diğer raflar aşağıya eklenmeli
     let currentHeight;
-    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+    if (shelfSpacings && shelfSpacings.length >= totalShelves) {
       // Individual spacing için cumulative height hesaplama
       let cumulativeHeight = 0;
       for (let j = 0; j < i; j++) {
@@ -229,7 +230,7 @@ export const handleWallMount = async ({
       currentHeight = adjustedBaseY - (i * shelfSpacing);
     }
 
-    // Her bir bay için rafları yerleştir - modellerin üstünde
+    // Her bir bay için rafları yerleştir - modellerin üstünde (+1 shelf de eklenir)
     shelfPositions.forEach((shelfX) => {
       const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
       shelfMesh.position.set(shelfX, currentHeight + model13Height * 1, zOffset); // Model yüksekliği kadar yukarı taşı
@@ -266,7 +267,7 @@ export const handleWallMount = async ({
       const isFront = pos.z === shelfBoundingBox.min.z + 5;  // Ön pozisyon
       
       // Ön pozisyonlar için duvar bağlantıları
-      if (isFront && shouldAddWallConnection(i, shelfQuantity)) {
+      if (isFront && shouldAddWallConnection(i, totalShelves)) {
         const wallGeometry = type16FGeometry || model11Geometry;
         const wallMaterial = type16FMaterial || materialGold;
         const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
@@ -287,7 +288,7 @@ export const handleWallMount = async ({
       }
       
       // Duvar bağlantısı olmayan seviyeler için - horizontal bar durumuna göre model seçimi
-      if (isFront && !shouldAddWallConnection(i, shelfQuantity)) {
+      if (isFront && !shouldAddWallConnection(i, totalShelves)) {
         let geometryToUse, materialToUse;
         
         // Horizontal bar açık olan raflar için Model13 kullan
@@ -405,7 +406,7 @@ export const handleWallMount = async ({
       }
 
       // Dikey ripler
-      if (i < shelfQuantity - 1) {
+      if (i < totalShelves - 1) {
         // Raflar arası normal ripler
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
         const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü

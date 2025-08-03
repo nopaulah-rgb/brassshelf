@@ -251,6 +251,9 @@ export const handleWallToCounterMount = async ({
   const ripMaterial = model13Material || materialGold;
 
   // Function to determine if wall connection should be added at this level
+  // Her raf için döngü - shelfQuantity + 1 oluşturulmalı ve en üst raf boş görünmeli
+  const totalShelves = shelfQuantity + 1;
+
   const shouldAddWallConnection = (currentIndex: number) => {
     // Handle array of connection points
     if (wallConnectionPoint.includes('all')) {
@@ -261,31 +264,29 @@ export const handleWallToCounterMount = async ({
     if (wallConnectionPoint.includes('first') && currentIndex === 0) {
       return true;
     }
-    if (wallConnectionPoint.includes('second') && currentIndex === 1 && shelfQuantity > 1) {
+    if (wallConnectionPoint.includes('second') && currentIndex === 1 && totalShelves > 1) {
       return true;
     }
-    if (wallConnectionPoint.includes('third') && currentIndex === 2 && shelfQuantity > 2) {
+    if (wallConnectionPoint.includes('third') && currentIndex === 2 && totalShelves > 2) {
       return true;
     }
-    if (wallConnectionPoint.includes('top') && currentIndex === shelfQuantity - 1) {
+    if (wallConnectionPoint.includes('top') && currentIndex === totalShelves - 1) {
       return true;
     }
     
     return false; // No connection if none of the conditions match
   };
-
-  // Her raf için döngü
-  for (let i = 0; i < shelfQuantity; i++) {
+  for (let i = 0; i < totalShelves; i++) {
     // Individual spacing kullan veya fallback olarak tek spacing kullan
     const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
     
     // Individual spacing için height hesaplama - ceiling mount gibi
     let currentHeight;
-    if (shelfQuantity === 1) {
+    if (totalShelves === 1) {
       currentHeight = baseY - spacingToUse; // Tek raf: duvardan spacing kadar aşağı
     } else {
       // Individual spacing için cumulative height hesaplama
-      if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+      if (shelfSpacings && shelfSpacings.length >= totalShelves) {
         let cumulativeHeight = 0;
         for (let j = 0; j <= i; j++) {
           cumulativeHeight += shelfSpacings[j];
@@ -299,7 +300,7 @@ export const handleWallToCounterMount = async ({
     
     console.log(`WallToCounter - Shelf ${i + 1} spacing:`, { spacingToUse, shelfSpacings, shelfSpacing, baseY, currentHeight });
 
-    // Her bir bay için rafları yerleştir - modellerin üstünde
+    // Her bir bay için rafları yerleştir - modellerin üstünde (+1 shelf de eklenir)
     shelfPositions.forEach((shelfX) => {
       const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
       shelfMesh.position.set(shelfX, currentHeight + model13Height * 1, zOffset); // Model yüksekliği kadar yukarı taşı
@@ -381,7 +382,7 @@ export const handleWallToCounterMount = async ({
 
         // Dikey ripler
         
-        if (i === shelfQuantity - 1) {
+        if (i === totalShelves - 1) {
           // En alt raftan counter'a kadar olan rip
           const ripHeight = currentHeight - counterHeight;
           let extendedHeight = ripHeight;
