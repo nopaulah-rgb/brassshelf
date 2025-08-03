@@ -8,7 +8,6 @@ export const handleCeilingFloorWallMount = async ({
   shelfSpacing = 250,
   barCount,
   showCrossbars,
-  userHeight,
   userWidth,
   shelfGeometry,
   shelfMaterial,
@@ -18,6 +17,7 @@ export const handleCeilingFloorWallMount = async ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  frontBars,
   pipeDiameter,
   roomDepth = 1200,
   roomHeight = 1500,
@@ -216,9 +216,7 @@ export const handleCeilingFloorWallMount = async ({
   // Ceiling mount için sabit tavan seviyesi
   const baseCeilingY = roomHeight || 1500;
   const baseY = baseCeilingY - shelfSpacing; // İlk shelf pozisyonu (tavan'dan shelfSpacing kadar aşağı)
-  // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
-  void userHeight;
-  // shelfSpacing now comes from props
+  const adjustedBaseY = baseY; // İlk raf her zaman aynı pozisyonda kalmalı
   
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
@@ -298,7 +296,7 @@ export const handleCeilingFloorWallMount = async ({
     scene.add(ceilingConnector);
 
     // Dikey rip: en üst raftan tavana kadar - dinamik uzunluk
-    const topShelfHeight = baseY; // İlk shelf pozisyonu (en üst shelf)
+    const topShelfHeight = adjustedBaseY; // İlk shelf pozisyonu (en üst shelf)
     const actualTopRipHeight = baseCeilingY - topShelfHeight; // Tavan ile üst shelf arası mesafe
     const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
@@ -311,7 +309,7 @@ export const handleCeilingFloorWallMount = async ({
     scene.add(verticalTopRip);
 
     // Dikey rip: en alt raftan zemine kadar
-    const bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
+    const bottomShelfHeight = adjustedBaseY - ((shelfQuantity - 1) * shelfSpacing);
     const floorTopY = floorHeight; // Floor'ın üst yüzeyi
     const bottomRipHeight = bottomShelfHeight - floorTopY;
     const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
@@ -340,8 +338,8 @@ export const handleCeilingFloorWallMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    // Sabit shelf positioning - CeilingToCounterToWallMount ile aynı mantık
-    const currentHeight = baseY - i * shelfSpacing;
+    // İlk raf her zaman baseY pozisyonunda kalmalı, diğer raflar aşağıya eklenmeli
+    const currentHeight = adjustedBaseY - (i * shelfSpacing);
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {
@@ -398,21 +396,56 @@ export const handleCeilingFloorWallMount = async ({
         scene.add(wallConnector);
       }
       
-      // Duvar bağlantısı olmayan seviyeler için - WallToCounter mantığını kullan
+      // Duvar bağlantısı olmayan seviyeler için - horizontal bar durumuna göre model seçimi
       if (pos.z === shelfBoundingBox.min.z + 5 && !shouldAddWallConnection(i, shelfQuantity)) {
-        const geometryToUse = type16AGeometry || model13Geometry || model1Geometry;
-        const materialToUse = type16AMaterial || model13Material || materialGold;
+        let geometryToUse, materialToUse;
+        
+        // Horizontal bar açık olan raflar için Model13 kullan
+        if (selectedShelvesForBars.includes(i)) {
+          geometryToUse = model13Geometry || model1Geometry;
+          materialToUse = model13Material || materialGold;
+        } else {
+          // Horizontal bar kapalı olan raflar için Type16A kullan
+          if (type16AGeometry) {
+            geometryToUse = type16AGeometry;
+            materialToUse = type16AMaterial || materialGold;
+          } else {
+            geometryToUse = model13Geometry || model1Geometry;
+            materialToUse = model13Material || materialGold;
+          }
+        }
         
         if (geometryToUse) {
           const connectorMesh = new THREE.Mesh(geometryToUse, materialToUse);
           connectorMesh.scale.set(1.5, 1.5, 1.5);
           
-          // WallToCounter ile aynı rotasyon
-          connectorMesh.rotation.y = Math.PI;
+          // Model tipine göre rotasyonlar
+          if (selectedShelvesForBars.includes(i)) {
+            // Horizontal bar açık - Model13 rotasyonu
+            connectorMesh.rotation.y = Math.PI;
+          } else {
+            // Horizontal bar kapalı - Type16A rotasyonu
+            if (type16AGeometry) {
+              connectorMesh.rotation.y = Math.PI;
+            } else {
+              connectorMesh.rotation.y = Math.PI; // Fallback rotasyon
+            }
+          }
           
-          // WallToCounter ile aynı pozisyon hesaplaması
+          // Pozisyon hesaplaması
           let zPos = pos.z + zOffset + 5;
-          zPos += model13Depth - 110; // Duvara yakın pozisyon
+          
+          if (selectedShelvesForBars.includes(i)) {
+            // Horizontal bar açık - Model13 pozisyonu
+            zPos += model13Depth - 110;
+          } else {
+            // Horizontal bar kapalı - Type16A pozisyonu
+            if (type16AGeometry) {
+              zPos += model13Depth - 110; // Type16A için aynı pozisyon
+            } else {
+              zPos += model13Depth - 110; // Fallback pozisyon
+            }
+          }
           
           connectorMesh.position.set(pos.x, currentHeight, zPos);
           scene.add(connectorMesh);
@@ -440,12 +473,12 @@ export const handleCeilingFloorWallMount = async ({
       if (isBack) {
         let geometryToUse, materialToUse;
         
-        if (showCrossbars) {
-          // Horizontal bar açık - arkada Model13 kullan
+        // Horizontal bar açık olan raflar için Model13 kullan
+        if (selectedShelvesForBars.includes(i)) {
           geometryToUse = model13Geometry || model1Geometry;
           materialToUse = model13Material || materialGold;
         } else {
-          // Horizontal bar kapalı - arkada Type16A kullan
+          // Horizontal bar kapalı olan raflar için Type16A kullan
           if (type16AGeometry) {
             geometryToUse = type16AGeometry;
             materialToUse = type16AMaterial || materialGold;
@@ -460,14 +493,15 @@ export const handleCeilingFloorWallMount = async ({
           backConnectorMesh.scale.set(1.5, 1.5, 1.5);
           
           // Model tipine göre rotasyonlar
-          if (showCrossbars) {
+          if (selectedShelvesForBars.includes(i)) {
+            // Horizontal bar açık - Model13 rotasyonu
             if (model13Geometry) {
               backConnectorMesh.rotation.y = Math.PI; // Model13 için rotasyon
             } else {
               backConnectorMesh.rotation.y = Math.PI / 2; // Eski model1 rotasyonu
             }
           } else {
-            // Horizontal bar kapalı
+            // Horizontal bar kapalı - Type16A rotasyonu
             if (type16AGeometry) {
               backConnectorMesh.rotation.y = Math.PI; // Type16A arkadaki rotasyon
             } else {
@@ -478,11 +512,11 @@ export const handleCeilingFloorWallMount = async ({
           // Pozisyon ayarlamaları
           let backZPos = pos.z + zOffset + 5;
           
-          if (showCrossbars) {
-            // Horizontal bar açık
+          if (selectedShelvesForBars.includes(i)) {
+            // Horizontal bar açık - Model13 pozisyonu
             backZPos -= model13Depth + 8; // Model13'ü geri çek
           } else {
-            // Horizontal bar kapalı
+            // Horizontal bar kapalı - Type16A pozisyonu
             if (type16AGeometry) {
               backZPos += model13Depth - 108; // Type16A arkadaki pozisyon
             } else {
@@ -508,12 +542,20 @@ export const handleCeilingFloorWallMount = async ({
         );
         scene.add(verticalRip);
       } else {
-        // Raflar arası normal ripler
-        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, shelfSpacing, 32);
+        // Raflar arası normal ripler - Type16A için uzama ekle
+        let totalExtension = shelfSpacing;
+        
+        // Type16A kullanılan raflar için uzama ekle
+        if (!selectedShelvesForBars.includes(i) && type16AGeometry) {
+          const type16AExtension = 80; // Type16A için ek uzama
+          totalExtension += type16AExtension;
+        }
+        
+        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, totalExtension, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - shelfSpacing / 2,
+          currentHeight - totalExtension / 2,
           pos.z + zOffset
         );
         scene.add(verticalRip);
@@ -530,14 +572,16 @@ export const handleCeilingFloorWallMount = async ({
       let zFront = leftFront.z + zOffset + 5;
       let zBack = leftBack.z + zOffset + 5;
       
-      // Ön modellerin pozisyonunu hesapla
-      if (showCrossbars) {
+      // Ön modellerin pozisyonunu hesapla - horizontal bar durumuna göre
+      if (selectedShelvesForBars.includes(i)) {
+        // Horizontal bar açık - Model13 pozisyonu
         if (type16AGeometry) {
           zFront += model13Depth - 20; // Type16A modelini daha öne kaydır
         } else {
           zFront += model13Depth + 3; // Normal öndeki modeli kaydır
         }
       } else {
+        // Horizontal bar kapalı - Type16A pozisyonu
         if (type16AGeometry) {
           zFront += model13Depth - 20; // Type16A öndeki pozisyon
         } else {
@@ -545,10 +589,12 @@ export const handleCeilingFloorWallMount = async ({
         }
       }
       
-      // Arka modellerin pozisyonunu hesapla
-      if (showCrossbars) {
+      // Arka modellerin pozisyonunu hesapla - horizontal bar durumuna göre
+      if (selectedShelvesForBars.includes(i)) {
+        // Horizontal bar açık - Model13 pozisyonu
         zBack -= model13Depth; // Arkadaki modeli öne yaklaştır
       } else {
+        // Horizontal bar kapalı - Type16A pozisyonu
         if (type16AGeometry) {
           zBack += model13Depth - 108; // Type16A arkadaki pozisyon
         } else {
@@ -556,7 +602,11 @@ export const handleCeilingFloorWallMount = async ({
         }
       }
       
-      const length = Math.abs(zBack - zFront);
+      // Type16A için kısa yatay rip uzaması
+      let length = Math.abs(zBack - zFront);
+      if (!selectedShelvesForBars.includes(i) && type16AGeometry) {
+        length += 60; // Type16A için ek uzama
+      }
 
       // Bay'in pozisyonunu kontrol et
       const bayIndex = shelfPositions.indexOf(shelfX);
