@@ -177,11 +177,14 @@ export default function Index() {
               {!useIndividualSpacing ? (
                 <ShelfSpacingSelector onSelect={setShelfSpacing} />
               ) : (
-                <IndividualShelfSpacingSelector 
-                  shelfQuantity={shelfQuantity}
-                  onSpacingChange={setShelfSpacings}
-                  defaultSpacing={shelfSpacing}
-                />
+                              <IndividualShelfSpacingSelector 
+                shelfQuantity={shelfQuantity}
+                onSpacingChange={(spacings) => {
+                  console.log('Shelf spacings updated:', spacings);
+                  setShelfSpacings([...spacings]); // Yeni array oluştur
+                }}
+                defaultSpacing={shelfSpacing}
+              />
               )}
               
               <BarSelector onSelect={setBarCount} />
@@ -242,6 +245,7 @@ export default function Index() {
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
                     shelfSpacing={useIndividualSpacing ? shelfSpacings[0] || 250 : shelfSpacing}
+                    shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? [...shelfSpacings] : undefined}
                     mountType={mountType}
                     barCount={barCount}
                     showCrossbars={frontBars}
