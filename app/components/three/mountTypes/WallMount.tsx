@@ -155,6 +155,9 @@ export const handleWallMount = async ({
 
   const baseY = userHeight || 1195;
   // shelfSpacing now comes from props
+  
+  // Adjust baseY when there are multiple shelves so that the first shelf stays at the same position
+  const adjustedBaseY = shelfQuantity > 1 ? baseY + (shelfQuantity - 1) * shelfSpacing : baseY;
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12;
@@ -202,7 +205,8 @@ export const handleWallMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    const currentHeight = baseY - i * shelfSpacing;
+    // İlk raf her zaman baseY pozisyonunda kalmalı, diğer raflar aşağıya eklenmeli
+    const currentHeight = adjustedBaseY - (i * shelfSpacing);
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {
