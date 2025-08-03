@@ -37,9 +37,9 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     if (shelfQuantity > 0) {
       const initialSpacings = Array(shelfQuantity).fill(defaultSpacing);
       setIndividualSpacings(initialSpacings);
-      onSpacingChange(initialSpacings);
+      // onSpacingChange'i burada çağırmayalım, sadece local state'i güncelleyelim
     }
-  }, [shelfQuantity, defaultSpacing, onSpacingChange]);
+  }, [shelfQuantity, defaultSpacing]);
 
   // Handle unit change
   const handleUnitChange = (newUnit: 'inch' | 'cm') => {
@@ -60,6 +60,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       const newSpacings = [...individualSpacings];
       newSpacings[index] = spacingInMm;
       setIndividualSpacings(newSpacings);
+      console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
       onSpacingChange(newSpacings);
     }
   };
@@ -117,9 +118,12 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
             className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
                      text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
                      focus:outline-none text-center font-medium transition-all duration-200"
-            onChange={(e) => {
+            onBlur={(e) => {
               const value = Number(e.target.value);
-              handleBulkSpacingChange(value);
+              console.log('Bulk input blur:', { value });
+              if (value > 0) {
+                handleBulkSpacingChange(value);
+              }
             }}
           />
           <span className="py-2 px-3 text-[#1E3A5F] font-medium">
@@ -138,18 +142,21 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
             <span className="text-sm font-medium text-[#1E3A5F] min-w-[80px]">
               Shelf {index + 1}:
             </span>
-            <input
+                        <input
               type="number"
-              value={convertFromMm(spacing, unit).toFixed(1)}
+              defaultValue={convertFromMm(spacing, unit).toFixed(1)}
               min={unit === 'inch' ? "6" : "15.24"}
               max={unit === 'inch' ? "20" : "50.8"}
               step={unit === 'inch' ? "0.5" : "0.5"}
               className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
                        text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
                        focus:outline-none text-center font-medium transition-all duration-200"
-              onChange={(e) => {
+              onBlur={(e) => {
                 const value = Number(e.target.value);
-                handleSpacingChange(index, value);
+                console.log('Input blur:', { index, value });
+                if (value > 0) {
+                  handleSpacingChange(index, value);
+                }
               }}
             />
             <span className="text-sm text-[#1E3A5F] font-medium min-w-[30px]">

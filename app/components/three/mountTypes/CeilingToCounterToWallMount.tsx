@@ -7,6 +7,7 @@ export const handleCeilingToCounterToWallMount = async ({
   scene,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   barCount,
   showCrossbars,
   userWidth,
@@ -356,7 +357,21 @@ export const handleCeilingToCounterToWallMount = async ({
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
     // İlk raf her zaman baseY pozisyonunda kalmalı, diğer raflar aşağıya eklenmeli
-    const currentHeight = adjustedBaseY - (i * shelfSpacing);
+    // Individual spacing kullan veya fallback olarak tek spacing kullan
+    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
+    
+    // Individual spacing için cumulative height hesaplama
+    let currentHeight;
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+      let cumulativeHeight = 0;
+      for (let j = 0; j < i; j++) {
+        cumulativeHeight += shelfSpacings[j];
+      }
+      currentHeight = adjustedBaseY - cumulativeHeight;
+    } else {
+      // Fallback: eşit spacing
+      currentHeight = adjustedBaseY - (i * shelfSpacing);
+    }
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {
@@ -558,7 +573,7 @@ export const handleCeilingToCounterToWallMount = async ({
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - shelfSpacing / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
+          currentHeight - spacingToUse / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
           pos.z + zOffset
         );
         scene.add(verticalRip);

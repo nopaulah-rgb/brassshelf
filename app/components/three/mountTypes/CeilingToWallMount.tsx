@@ -6,6 +6,7 @@ export const handleCeilingToWallMount = async ({
   scene,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   barCount,
   showCrossbars,
   userHeight,
@@ -296,11 +297,27 @@ export const handleCeilingToWallMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    // Tek raf olduğunda ceiling connector'dan shelfSpacing kadar aşağı
-    // Çoklu raf olduğunda normal hesaplama (i=0 ilk raf, i=1 ikinci raf vs.)
-    const currentHeight = shelfQuantity === 1 ? 
-      baseCeilingY - shelfSpacing : // Tek raf: ceiling'den shelfSpacing kadar aşağı
-      baseY - i * shelfSpacing; // Çoklu raf: her raf shelfSpacing kadar aralıklı
+    // Individual spacing kullan veya fallback olarak tek spacing kullan
+    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
+    
+    // Tek raf olduğunda ceiling connector'dan spacing kadar aşağı
+    // Çoklu raf olduğunda individual spacing hesaplama
+    let currentHeight;
+    if (shelfQuantity === 1) {
+      currentHeight = baseCeilingY - spacingToUse; // Tek raf: ceiling'den spacing kadar aşağı
+    } else {
+      // Individual spacing için cumulative height hesaplama
+      if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+        let cumulativeHeight = 0;
+        for (let j = 0; j < i; j++) {
+          cumulativeHeight += shelfSpacings[j];
+        }
+        currentHeight = baseY - cumulativeHeight;
+      } else {
+        // Fallback: eşit spacing
+        currentHeight = baseY - i * shelfSpacing;
+      }
+    }
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {

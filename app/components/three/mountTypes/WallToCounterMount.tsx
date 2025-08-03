@@ -7,6 +7,7 @@ export const handleWallToCounterMount = async ({
   scene,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   barCount,
   showCrossbars,
   userHeight,
@@ -205,7 +206,8 @@ export const handleWallToCounterMount = async ({
   const counterHeight = 400; // Counter height in mm
   // Wall mount için shelf sistemini duvara göre konumlandır  
   const baseWallY = roomHeight || 1500;
-  const baseY = baseWallY - shelfSpacing; // Duvar seviyesinden shelfSpacing kadar aşağı
+  // Wall to counter için baseY hesaplama - ceiling'den başla
+  const baseY = baseWallY; // Duvar seviyesinden başla
   // userHeight artık kullanılmıyor - wall position'a göre hesaplanıyor
   void userHeight;
 
@@ -268,7 +270,28 @@ export const handleWallToCounterMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    const currentHeight = baseY - i * shelfSpacing;
+    // Individual spacing kullan veya fallback olarak tek spacing kullan
+    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
+    
+    // Individual spacing için height hesaplama - ceiling mount gibi
+    let currentHeight;
+    if (shelfQuantity === 1) {
+      currentHeight = baseY - spacingToUse; // Tek raf: duvardan spacing kadar aşağı
+    } else {
+      // Individual spacing için cumulative height hesaplama
+      if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+        let cumulativeHeight = 0;
+        for (let j = 0; j <= i; j++) {
+          cumulativeHeight += shelfSpacings[j];
+        }
+        currentHeight = baseY - cumulativeHeight; // i. rafın pozisyonu
+      } else {
+        // Fallback: eşit spacing
+        currentHeight = baseY - i * shelfSpacing;
+      }
+    }
+    
+    console.log(`WallToCounter - Shelf ${i + 1} spacing:`, { spacingToUse, shelfSpacings, shelfSpacing, baseY, currentHeight });
 
     // Her bir bay için rafları yerleştir - modellerin üstünde
     shelfPositions.forEach((shelfX) => {

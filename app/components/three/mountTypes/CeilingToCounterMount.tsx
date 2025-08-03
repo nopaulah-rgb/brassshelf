@@ -7,6 +7,7 @@ export const handleCeilingToCounterMount = async ({
   scene,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   barCount,
   showCrossbars,
   userHeight,
@@ -212,7 +213,22 @@ export const handleCeilingToCounterMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    const currentHeight = baseY - i * shelfSpacing;
+    // Individual spacing kullan veya fallback olarak tek spacing kullan
+    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
+    console.log(`CeilingToCounter - Shelf ${i + 1} spacing:`, { spacingToUse, shelfSpacings, shelfSpacing });
+    
+    // Individual spacing için cumulative height hesaplama
+    let currentHeight;
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+      let cumulativeHeight = 0;
+      for (let j = 0; j < i; j++) {
+        cumulativeHeight += shelfSpacings[j];
+      }
+      currentHeight = baseY - cumulativeHeight;
+    } else {
+      // Fallback: eşit spacing
+      currentHeight = baseY - i * shelfSpacing;
+    }
 
     // Her bir bay için rafları yerleştir
     shelfPositions.forEach((shelfX) => {
@@ -358,12 +374,12 @@ export const handleCeilingToCounterMount = async ({
       if (i < shelfQuantity - 1 && shelfQuantity > 1) {
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
-        const extendedHeight = shelfSpacing + extensionDown;
+        const extendedHeight = spacingToUse + extensionDown;
                     const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - (shelfSpacing + extensionDown) / 2, // Sadece aşağı uzat
+          currentHeight - (spacingToUse + extensionDown) / 2, // Sadece aşağı uzat
           pos.z + zOffset
         );
         scene.add(verticalRip);

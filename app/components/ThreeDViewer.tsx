@@ -22,6 +22,7 @@ interface ThreeDViewerProps {
   ripUrl: string;
   shelfQuantity: number;
   shelfSpacing?: number;
+  shelfSpacings?: number[];
   mountType: string;
   barCount: number;
   showCrossbars: boolean;
@@ -41,6 +42,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   ripUrl,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   mountType,
   barCount,
   showCrossbars,
@@ -65,6 +67,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     shelfUrl,
     ripUrl,
     shelfQuantity,
+    shelfSpacing,
+    shelfSpacings,
     mountType,
     barCount,
     showCrossbars,
@@ -733,6 +737,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           scene,
           shelfQuantity,
           shelfSpacing,
+          shelfSpacings,
           barCount,
           showCrossbars,
           userHeight,

@@ -4,6 +4,7 @@ export interface MountTypeProps {
   scene: THREE.Scene;
   shelfQuantity: number;
   shelfSpacing?: number;
+  shelfSpacings?: number[];
   barCount: number;
   showCrossbars: boolean;
   userHeight?: number;

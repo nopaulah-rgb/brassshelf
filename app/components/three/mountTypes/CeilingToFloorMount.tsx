@@ -7,6 +7,7 @@ export const handleCeilingToFloorMount = async ({
   scene,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   barCount,
   showCrossbars,
   userHeight,
@@ -203,11 +204,28 @@ export const handleCeilingToFloorMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
-    // Tek raf olduğunda ceiling connector'dan shelfSpacing kadar aşağı
-    // Çoklu raf olduğunda normal hesaplama (i=0 ilk raf, i=1 ikinci raf vs.)
-    const currentHeight = shelfQuantity === 1 ? 
-      baseCeilingY - shelfSpacing : // Tek raf: ceiling'den shelfSpacing kadar aşağı
-      baseY - i * shelfSpacing; // Çoklu raf: her raf shelfSpacing kadar aralıklı
+    // Individual spacing kullan veya fallback olarak tek spacing kullan
+    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
+    console.log(`CeilingToFloor - Shelf ${i + 1} spacing:`, { spacingToUse, shelfSpacings, shelfSpacing });
+    
+    // Tek raf olduğunda ceiling connector'dan spacing kadar aşağı
+    // Çoklu raf olduğunda individual spacing hesaplama
+    let currentHeight;
+    if (shelfQuantity === 1) {
+      currentHeight = baseCeilingY - spacingToUse; // Tek raf: ceiling'den spacing kadar aşağı
+    } else {
+      // Individual spacing için cumulative height hesaplama
+      if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+        let cumulativeHeight = 0;
+        for (let j = 0; j < i; j++) {
+          cumulativeHeight += shelfSpacings[j];
+        }
+        currentHeight = baseY - cumulativeHeight;
+      } else {
+        // Fallback: eşit spacing
+        currentHeight = baseY - i * shelfSpacing;
+      }
+    }
 
     // Her bir bay için rafları yerleştir
     shelfPositions.forEach((shelfX) => {
@@ -353,12 +371,12 @@ export const handleCeilingToFloorMount = async ({
       if (i < shelfQuantity - 1 && shelfQuantity > 1) {
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
-        const extendedHeight = shelfSpacing + extensionDown;
+        const extendedHeight = spacingToUse + extensionDown;
         const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - (shelfSpacing + extensionDown) / 2, // Sadece aşağı uzat
+          currentHeight - (spacingToUse + extensionDown) / 2, // Sadece aşağı uzat
           pos.z + zOffset
         );
         scene.add(verticalRip);
