@@ -33,7 +33,7 @@ interface ThreeDViewerProps {
   pipeDiameter?: string;
   frontBars?: boolean;
   verticalBarsAtBack?: boolean;
-  wallConnectionPoint?: string;
+  wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
 }
 
@@ -53,7 +53,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   pipeDiameter = '5/8',
   frontBars = false,
   verticalBarsAtBack = true,
-  wallConnectionPoint = 'all',
+  wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);

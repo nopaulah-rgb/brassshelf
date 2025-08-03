@@ -23,25 +23,31 @@ export const handleWallToFloorMount = async ({
   frontBars,
   pipeDiameter,
   roomDepth = 1200,
-  wallConnectionPoint = 'all',
+  wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
 }: MountTypeProps) => {
   // Check if wall connection should be added for current shelf level
   const shouldAddWallConnection = (currentShelfIndex: number, totalShelves: number) => {
-    switch (wallConnectionPoint) {
-      case 'all':
-        return true; // Connect to all shelf levels
-      case 'first':
-        return currentShelfIndex === 0; // Only first shelf
-      case 'second':
-        return currentShelfIndex === 1 && totalShelves > 1; // Only second shelf if exists
-      case 'third':
-        return currentShelfIndex === 2 && totalShelves > 2; // Only third shelf if exists
-      case 'top':
-        return currentShelfIndex === totalShelves - 1; // Only top (highest) shelf
-      default:
-        return true; // Default: all levels
+    // Handle array of connection points
+    if (wallConnectionPoint.includes('all')) {
+      return true; // Connect to all shelf levels
     }
+    
+    // Check specific shelf selections
+    if (wallConnectionPoint.includes('first') && currentShelfIndex === 0) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('second') && currentShelfIndex === 1 && totalShelves > 1) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('third') && currentShelfIndex === 2 && totalShelves > 2) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('top') && currentShelfIndex === totalShelves - 1) {
+      return true;
+    }
+    
+    return false; // No connection if none of the conditions match
   };
 
   // Model 13 GLB dosyasını yükle

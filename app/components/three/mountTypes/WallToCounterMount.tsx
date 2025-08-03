@@ -26,7 +26,7 @@ export const handleWallToCounterMount = async ({
   frontBars,
   pipeDiameter,
   roomHeight = 1500,
-  wallConnectionPoint = 'all',
+  wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
 }: MountTypeProps) => {
   const roomDepth = 1200; // Room depth in mm
@@ -252,20 +252,26 @@ export const handleWallToCounterMount = async ({
 
   // Function to determine if wall connection should be added at this level
   const shouldAddWallConnection = (currentIndex: number) => {
-    switch (wallConnectionPoint) {
-      case 'all':
-        return true; // Connect to all shelf levels
-      case 'first':
-        return currentIndex === 0; // Only first shelf
-      case 'second':
-        return currentIndex === 1 && shelfQuantity > 1; // Only second shelf if exists
-      case 'third':
-        return currentIndex === 2 && shelfQuantity > 2; // Only third shelf if exists
-      case 'top':
-        return currentIndex === shelfQuantity - 1; // Only top (highest) shelf
-      default:
-        return true; // Default: all levels
+    // Handle array of connection points
+    if (wallConnectionPoint.includes('all')) {
+      return true; // Connect to all shelf levels
     }
+    
+    // Check specific shelf selections
+    if (wallConnectionPoint.includes('first') && currentIndex === 0) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('second') && currentIndex === 1 && shelfQuantity > 1) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('third') && currentIndex === 2 && shelfQuantity > 2) {
+      return true;
+    }
+    if (wallConnectionPoint.includes('top') && currentIndex === shelfQuantity - 1) {
+      return true;
+    }
+    
+    return false; // No connection if none of the conditions match
   };
 
   // Her raf için döngü

@@ -54,7 +54,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // Wall connection point selection
-  const [wallConnectionPoint, setWallConnectionPoint] = useState<string>('all');
+  const [wallConnectionPoint, setWallConnectionPoint] = useState<string[]>(['all']);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;

@@ -38,7 +38,7 @@ export interface MountTypeProps {
   roomDepth?: number;
   roomHeight?: number;
   dynamicFloorY?: number;
-  wallConnectionPoint?: string;
+  wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
 }
 
