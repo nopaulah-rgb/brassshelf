@@ -22,9 +22,11 @@ export const handleWallToCounterMount = async ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  frontBars,
   pipeDiameter,
   roomHeight = 1500,
   wallConnectionPoint = 'all',
+  selectedShelvesForBars = [],
 }: MountTypeProps) => {
   const roomDepth = 1200; // Room depth in mm
   
@@ -390,33 +392,36 @@ export const handleWallToCounterMount = async ({
     });
 
     // Crossbar'ları ekle
-    if (showCrossbars) {
+    if (showCrossbars && frontBars) {
       // Her bay için arka crossbar'ları ekle
       shelfPositions.forEach((shelfX) => {
-        const backPositions = [
-          { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
-          { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
-        ];
-        
-        if (backPositions.length === 2) {
-          const start = backPositions[0];
-          const end = backPositions[1];
-          let zStart = start.z + zOffset + 5;
-          let zEnd = end.z + zOffset + 5;
-          zStart -= model1Depth + 10;
-          zEnd -= model1Depth + 10;
+        // Sadece seçili raflarda horizontal bar ekle
+        if (selectedShelvesForBars.includes(i)) {
+          const backPositions = [
+            { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+            { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
+          ];
+          
+          if (backPositions.length === 2) {
+            const start = backPositions[0];
+            const end = backPositions[1];
+            let zStart = start.z + zOffset + 5;
+            let zEnd = end.z + zOffset + 5;
+            zStart -= model1Depth + 10;
+            zEnd -= model1Depth + 10;
 
-          const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const horizontalRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
-          const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, length, 32);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-          horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
-          horizontalRip.position.set(
-            start.x + (end.x - start.x) / 2,
-            currentHeight + model13Height / 2 - 20,
-            (zStart + zEnd) / 2 + 15
-          );
-          scene.add(horizontalRip);
+            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const horizontalRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
+            const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, length, 32);
+            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+            horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
+            horizontalRip.position.set(
+              start.x + (end.x - start.x) / 2,
+              currentHeight + model13Height / 2 - 20,
+              (zStart + zEnd) / 2 + 15
+            );
+            scene.add(horizontalRip);
+          }
         }
 
         // Kısa kenarlara yatay rip ekle

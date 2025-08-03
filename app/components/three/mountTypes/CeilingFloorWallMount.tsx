@@ -22,6 +22,7 @@ export const handleCeilingFloorWallMount = async ({
   roomDepth = 1200,
   roomHeight = 1500,
   wallConnectionPoint = 'all',
+  selectedShelvesForBars = [],
 }: MountTypeProps) => {
   // Check if wall connection should be added for current shelf level
   const shouldAddWallConnection = (currentShelfIndex: number, totalShelves: number) => {
@@ -418,8 +419,8 @@ export const handleCeilingFloorWallMount = async ({
         }
       }
 
-      // Duvara yatay rip ekle - tüm ön pozisyonlarda
-      if (pos.z === shelfBoundingBox.min.z + 5) {
+      // Duvara yatay rip ekle - tüm ön pozisyonlarda (sadece seçili raflarda)
+      if (pos.z === shelfBoundingBox.min.z + 5 && selectedShelvesForBars.includes(i)) {
         const horizontalRipLength = Math.abs(pos.z + zOffset + roomDepth - 140); // 105'ten 140'a güncellendi
         const horizontalRipRadius = showCrossbars ? 14 : pipeRadius; // Horizontal bar açıksa daha kalın
         const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, horizontalRipLength, 32);
@@ -587,34 +588,37 @@ export const handleCeilingFloorWallMount = async ({
       scene.add(rightRip);
     });
 
-    // Crossbar'ları ekle (sadece horizontal bar açık olduğunda)
-    if (showCrossbars) {
+    // Crossbar'ları ekle (sadece horizontal bar açık olduğunda ve seçili raflarda)
+    if (showCrossbars && frontBars) {
       // Her bay için arka crossbar'ları ekle
       shelfPositions.forEach((shelfX) => {
-        const backPositions = [
-          { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
-          { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
-        ];
-        
-        if (backPositions.length === 2) {
-          const start = backPositions[0];
-          const end = backPositions[1];
-          let zStart = start.z + zOffset + 5;
-          let zEnd = end.z + zOffset + 5;
-          zStart -= model1Depth + 10;
-          zEnd -= model1Depth + 10;
+        // Sadece seçili raflarda horizontal bar ekle
+        if (selectedShelvesForBars.includes(i)) {
+          const backPositions = [
+            { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+            { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
+          ];
+          
+          if (backPositions.length === 2) {
+            const start = backPositions[0];
+            const end = backPositions[1];
+            let zStart = start.z + zOffset + 5;
+            let zEnd = end.z + zOffset + 5;
+            zStart -= model1Depth + 10;
+            zEnd -= model1Depth + 10;
 
-          const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const backHorizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
-          const horizontalRipGeometry = new THREE.CylinderGeometry(backHorizontalRipRadius, backHorizontalRipRadius, length, 32);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-          horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
-          horizontalRip.position.set(
-            start.x + (end.x - start.x) / 2,
-            currentHeight + model13Height / 2 - 20,
-            (zStart + zEnd) / 2 + 15
-          );
-          scene.add(horizontalRip);
+            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const backHorizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
+            const horizontalRipGeometry = new THREE.CylinderGeometry(backHorizontalRipRadius, backHorizontalRipRadius, length, 32);
+            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+            horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
+            horizontalRip.position.set(
+              start.x + (end.x - start.x) / 2,
+              currentHeight + model13Height / 2 - 20,
+              (zStart + zEnd) / 2 + 15
+            );
+            scene.add(horizontalRip);
+          }
         }
       });
     }

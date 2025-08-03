@@ -38,6 +38,7 @@ export interface MountTypeProps {
   roomHeight?: number;
   dynamicFloorY?: number;
   wallConnectionPoint?: string;
+  selectedShelvesForBars?: number[];
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";

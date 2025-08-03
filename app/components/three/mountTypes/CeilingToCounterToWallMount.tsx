@@ -26,6 +26,7 @@ export const handleCeilingToCounterToWallMount = async ({
   roomHeight = 1500,
   dynamicFloorY = 0,
   wallConnectionPoint = 'all',
+  selectedShelvesForBars = [],
 }: MountTypeProps) => {
   const roomDepth = 1200; // Room depth in mm
   
@@ -444,18 +445,20 @@ export const handleCeilingToCounterToWallMount = async ({
         }
       }
 
-      // Duvara yatay rip ekle
-      const horizontalRipLength = Math.abs(pos.z + zOffset + 895); // 1000'den 895'e güncellendi
-      const horizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
-      const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, horizontalRipLength, 32);
-      const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-      horizontalRip.rotation.x = Math.PI / 2; // Yatay pozisyon için X ekseninde 90 derece döndür
-      horizontalRip.position.set(
-        pos.x,
-        currentHeight,
-        (pos.z + zOffset - 895) / 2 // 1000'den 895'e güncellendi
-      );
-      scene.add(horizontalRip);
+      // Duvara yatay rip ekle (sadece seçili raflarda)
+      if (selectedShelvesForBars.includes(i)) {
+        const horizontalRipLength = Math.abs(pos.z + zOffset + 895); // 1000'den 895'e güncellendi
+        const horizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
+        const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, horizontalRipLength, 32);
+        const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+        horizontalRip.rotation.x = Math.PI / 2; // Yatay pozisyon için X ekseninde 90 derece döndür
+        horizontalRip.position.set(
+          pos.x,
+          currentHeight,
+          (pos.z + zOffset - 895) / 2 // 1000'den 895'e güncellendi
+        );
+        scene.add(horizontalRip);
+      }
 
       // Ön ve arka bağlantılar için Model seçimi
       const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
@@ -587,34 +590,37 @@ export const handleCeilingToCounterToWallMount = async ({
       }
     });
 
-    // Crossbar'ları ekle
-    if (showCrossbars) {
-      // Her bay için arka crossbar'ları ekle
-      shelfPositions.forEach((shelfX) => {
-        const backPositions = [
-          { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
-          { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
-        ];
-        
-        if (backPositions.length === 2) {
-          const start = backPositions[0];
-          const end = backPositions[1];
-          let zStart = start.z + zOffset + 5;
-          let zEnd = end.z + zOffset + 5;
-          zStart -= model1Depth + 10;
-          zEnd -= model1Depth + 10;
+          // Crossbar'ları ekle
+      if (showCrossbars && frontBars) {
+        // Her bay için arka crossbar'ları ekle
+        shelfPositions.forEach((shelfX) => {
+          // Sadece seçili raflarda horizontal bar ekle
+          if (selectedShelvesForBars.includes(i)) {
+          const backPositions = [
+            { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+            { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
+          ];
+          
+          if (backPositions.length === 2) {
+            const start = backPositions[0];
+            const end = backPositions[1];
+            let zStart = start.z + zOffset + 5;
+            let zEnd = end.z + zOffset + 5;
+            zStart -= model1Depth + 10;
+            zEnd -= model1Depth + 10;
 
-          const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const backHorizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
-          const horizontalRipGeometry = new THREE.CylinderGeometry(backHorizontalRipRadius, backHorizontalRipRadius, length, 32);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-          horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
-          horizontalRip.position.set(
-            start.x + (end.x - start.x) / 2,
-            currentHeight + model13Height / 2 - 20,
-            (zStart + zEnd) / 2 + 15
-          );
-          scene.add(horizontalRip);
+            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const backHorizontalRipRadius = showCrossbars ? 14 : 10; // Horizontal bar açıksa daha kalın
+            const horizontalRipGeometry = new THREE.CylinderGeometry(backHorizontalRipRadius, backHorizontalRipRadius, length, 32);
+            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+            horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
+            horizontalRip.position.set(
+              start.x + (end.x - start.x) / 2,
+              currentHeight + model13Height / 2 - 20,
+              (zStart + zEnd) / 2 + 15
+            );
+            scene.add(horizontalRip);
+          }
         }
       });
 

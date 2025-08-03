@@ -33,6 +33,7 @@ interface ThreeDViewerProps {
   frontBars?: boolean;
   verticalBarsAtBack?: boolean;
   wallConnectionPoint?: string;
+  selectedShelvesForBars?: number[];
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -51,6 +52,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   frontBars = false,
   verticalBarsAtBack = true,
   wallConnectionPoint = 'all',
+  selectedShelvesForBars = [],
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -648,7 +650,14 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           baseHeight: number,
           positions: { x: number; z: number }[]
         ) => {
-          if (!showCrossbars) return;
+          if (!showCrossbars || !frontBars) return;
+          
+          // Calculate which shelf this height corresponds to
+          const shelfIndex = Math.round((baseHeight - 100) / shelfSpacing);
+          
+          // Only add horizontal bars if this shelf is selected
+          if (!selectedShelvesForBars.includes(shelfIndex)) return;
+          
           for (let i = 0; i < positions.length - 1; i++) {
             const start = positions[i];
             const end = positions[i + 1];
@@ -735,6 +744,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           shelfMaterial: materialShelf,
           ripGeometry,
           zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2  -220,
+          selectedShelvesForBars,
           shelfWidth: shelfBoundingBox.max.x - shelfBoundingBox.min.x,
           shelfBoundingBox,
           model1Geometry,
@@ -855,7 +865,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint]);
+  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

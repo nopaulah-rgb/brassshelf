@@ -19,8 +19,10 @@ export const handleCeilingToFloorMount = async ({
   model1Geometry,
   model11Geometry,
   materialGold,
+  frontBars,
   pipeDiameter,
   roomHeight = 1500,
+  selectedShelvesForBars = [],
 }: MountTypeProps) => {
   // Model 13 GLB dosyasını yükle
   const loader = new GLTFLoader();
@@ -365,33 +367,36 @@ export const handleCeilingToFloorMount = async ({
 
     // Her bay için ayrı ayrı crossbar ve kısa kenar ripleri ekle
     shelfPositions.forEach((shelfX) => {
-      // Arka crossbar'ları ekle (sadece horizontal bar açık olduğunda)
-      if (showCrossbars) {
-        const backPositions = [
-          { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
-          { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
-        ];
+      // Arka crossbar'ları ekle (sadece horizontal bar açık olduğunda ve seçili raflarda)
+      if (showCrossbars && frontBars) {
+        // Sadece seçili raflarda horizontal bar ekle
+        if (selectedShelvesForBars.includes(i)) {
+          const backPositions = [
+            { x: shelfBoundingBox.min.x + 5 + shelfX, z: shelfBoundingBox.max.z - 5 },
+            { x: shelfBoundingBox.max.x - 5 + shelfX, z: shelfBoundingBox.max.z - 5 }
+          ];
 
-        if (backPositions.length === 2) {
-          // Arka model 13'lerin yeni z konumlarını bul
-          const start = backPositions[0];
-          const end = backPositions[1];
-          let zStart = start.z + zOffset + 5;
-          let zEnd = end.z + zOffset + 5;
-          zStart -= model13Depth - 10; // 20 birim öne yaklaştırıldı
-          zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
+          if (backPositions.length === 2) {
+            // Arka model 13'lerin yeni z konumlarını bul
+            const start = backPositions[0];
+            const end = backPositions[1];
+            let zStart = start.z + zOffset + 5;
+            let zEnd = end.z + zOffset + 5;
+            zStart -= model13Depth - 10; // 20 birim öne yaklaştırıldı
+            zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
-          const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-          const horizontalRipRadius = 14; // Horizontal bar açık olduğunda daha kalın
-          const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, length, 32);
-          const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-          horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
-          horizontalRip.position.set(
-            start.x + (end.x - start.x) / 2 ,
-            currentHeight + model13Height / 2 -20,
-            (zStart + zEnd) / 2 + 25 // Horizontal ripi 5 birim daha arkaya kaydırıldı (15 -> 10)
-          );
-          scene.add(horizontalRip);
+            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const horizontalRipRadius = 14; // Horizontal bar açık olduğunda daha kalın
+            const horizontalRipGeometry = new THREE.CylinderGeometry(horizontalRipRadius, horizontalRipRadius, length, 32);
+            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+            horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
+            horizontalRip.position.set(
+              start.x + (end.x - start.x) / 2 ,
+              currentHeight + model13Height / 2 -20,
+              (zStart + zEnd) / 2 + 25 // Horizontal ripi 5 birim daha arkaya kaydırıldı (15 -> 10)
+            );
+            scene.add(horizontalRip);
+          }
         }
       }
 

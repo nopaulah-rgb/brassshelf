@@ -44,6 +44,7 @@ export default function Index() {
 
   // Crossbar settings
   const [frontBars, setFrontBars] = useState<boolean>(true);
+  const [selectedShelvesForBars, setSelectedShelvesForBars] = useState<number[]>([]);
 
   // Space adjustments (simplified - keeping only essential ones)
   const [verticalBarsAtBack] = useState<boolean>(true);
@@ -166,6 +167,9 @@ export default function Index() {
               <CrossbarSelector
                 frontBars={frontBars}
                 onFrontBarsChange={setFrontBars}
+                shelfCount={shelfQuantity}
+                selectedShelves={selectedShelvesForBars}
+                onSelectedShelvesChange={setSelectedShelvesForBars}
               />
 
               <div className="bg-[#8BBBD9] rounded-lg p-4">
@@ -195,6 +199,7 @@ export default function Index() {
               ) : isViewerReady ? (
                 <div className="w-full h-[400px]">
                   <ThreeDViewer
+                    key={`${mountType}-${shelfQuantity}-${frontBars}-${selectedShelvesForBars.join(',')}`}
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
@@ -210,6 +215,7 @@ export default function Index() {
                     frontBars={frontBars}
                     verticalBarsAtBack={verticalBarsAtBack}
                     wallConnectionPoint={wallConnectionPoint}
+                    selectedShelvesForBars={selectedShelvesForBars}
                   />
                 </div>
               ) : (
