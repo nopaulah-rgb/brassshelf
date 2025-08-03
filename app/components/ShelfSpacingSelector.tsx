@@ -26,8 +26,25 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
   };
 
   const handleUnitChange = (newUnit: 'inch' | 'cm') => {
+    // Convert current value to the new unit
+    let newValue: number;
+    if (unit === 'inch' && newUnit === 'cm') {
+      // Convert from inches to cm: 1 inch = 2.54 cm
+      newValue = spacingValue * 2.54;
+    } else if (unit === 'cm' && newUnit === 'inch') {
+      // Convert from cm to inches: 1 cm = 0.3937 inches
+      newValue = spacingValue / 2.54;
+    } else {
+      // Same unit, no conversion needed
+      newValue = spacingValue;
+    }
+    
+    // Round to 2 decimal places for better display
+    newValue = Math.round(newValue * 100) / 100;
+    
+    setSpacingValue(newValue);
     setUnit(newUnit);
-    const spacingInMm = convertToMm(spacingValue, newUnit);
+    const spacingInMm = convertToMm(newValue, newUnit);
     onSelect(spacingInMm);
   };
 
@@ -66,13 +83,13 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
                 handleValueChange(newValue);
               }
             }}
-                         min={unit === 'inch' ? "6" : "15"}
-             max={unit === 'inch' ? "20" : "60"}
-            step={unit === 'inch' ? "0.5" : "1"}
+                         min={unit === 'inch' ? "6" : "15.24"}
+             max={unit === 'inch' ? "20" : "50.8"}
+            step={unit === 'inch' ? "0.5" : "0.5"}
             className="w-full py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
                      text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
                      focus:outline-none text-center font-medium transition-all duration-200"
-                         placeholder={unit === 'inch' ? "12" : "30"}
+                         placeholder={unit === 'inch' ? "12" : "30.48"}
           />
         </div>
         
@@ -103,9 +120,9 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
 
       {/* Help Text */}
       <p className="text-xs text-[#1E3A5F]/70">
-        Default rib length: 12 inch ({unit === 'inch' ? '12 inch' : '30 cm'})
+        Default rib length: {unit === 'inch' ? '12 inch' : '30.48 cm'} ({unit === 'inch' ? '12 inch' : '30.48 cm'})
         <br />
-        Recommended range: {unit === 'inch' ? '6-20 inch' : '15-60 cm'}
+        Recommended range: {unit === 'inch' ? '6-20 inch' : '15.24-50.8 cm'}
         <br />
         This setting determines spacing between shelves and rib length
       </p>
