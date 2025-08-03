@@ -42,13 +42,6 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
     onTotalDepthChange(convertValue(totalDepth, unit, newUnit));
   };
 
-  const formatValue = (value: number): string => {
-    if (unit === 'inch') {
-      return `${value.toFixed(0)}"`;
-    }
-    return `${value.toFixed(0)}`;
-  };
-
   return (
     <div className="bg-[#8BBBD9] rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -83,7 +76,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={unit === 'inch' ? height.toFixed(0) : height.toFixed(0)}
+              value={height.toFixed(0)}
               onChange={(e) => onHeightChange(parseFloat(e.target.value) || 0)}
               className="w-20 px-2 py-1 text-center text-[#1E3A5F] font-bold text-lg bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
             />
@@ -96,7 +89,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={unit === 'inch' ? width.toFixed(0) : width.toFixed(0)}
+              value={width.toFixed(0)}
               onChange={(e) => onWidthChange(parseFloat(e.target.value) || 0)}
               className="w-20 px-2 py-1 text-center text-[#1E3A5F] font-bold text-lg bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
             />
@@ -109,13 +102,19 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-[#1E3A5F] text-sm">Total Depth:</span>
-              <span className="text-[#1E3A5F] font-medium text-sm opacity-60">―――</span>
+              <input
+                type="number"
+                value={totalDepth.toFixed(0)}
+                onChange={(e) => onTotalDepthChange(parseFloat(e.target.value) || 0)}
+                className="w-16 px-2 py-1 text-center text-[#1E3A5F] font-bold bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
+              />
+              <span className="text-[#1E3A5F] font-medium">{unit === 'inch' ? '"' : 'cm'}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#1E3A5F] text-sm">Shelf Depth:</span>
               <input
                 type="number"
-                value={unit === 'inch' ? shelfDepth.toFixed(0) : shelfDepth.toFixed(0)}
+                value={shelfDepth.toFixed(0)}
                 onChange={(e) => onShelfDepthChange(parseFloat(e.target.value) || 0)}
                 className="w-16 px-2 py-1 text-center text-[#1E3A5F] font-bold bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
               />
