@@ -254,16 +254,18 @@ export default function Index() {
                     shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? [...shelfSpacings] : undefined}
                     mountType={mountType}
                     barCount={barCount}
-                    showCrossbars={frontBars}
+                    showCrossbars={frontBars || backBars}
                     userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
                     userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
                     shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
                     useTopShelf={useTopShelf}
                     pipeDiameter={pipeDiameter}
                     frontBars={frontBars}
+                    backBars={backBars}
                     verticalBarsAtBack={verticalBarsAtBack}
                     wallConnectionPoint={wallConnectionPoint}
                     selectedShelvesForBars={selectedShelvesForBars}
+                    selectedBackShelvesForBars={selectedShelvesForBackBars}
                   />
                 </div>
               ) : (

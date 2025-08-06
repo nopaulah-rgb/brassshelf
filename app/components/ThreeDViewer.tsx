@@ -32,9 +32,11 @@ interface ThreeDViewerProps {
   useTopShelf?: boolean;
   pipeDiameter?: string;
   frontBars?: boolean;
+  backBars?: boolean;
   verticalBarsAtBack?: boolean;
   wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
+  selectedBackShelvesForBars?: number[];
 }
 
 const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
@@ -52,9 +54,11 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   useTopShelf = false,
   pipeDiameter = '5/8',
   frontBars = false,
+  backBars = false,
   verticalBarsAtBack = true,
   wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
+  selectedBackShelvesForBars = [],
 }): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -751,6 +755,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           ripGeometry,
           zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2  -220,
           selectedShelvesForBars,
+          selectedBackShelvesForBars,
           shelfWidth: shelfBoundingBox.max.x - shelfBoundingBox.min.x,
           shelfBoundingBox,
           model1Geometry,
@@ -761,6 +766,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           addHorizontalConnectingRips,
           addFrontToBackRips,
           frontBars,
+          backBars,
           verticalBarsAtBack,
           pipeDiameter,
           roomDepth,
@@ -875,7 +881,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars]);
+  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

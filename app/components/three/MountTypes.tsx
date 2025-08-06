@@ -33,6 +33,7 @@ export interface MountTypeProps {
   addHorizontalConnectingRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
   addFrontToBackRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
   frontBars?: boolean;
+  backBars?: boolean;
   verticalBarsAtBack?: boolean;
   pipeDiameter?: string;
   roomDepth?: number;
@@ -40,6 +41,7 @@ export interface MountTypeProps {
   dynamicFloorY?: number;
   wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
+  selectedBackShelvesForBars?: number[];
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";
