@@ -25,6 +25,7 @@ interface ThreeDViewerProps {
   shelfSpacings?: number[];
   mountType: string;
   barCount: number;
+  baySpacing?: number;
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;
@@ -47,6 +48,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   shelfSpacings = [250],
   mountType,
   barCount,
+  baySpacing = 0,
   showCrossbars,
   userHeight,
   userWidth,
@@ -75,6 +77,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     shelfSpacings,
     mountType,
     barCount,
+    baySpacing,
     showCrossbars,
     userHeight,
     userWidth,
@@ -743,6 +746,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           shelfSpacing,
           shelfSpacings,
           barCount,
+          baySpacing,
           showCrossbars,
           userHeight,
           userWidth: effectiveUserWidth,
@@ -881,7 +885,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
+  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, shelfSpacings, mountType, barCount, baySpacing, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

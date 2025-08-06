@@ -18,6 +18,7 @@ import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
 import PriceAndActions from "~/components/PriceAndActions";
 import WallConnectionSelector from "~/components/WallConnectionSelector";
+import BaySpacingInput from "~/components/BaySpacingInput";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -34,6 +35,7 @@ export default function Index() {
   const [shelfSpacings, setShelfSpacings] = useState<number[]>([250]); // in mm - array for individual spacing
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
+  const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik)
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
   const [userWidth, setUserWidth] = useState<number>(36); // in inches
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
@@ -191,6 +193,12 @@ export default function Index() {
               
               <BarSelector onSelect={setBarCount} />
               
+              <BaySpacingInput 
+                baySpacing={baySpacing}
+                onBaySpacingChange={setBaySpacing}
+                barCount={barCount}
+              />
+              
               <PipeDiameterSelector
                 pipeDiameter={pipeDiameter}
                 onChange={setPipeDiameter}
@@ -254,6 +262,7 @@ export default function Index() {
                     shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? [...shelfSpacings] : undefined}
                     mountType={mountType}
                     barCount={barCount}
+                    baySpacing={baySpacing}
                     showCrossbars={frontBars || backBars}
                     userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
                     userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
