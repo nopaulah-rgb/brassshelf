@@ -48,6 +48,8 @@ export default function Index() {
   // Crossbar settings
   const [frontBars, setFrontBars] = useState<boolean>(true);
   const [selectedShelvesForBars, setSelectedShelvesForBars] = useState<number[]>([]);
+  const [backBars, setBackBars] = useState<boolean>(false);
+  const [selectedShelvesForBackBars, setSelectedShelvesForBackBars] = useState<number[]>([]);
 
   // Space adjustments (simplified - keeping only essential ones)
   const [verticalBarsAtBack] = useState<boolean>(true);
@@ -209,9 +211,13 @@ export default function Index() {
               <CrossbarSelector
                 frontBars={frontBars}
                 onFrontBarsChange={setFrontBars}
+                backBars={backBars}
+                onBackBarsChange={setBackBars}
                 shelfCount={shelfQuantity}
                 selectedShelves={selectedShelvesForBars}
                 onSelectedShelvesChange={setSelectedShelvesForBars}
+                selectedBackShelves={selectedShelvesForBackBars}
+                onSelectedBackShelvesChange={setSelectedShelvesForBackBars}
               />
 
               <div className="bg-[#8BBBD9] rounded-lg p-4">
