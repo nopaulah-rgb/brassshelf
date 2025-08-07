@@ -230,6 +230,10 @@ export const handleCeilingToCounterMount = async ({
 
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
+    // Bu shelf için bar selection durumlarını önceden hesapla
+    const isFrontBarSelectedForThisShelf = frontBars && selectedShelvesForBars.includes(i);
+    const isBackBarSelectedForThisShelf = backBars && selectedBackShelvesForBars.includes(i);
+    
     // Individual spacing için cumulative height hesaplama
     let currentHeight;
     if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
@@ -301,11 +305,11 @@ export const handleCeilingToCounterMount = async ({
       let geometryToUse, materialToUse;
       
       // Model seçim mantığı:
-      // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-      // Back bar YES -> öndeki modeller Model13 (çünkü öne bağlanır)
+      // Front bar YES ve bu shelf seçili -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
+      // Back bar YES ve bu shelf seçili -> öndeki modeller Model13 (çünkü öne bağlanır)
       const shouldUseModel13 = 
-        (isFrente && backBars) ||   // Ön pozisyon ve back bar açık
-        (isBacke && frontBars);     // Arka pozisyon ve front bar açık
+        (isFrente && isBackBarSelectedForThisShelf) ||   // Ön pozisyon ve back bar bu shelf için açık
+        (isBacke && isFrontBarSelectedForThisShelf);     // Arka pozisyon ve front bar bu shelf için açık
       
       if (shouldUseModel13) {
         // Model13 kullan
@@ -327,8 +331,8 @@ export const handleCeilingToCounterMount = async ({
         connectorMesh.scale.set(1.5, 1.5, 1.5);
 
         // Model tipine göre rotasyonlar
-        if (frontBars || backBars) {
-          // Horizontal bar açık durumunda
+        if (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) {
+          // Bu shelf için horizontal bar açık durumunda
           if (model13Geometry) {
             // Model13 için rotasyonlar
             if (isFrente) {
@@ -345,7 +349,7 @@ export const handleCeilingToCounterMount = async ({
             }
           }
         } else {
-          // Horizontal bar kapalı - ön ve arka Type16A
+          // Bu shelf için horizontal bar kapalı - ön ve arka Type16A
           if (type16AGeometry) {
             if (isBacke) {
               connectorMesh.rotation.y = Math.PI; // Arkadaki Type16A'yı 180 derece çevir
@@ -362,11 +366,11 @@ export const handleCeilingToCounterMount = async ({
         // Pozisyon ayarlamaları
         let zPos = pos.z + zOffset + 5;
         
-        if (isFrente && backBars) {
-          // Ön pozisyon ve back bar açık - Model13
+        if (isFrente && isBackBarSelectedForThisShelf) {
+          // Ön pozisyon ve bu shelf için back bar açık - Model13
           zPos += model13Depth + 3; // Normal öndeki model pozisyonu
-        } else if (isBacke && frontBars) {
-          // Arka pozisyon ve front bar açık - Model13
+        } else if (isBacke && isFrontBarSelectedForThisShelf) {
+          // Arka pozisyon ve bu shelf için front bar açık - Model13
           zPos -= model13Depth + 8; // Arkadaki model13.glb pozisyonu
         } else {
           // Type16A pozisyonu
@@ -469,7 +473,7 @@ export const handleCeilingToCounterMount = async ({
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 - 15 // Öndeki crossbar pozisyonu
+              (zStart + zEnd) / 2 - 57 // Öndeki crossbar pozisyonu - 5 birim daha öne
             );
             scene.add(horizontalRip);
           }
@@ -486,11 +490,11 @@ export const handleCeilingToCounterMount = async ({
       let zBack = leftBack.z + zOffset + 5;
       
       // Ön modellerin pozisyonunu hesapla
-      if (backBars) {
-        // Back bar açık - öndeki model Model13
+      if (backBars && selectedBackShelvesForBars.includes(i)) {
+        // Bu shelf için back bar açık - öndeki model Model13
         zFront += model13Depth + 3; // Model13 öndeki pozisyon
       } else {
-        // Back bar kapalı - Type16A
+        // Bu shelf için back bar kapalı - Type16A
         if (type16AGeometry) {
           zFront += model13Depth - 20; // Type16A öndeki pozisyon
         } else {
@@ -499,11 +503,11 @@ export const handleCeilingToCounterMount = async ({
       }
       
       // Arka modellerin pozisyonunu hesapla
-      if (frontBars) {
-        // Front bar açık - arkadaki model Model13
+      if (frontBars && selectedShelvesForBars.includes(i)) {
+        // Bu shelf için front bar açık - arkadaki model Model13
         zBack -= model13Depth; // Model13 arkadaki pozisyon
       } else {
-        // Front bar kapalı - Type16A
+        // Bu shelf için front bar kapalı - Type16A
         if (type16AGeometry) {
           zBack += model13Depth - 108; // Type16A arkadaki pozisyon
         } else {
@@ -520,51 +524,51 @@ export const handleCeilingToCounterMount = async ({
         // Bay spacing 0 ise eski mantık: sol kenar sadece ilk bay, sağ kenar her bay
         // Sol kısa kenar - sadece en soldaki bay veya tek bay durumunda ekle
         if (bayIndex === 0) {
-          const leftEdgeRipRadius = (frontBars || backBars) ? 14 : 10; // Horizontal bar açıksa daha kalın
+          const leftEdgeRipRadius = (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) ? 18 : 14; // Bu shelf için horizontal bar açıksa daha kalın
           const leftRipGeometry = new THREE.CylinderGeometry(leftEdgeRipRadius, leftEdgeRipRadius, length, 32);
           const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
           leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
         }
 
         // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
-        const rightEdgeRipRadius = (frontBars || backBars) ? 14 : 10; // Horizontal bar açıksa daha kalın
+        const rightEdgeRipRadius = (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) ? 18 : 14; // Bu shelf için horizontal bar açıksa daha kalın
         const rightRipGeometry = new THREE.CylinderGeometry(rightEdgeRipRadius, rightEdgeRipRadius, length, 32);
         const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
       } else {
         // Bay spacing > 0 ise her bay için hem sol hem sağ kısa kenar
         // Sol kısa kenar
-        const leftEdgeRipRadius = (frontBars || backBars) ? 14 : 10; // Horizontal bar açıksa daha kalın
+        const leftEdgeRipRadius = (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) ? 18 : 14; // Bu shelf için horizontal bar açıksa daha kalın
         const leftRipGeometry = new THREE.CylinderGeometry(leftEdgeRipRadius, leftEdgeRipRadius, length, 32);
         const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
         leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
 
         // Sağ kısa kenar
-        const rightEdgeRipRadius = (frontBars || backBars) ? 14 : 10; // Horizontal bar açıksa daha kalın
+        const rightEdgeRipRadius = (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) ? 18 : 14; // Bu shelf için horizontal bar açıksa daha kalın
         const rightRipGeometry = new THREE.CylinderGeometry(rightEdgeRipRadius, rightEdgeRipRadius, length, 32);
         const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
