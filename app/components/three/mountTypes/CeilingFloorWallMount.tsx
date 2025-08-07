@@ -694,7 +694,7 @@ export const handleCeilingFloorWallMount = async ({
           leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
@@ -707,7 +707,7 @@ export const handleCeilingFloorWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
@@ -720,7 +720,7 @@ export const handleCeilingFloorWallMount = async ({
         leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
@@ -732,7 +732,7 @@ export const handleCeilingFloorWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);

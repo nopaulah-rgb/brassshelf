@@ -546,8 +546,8 @@ export const handleCeilingToCounterToWallMount = async ({
         let geometryToUse, materialToUse;
         
         // Model seçim mantığı:
-        // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-        const shouldUseModel13 = (isBack && frontBars);
+        // Front bar YES -> sadece seçili raflarda arkadaki modeller Model13
+        const shouldUseModel13 = (isBack && frontBars && selectedShelvesForBars.includes(i));
         
         if (shouldUseModel13) {
           // Model13 kullan
@@ -716,7 +716,7 @@ export const handleCeilingToCounterToWallMount = async ({
           leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
@@ -729,7 +729,7 @@ export const handleCeilingToCounterToWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
@@ -742,7 +742,7 @@ export const handleCeilingToCounterToWallMount = async ({
         leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
@@ -754,7 +754,7 @@ export const handleCeilingToCounterToWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);

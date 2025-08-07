@@ -24,6 +24,7 @@ export const handleWallMount = async ({
   frontBars,
   pipeDiameter,
   roomDepth = 1200,
+  roomHeight = 1500,
   wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
 }: MountTypeProps) => {
@@ -157,11 +158,13 @@ export const handleWallMount = async ({
     }
   }
 
-  const baseY = userHeight || 1195;
-  // shelfSpacing now comes from props
-  
-  // Adjust baseY when there are multiple shelves so that the first shelf stays at the same position
-  const adjustedBaseY = shelfQuantity > 1 ? baseY + (shelfQuantity - 1) * shelfSpacing : baseY;
+  // Ceiling'den başlayacak şekilde üst seviyeyi belirle
+  void userHeight; // artık kullanılmıyor
+  const ceilingClearance = 80; // mm
+  const modelHeightForOffset = model13Height > 0 ? model13Height : 120; // yedek değer
+  const baseY = (roomHeight || 1500) - modelHeightForOffset - ceilingClearance;
+  // Üst raf sabit: ek raflar aşağıya doğru eklensin
+  const adjustedBaseY = baseY;
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12;
@@ -382,8 +385,8 @@ export const handleWallMount = async ({
         let geometryToUse, materialToUse;
         
         // Model seçim mantığı:
-        // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-        const shouldUseModel13 = (isBack && frontBars);
+        // Front bar YES -> sadece seçili raflarda arkadaki modeller Model13
+        const shouldUseModel13 = (isBack && frontBars && selectedShelvesForBars.includes(i));
         
         if (shouldUseModel13) {
           // Model13 kullan
@@ -446,6 +449,10 @@ export const handleWallMount = async ({
         // Raflar arası normal ripler
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
         const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü
+        // Individual spacing desteği
+        const spacingForNext = (shelfSpacings && shelfSpacings.length >= totalShelves)
+          ? shelfSpacings[i]
+          : shelfSpacing;
         
         // useTopShelf true ise ve ilk raf ise ripi uzat (top shelf kullanılıyor)
         const shouldExtendRip = useTopShelf && i === 0;
@@ -460,13 +467,13 @@ export const handleWallMount = async ({
         const verticalRipGeometry = new THREE.CylinderGeometry(
           pipeRadius, 
           pipeRadius, 
-          shelfSpacing + totalExtension, 
+          spacingForNext + totalExtension, 
           32
         );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - shelfSpacing / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
+          currentHeight - spacingForNext / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
           pos.z + zOffset
         );
         scene.add(verticalRip);
@@ -500,7 +507,7 @@ export const handleWallMount = async ({
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 + 34 // Horizontal bar'ı arkadaki modelin içinden geçir
+            (zStart + zEnd) / 2 + 44 // Front YES: 20 mm arkaya al
             );
             scene.add(horizontalRip);
           }
@@ -552,7 +559,7 @@ export const handleWallMount = async ({
           leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
@@ -565,7 +572,7 @@ export const handleWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
@@ -578,7 +585,7 @@ export const handleWallMount = async ({
         leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
@@ -590,7 +597,7 @@ export const handleWallMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);

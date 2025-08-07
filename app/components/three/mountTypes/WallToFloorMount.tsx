@@ -385,8 +385,8 @@ export const handleWallToFloorMount = async ({
         let geometryToUse, materialToUse;
         
         // Model seçim mantığı:
-        // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-        const shouldUseModel13 = (isBack && frontBars);
+        // Front bar YES -> sadece seçili raflarda arkadaki modeller Model13
+        const shouldUseModel13 = (isBack && frontBars && selectedShelvesForBars.includes(i));
         
         if (shouldUseModel13) {
           // Model13 kullan
@@ -502,7 +502,7 @@ export const handleWallToFloorMount = async ({
       }
     });
 
-    // Front bar için arka crossbar'ları ekle
+      // Front bar için arka crossbar'ları ekle
     if (frontBars) {
       // Her bay için arka crossbar'ları ekle - bay spacing'e göre
       if (baySpacing === 0) {
@@ -531,7 +531,7 @@ export const handleWallToFloorMount = async ({
               horizontalRip.position.set(
                 start.x + (end.x - start.x) / 2,
                 currentHeight + model13Height / 2 - 20,
-                (zStart + zEnd) / 2 + 15 - 28 // Horizontal bar'ı 18 birim geriye taşı (2 birim öne alındı)
+                (zStart + zEnd) / 2 + 15 - 28 // Horizontal bar ofseti
               );
               scene.add(horizontalRip);
             }
@@ -617,7 +617,7 @@ export const handleWallToFloorMount = async ({
           leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
@@ -630,7 +630,7 @@ export const handleWallToFloorMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
@@ -674,7 +674,7 @@ export const handleWallToFloorMount = async ({
         leftRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
@@ -686,7 +686,7 @@ export const handleWallToFloorMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Yatay pozisyon için 90 derece döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
