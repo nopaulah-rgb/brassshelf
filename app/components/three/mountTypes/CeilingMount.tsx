@@ -287,11 +287,11 @@ export const handleCeilingMount = async ({
       let geometryToUse, materialToUse;
       
       // Model seçim mantığı:
-      // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-      // Back bar YES -> öndeki modeller Model13 (çünkü öne bağlanır)
+      // Front bar YES ve bu raf seçili -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
+      // Back bar YES ve bu raf seçili -> öndeki modeller Model13 (çünkü öne bağlanır)
       const shouldUseModel13 = 
-        (isFrente && backBars) ||   // Ön pozisyon ve back bar açık
-        (isBacke && frontBars);     // Arka pozisyon ve front bar açık
+        (isFrente && backBars && selectedBackShelvesForBars.includes(i)) ||   // Ön pozisyon ve back bar açık ve bu raf seçili
+        (isBacke && frontBars && selectedShelvesForBars.includes(i));         // Arka pozisyon ve front bar açık ve bu raf seçili
       
       if (shouldUseModel13) {
         // Model13 kullan
@@ -313,8 +313,12 @@ export const handleCeilingMount = async ({
         connectorMesh.scale.set(1.5, 1.5, 1.5);
 
         // Model tipine göre rotasyonlar
-        if (frontBars || backBars) {
-          // Horizontal bar açık durumunda
+        const hasHorizontalBarForThisShelf = 
+          (frontBars && selectedShelvesForBars.includes(i)) || 
+          (backBars && selectedBackShelvesForBars.includes(i));
+          
+        if (hasHorizontalBarForThisShelf) {
+          // Bu raf için horizontal bar var durumunda
           if (model13Geometry) {
             // Model13 için rotasyonlar
             if (isFrente) {
@@ -331,7 +335,7 @@ export const handleCeilingMount = async ({
             }
           }
         } else {
-          // Horizontal bar kapalı - ön ve arka Type16A
+          // Bu raf için horizontal bar yok - Type16A kullan
           if (type16AGeometry) {
             if (isBacke) {
               connectorMesh.rotation.y = Math.PI; // Arkadaki Type16A'yı 180 derece çevir
@@ -348,14 +352,14 @@ export const handleCeilingMount = async ({
         // Pozisyon ayarlamaları
         let zPos = pos.z + zOffset + 5;
         
-        if (isFrente && backBars) {
-          // Ön pozisyon ve back bar açık - Model13
+        if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
+          // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
           zPos += model13Depth + 3; // Normal öndeki model pozisyonu
-        } else if (isBacke && frontBars) {
-          // Arka pozisyon ve front bar açık - Model13
+        } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
+          // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
           zPos -= model13Depth + 8; // Arkadaki model13.glb pozisyonu
         } else {
-          // Type16A pozisyonu
+          // Type16A pozisyonu (bu raf için horizontal bar yok)
           if (type16AGeometry) {
             if (isFrente) {
               zPos += model13Depth - 20; // Type16A öndeki pozisyon
@@ -396,11 +400,11 @@ export const handleCeilingMount = async ({
         if (isBacke) {
           // Sadece arkadaki ripler için pozisyon ayarla
           ripZPos += 5; // Base offset
-          if (frontBars) {
-            // Front bar açık - arkadaki model Model13
+          if (frontBars && selectedShelvesForBars.includes(i)) {
+            // Front bar açık ve bu raf seçili - arkadaki model Model13
             ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
           } else {
-            // Front bar kapalı - Type16A
+            // Front bar kapalı veya bu raf seçili değil - Type16A
             if (type16AGeometry) {
               ripZPos += model13Depth - 68; // Type16A arkadaki pozisyon
             } else {
@@ -510,11 +514,11 @@ export const handleCeilingMount = async ({
       let zBack = leftBack.z + zOffset + 5;
       
       // Ön modellerin pozisyonunu hesapla
-      if (backBars) {
-        // Back bar açık - öndeki model Model13
+      if (backBars && selectedBackShelvesForBars.includes(i)) {
+        // Back bar açık ve bu raf seçili - öndeki model Model13
         zFront += model13Depth + 3; // Model13 öndeki pozisyon
       } else {
-        // Back bar kapalı - Type16A
+        // Back bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
           zFront += model13Depth - 20; // Type16A öndeki pozisyon
         } else {
@@ -523,11 +527,11 @@ export const handleCeilingMount = async ({
       }
       
       // Arka modellerin pozisyonunu hesapla
-      if (frontBars) {
-        // Front bar açık - arkadaki model Model13
+      if (frontBars && selectedShelvesForBars.includes(i)) {
+        // Front bar açık ve bu raf seçili - arkadaki model Model13
         zBack -= model13Depth; // Model13 arkadaki pozisyon
       } else {
-        // Front bar kapalı - Type16A
+        // Front bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
           zBack += model13Depth - 108; // Type16A arkadaki pozisyon
         } else {
@@ -649,11 +653,11 @@ export const handleCeilingMount = async ({
     if (isBacke) {
       // Sadece arkadaki ripler için pozisyon ayarla
       ripZPos += 5; // Base offset
-      if (frontBars) {
-        // Front bar açık - arkadaki model Model13
+      if (frontBars && selectedShelvesForBars.includes(shelfQuantity - 1)) {
+        // Front bar açık ve son raf seçili - arkadaki model Model13
         ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
       } else {
-        // Front bar kapalı - Type16A
+        // Front bar kapalı veya son raf seçili değil - Type16A
         if (type16AGeometry) {
           ripZPos += model13Depth - 68; // Type16A arkadaki pozisyon
         } else {
@@ -727,11 +731,11 @@ export const handleCeilingMount = async ({
       if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
-        if (frontBars) {
-          // Front bar açık - arkadaki model Model13
+        if (frontBars && selectedShelvesForBars.includes(0)) {
+          // Front bar açık ve tek raf seçili - arkadaki model Model13
           ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
         } else {
-          // Front bar kapalı - Type16A
+          // Front bar kapalı veya tek raf seçili değil - Type16A
           if (type16AGeometry) {
             ripZPos += model13Depth - 68; // Type16A arkadaki pozisyon
           } else {
@@ -834,11 +838,11 @@ export const handleCeilingMount = async ({
           if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
-        if (frontBars) {
-          // Front bar açık - arkadaki model Model13
+        if (frontBars && selectedShelvesForBars.includes(0)) {
+          // Front bar açık ve üst raf seçili - arkadaki model Model13
           ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
         } else {
-          // Front bar kapalı - Type16A
+          // Front bar kapalı veya üst raf seçili değil - Type16A
           if (type16AGeometry) {
             ripZPos += model13Depth - 68; // Type16A arkadaki pozisyon
           } else {
