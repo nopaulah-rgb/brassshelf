@@ -496,8 +496,8 @@ export const handleCeilingMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 - 15 // Öndeki crossbar pozisyonu
+              currentHeight + model13Height / 2 - 15, // 3 birim yukarı kaldırıldı
+              (zStart + zEnd) / 2 - 48 // Öndeki crossbar pozisyonu - 20 birim öne hareket ettirildi
             );
             scene.add(horizontalRip);
           }
