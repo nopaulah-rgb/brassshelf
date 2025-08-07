@@ -433,7 +433,7 @@ export const handleCeilingToCounterMount = async ({
             zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
@@ -467,7 +467,7 @@ export const handleCeilingToCounterMount = async ({
             zEnd += model13Depth + 3;
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
