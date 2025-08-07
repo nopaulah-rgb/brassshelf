@@ -380,10 +380,13 @@ export const handleCeilingMount = async ({
 
       // Dikey ripler (son raf değilse)
       if (i < shelfQuantity - 1 && shelfQuantity > 1) {
-        // En son rafın bir öncesinde ise uzatma daha az olsun
-        const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
-        const extendedHeight = spacingToUse + extensionDown;
-        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 16);
+        // Next shelf spacing'i al
+        const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
+        
+        // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafe + model yüksekliği
+        const ripLength = nextSpacingToUse + model13Height + 10; // Model yüksekliğini de dahil et ve biraz boşluk bırak
+        
+        const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, ripLength, 16);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         
         // Sadece arkadaki ripler değişsin, öndeki sabit kalsın
@@ -406,9 +409,10 @@ export const handleCeilingMount = async ({
           }
         }
         
+        // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat
         verticalRip.position.set(
           pos.x,
-          currentHeight - (spacingToUse + extensionDown) / 2, // Sadece aşağı uzat
+          currentHeight - ripLength / 2, // Mevcut model altından başla
           ripZPos
         );
         scene.add(verticalRip);
@@ -592,7 +596,7 @@ export const handleCeilingMount = async ({
   // En alt raftan aşağı uzayan dikey ripler (sadece çoklu shelf durumunda)
   if (shelfQuantity > 1) {
     const bottomShelfHeight = baseY - (shelfQuantity - 1) * shelfSpacing;
-    const downwardExtension = 40; // Aşağı uzatma miktarı - sabit 3 birim
+    const downwardExtension = 20; // Aşağı uzatma miktarı - kısaltıldı
   
   // Köşe pozisyonlarını hesapla
   const allBottomCornerPositions = [];
@@ -660,7 +664,7 @@ export const handleCeilingMount = async ({
     
     downwardRip.position.set(
       pos.x,
-      bottomShelfHeight - downwardExtension / 2,
+      bottomShelfHeight - model13Height - downwardExtension / 2, // Model altından başlatıp aşağı uzat
       ripZPos
     );
     scene.add(downwardRip);
