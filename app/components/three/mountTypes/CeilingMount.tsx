@@ -357,7 +357,7 @@ export const handleCeilingMount = async ({
           zPos += model13Depth + 3; // Normal öndeki model pozisyonu
         } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
           // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
-          zPos -= model13Depth + 8; // Arkadaki model13.glb pozisyonu
+          zPos -= model13Depth + 23; // Arkadaki model13.glb pozisyonu - 20 birim geri çekildi
         } else {
           // Type16A pozisyonu (bu raf için horizontal bar yok)
           if (type16AGeometry) {
