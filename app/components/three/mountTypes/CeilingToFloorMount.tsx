@@ -297,11 +297,14 @@ export const handleCeilingToFloorMount = async ({
       let geometryToUse, materialToUse;
       
       // Model seçim mantığı:
-      // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-      // Back bar YES -> öndeki modeller Model13 (çünkü öne bağlanır)
+      // Front bar YES ve shelf seçili -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
+      // Back bar YES ve shelf seçili -> öndeki modeller Model13 (çünkü öne bağlanır)
+      const isFrontBarSelectedForThisShelf = frontBars && selectedShelvesForBars.includes(i);
+      const isBackBarSelectedForThisShelf = backBars && selectedBackShelvesForBars.includes(i);
+      
       const shouldUseModel13 = 
-        (isFrente && backBars) ||   // Ön pozisyon ve back bar açık
-        (isBacke && frontBars);     // Arka pozisyon ve front bar açık
+        (isFrente && isBackBarSelectedForThisShelf) ||   // Ön pozisyon ve back bar bu shelf için açık
+        (isBacke && isFrontBarSelectedForThisShelf);     // Arka pozisyon ve front bar bu shelf için açık
       
       if (shouldUseModel13) {
         // Model13 kullan
@@ -323,8 +326,8 @@ export const handleCeilingToFloorMount = async ({
         connectorMesh.scale.set(1.5, 1.5, 1.5);
 
         // Model tipine göre rotasyonlar
-        if (frontBars || backBars) {
-          // Horizontal bar açık durumunda
+        if (isFrontBarSelectedForThisShelf || isBackBarSelectedForThisShelf) {
+          // Bu shelf için horizontal bar açık durumunda
           if (model13Geometry) {
             // Model13 için rotasyonlar
             if (isFrente) {
@@ -341,7 +344,7 @@ export const handleCeilingToFloorMount = async ({
             }
           }
         } else {
-          // Horizontal bar kapalı - ön ve arka Type16A
+          // Bu shelf için horizontal bar kapalı - ön ve arka Type16A
           if (type16AGeometry) {
             if (isBacke) {
               connectorMesh.rotation.y = Math.PI; // Arkadaki Type16A'yı 180 derece çevir
@@ -358,11 +361,11 @@ export const handleCeilingToFloorMount = async ({
         // Pozisyon ayarlamaları
         let zPos = pos.z + zOffset + 5;
         
-        if (isFrente && backBars) {
-          // Ön pozisyon ve back bar açık - Model13
+        if (isFrente && isBackBarSelectedForThisShelf) {
+          // Ön pozisyon ve bu shelf için back bar açık - Model13
           zPos += model13Depth + 3; // Normal öndeki model pozisyonu
-        } else if (isBacke && frontBars) {
-          // Arka pozisyon ve front bar açık - Model13
+        } else if (isBacke && isFrontBarSelectedForThisShelf) {
+          // Arka pozisyon ve bu shelf için front bar açık - Model13
           zPos -= model13Depth + 8; // Arkadaki model13.glb pozisyonu
         } else {
           // Type16A pozisyonu
@@ -467,7 +470,7 @@ export const handleCeilingToFloorMount = async ({
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 - 25 // Öndeki crossbar pozisyonu
+              (zStart + zEnd) / 2 -50// Öndeki crossbar pozisyonu - 5 birim daha öne
             );
             scene.add(horizontalRip);
           }
@@ -484,26 +487,26 @@ export const handleCeilingToFloorMount = async ({
       let zBack = leftBack.z + zOffset + 5;
       
       // Ön modellerin pozisyonunu hesapla
-      if (backBars) {
-        // Back bar açık - öndeki model Model13
+      if (backBars && selectedBackShelvesForBars.includes(i)) {
+        // Back bar açık ve seçili - öndeki model Model13
         zFront += model13Depth + 3; // Model13 öndeki pozisyon
       } else {
-        // Back bar kapalı - Type16A
+        // Back bar kapalı veya seçili değil - Type16A
         if (type16AGeometry) {
-          zFront += model13Depth - 20; // Type16A öndeki pozisyon
+          zFront += model13Depth - 20; // Type16A öndeki pozisyon - modele yakın
         } else {
           zFront += model13Depth + 3;
         }
       }
       
       // Arka modellerin pozisyonunu hesapla
-      if (frontBars) {
-        // Front bar açık - arkadaki model Model13
+      if (frontBars && selectedShelvesForBars.includes(i)) {
+        // Front bar açık ve seçili - arkadaki model Model13
         zBack -= model13Depth; // Model13 arkadaki pozisyon
       } else {
-        // Front bar kapalı - Type16A
+        // Front bar kapalı veya seçili değil - Type16A
         if (type16AGeometry) {
-          zBack += model13Depth - 108; // Type16A arkadaki pozisyon
+          zBack += model13Depth - 93; // Type16A arkadaki pozisyon - modele yakın
         } else {
           zBack += model13Depth - 85; // Normal arkadaki pozisyon
         }
@@ -524,7 +527,7 @@ export const handleCeilingToFloorMount = async ({
           leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
           leftRip.position.set(
             leftFront.x,
-            currentHeight + model13Height / 2 - 18,
+            currentHeight + model13Height / 2 - 13,
             zFront + (zBack - zFront) / 2
           );
           scene.add(leftRip);
@@ -537,7 +540,7 @@ export const handleCeilingToFloorMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
@@ -550,7 +553,7 @@ export const handleCeilingToFloorMount = async ({
         leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         leftRip.position.set(
           leftFront.x,
-          currentHeight + model13Height / 2 - 18,
+          currentHeight + model13Height / 2 - 13,
           zFront + (zBack - zFront) / 2
         );
         scene.add(leftRip);
@@ -562,7 +565,7 @@ export const handleCeilingToFloorMount = async ({
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
-          currentHeight + model13Height / 2 - 5,
+          currentHeight + model13Height / 2 - 10,
           zFront + (zBack - zFront) / 2
         );
         scene.add(rightRip);
