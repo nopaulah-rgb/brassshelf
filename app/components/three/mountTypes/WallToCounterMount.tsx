@@ -525,6 +525,10 @@ export const handleWallToCounterMount = async ({
           scene.add(verticalRip);
         } else {
           // Raflar arası normal ripler
+          // Individual spacing desteği: bir sonraki raf aralığı
+          const spacingForNext = (shelfSpacings && shelfSpacings.length >= totalShelves)
+            ? shelfSpacings[i]
+            : shelfSpacing;
           const shouldExtendRip = useTopShelf && i === 0;
           const baseExtension = shouldExtendRip ? 100 : 0;
                       const edgeExtension = (isWallSide || isBackSide) ? 35 : 0; // Ön ve arka ripler için ekstra uzatma
@@ -533,13 +537,13 @@ export const handleWallToCounterMount = async ({
           const verticalRipGeometry = new THREE.CylinderGeometry(
             pipeRadius, 
             pipeRadius, 
-            shelfSpacing + totalExtension, 
+            spacingForNext + totalExtension, 
             32
           );
           const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
           verticalRip.position.set(
             pos.x,
-            currentHeight - shelfSpacing / 2 + (shouldExtendRip ? 50 : 0) + ((isWallSide || isBackSide) ? 17.5 : 0),
+            currentHeight - spacingForNext / 2 + (shouldExtendRip ? 50 : 0) + ((isWallSide || isBackSide) ? 17.5 : 0),
             pos.z + zOffset
           );
           scene.add(verticalRip);
