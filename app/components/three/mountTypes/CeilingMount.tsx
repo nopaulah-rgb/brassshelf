@@ -397,7 +397,7 @@ export const handleCeilingMount = async ({
         
         // Ön ve arka ripler için farklı çaplar kullan
         const isFrente = pos.z === shelfBoundingBox.min.z + 5;
-        const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 2; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
+        const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
         
         const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripLength, 16);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
@@ -671,7 +671,7 @@ export const handleCeilingMount = async ({
       
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === shelfBoundingBox.min.z + 5;
-      const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 2; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
+      const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
       
       const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripHeight, 16);
       const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
