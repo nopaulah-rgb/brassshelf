@@ -365,9 +365,9 @@ export const handleCeilingMount = async ({
               zPos += model13Depth - 20; // Type16A öndeki pozisyon
             }
             if (isBacke) {
-              // Front bar YES ve raf seçili değilse arkadaki Type16A'yı arkaya al
+              // Front bar YES ve raf seçili değilse arkadaki Type16A pozisyonu
               if (frontBars && !selectedShelvesForBars.includes(i)) {
-                zPos += model13Depth - 123; // 15 birim arkaya alındı (108'den 123'e)
+                zPos += model13Depth - 98; // Arkadaki riplere göre ayarlandı (rip -58, model 40 birim arkada)
               } else {
                 zPos += model13Depth - 108; // Type16A arkadaki normal pozisyon
               }
@@ -415,9 +415,9 @@ export const handleCeilingMount = async ({
           } else {
             // Front bar kapalı veya bu raf seçili değil - Type16A
             if (type16AGeometry) {
-              // Front bar YES ve raf seçili değilse arkadaki ripi de arkaya al
+              // Front bar YES ve raf seçili değilse arkadaki ripi pozisyonu
               if (frontBars && !selectedShelvesForBars.includes(i)) {
-                ripZPos += model13Depth - 83; // 15 birim arkaya alındı (68'den 83'e)
+                ripZPos += model13Depth - 58; // En üstteki arkadaki rip ile aynı pozisyon
               } else {
                 ripZPos += model13Depth - 68; // Type16A arkadaki normal pozisyon
               }
@@ -550,9 +550,9 @@ export const handleCeilingMount = async ({
       } else {
         // Front bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
-          // Front bar YES ve raf seçili değilse arkadaki kısa kenar ripi de arkaya al
+          // Front bar YES ve raf seçili değilse arkadaki kısa kenar ripi pozisyonu
           if (frontBars && !selectedShelvesForBars.includes(i)) {
-            zBack += model13Depth - 123; // 15 birim arkaya alındı (108'den 123'e)
+            zBack += model13Depth - 98; // Arkadaki riplere göre ayarlandı
           } else {
             zBack += model13Depth - 108; // Type16A arkadaki normal pozisyon
           }
@@ -707,7 +707,7 @@ export const handleCeilingMount = async ({
       verticalRip.geometry = updatedRipGeometry;
       
       // Front bar açıksa tüm dikey ripleri 3 birim arkaya kaydır
-      const verticalRipZAdjustment = frontBars ? 10 : 0;
+      const verticalRipZAdjustment = frontBars ? 3 : 0;
       
       verticalRip.position.set(
         pos.x,
@@ -738,7 +738,7 @@ export const handleCeilingMount = async ({
       // Type16E modeli için pozisyon ayarı - tek shelf durumunda asıl tavan seviyesinde
       const singleConnectorCeilingY = shelfQuantity === 1 ? baseCeilingY : topShelfHeight + shelfSpacing;
       // Front bar açıksa ceiling connector'ları da 3 birim arkaya kaydır
-      const connectorZAdjustment = frontBars ? 10 : 0;
+      const connectorZAdjustment = frontBars ? 3 : 0;
       ceilingConnector.position.set(pos.x, singleConnectorCeilingY, ripZPos + connectorZAdjustment);
       scene.add(ceilingConnector);
     });
@@ -811,9 +811,9 @@ export const handleCeilingMount = async ({
         } else {
                       // Front bar kapalı veya en üst raf seçili değil - Type16A
             if (type16AGeometry) {
-              // Front bar YES ve raf seçili değilse arkadaki ripi de öne al
+              // Front bar YES ve raf seçili değilse arkadaki ripi pozisyonu
               if (frontBars && !selectedShelvesForBars.includes(0)) {
-                ripZPos += model13Depth - 58; // 10 birim öne alındı (68'den 58'e)
+                ripZPos += model13Depth - 58; // Standart pozisyon
               } else {
                 ripZPos += model13Depth - 68; // Type16A arkadaki normal pozisyon
               }
@@ -829,7 +829,7 @@ export const handleCeilingMount = async ({
     verticalRip.geometry = updatedRipGeometry;
     
     // Front bar açıksa tüm dikey ripleri 3 birim arkaya kaydır
-    const verticalRipZAdjustment = frontBars ? 10 : 0;
+    const verticalRipZAdjustment = frontBars ? 3 : 0;
     
     verticalRip.position.set(
       pos.x,
