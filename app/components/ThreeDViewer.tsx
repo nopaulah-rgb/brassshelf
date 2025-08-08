@@ -74,6 +74,8 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   const animationIdRef = useRef<number | null>(null);
   const targetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const ceilingMeshRef = useRef<THREE.Mesh | null>(null);
+  const floorMeshRef = useRef<THREE.Mesh | null>(null);
+  const backWallMeshRef = useRef<THREE.Mesh | null>(null);
   
   console.log('ThreeDViewer props:', {
     shelfUrl,
@@ -380,10 +382,12 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, dynamicFloorY, -roomDepth / 2);
     scene.add(floor);
+    floorMeshRef.current = floor;
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
     backWall.position.set(0, roomHeight / 2, -roomDepth);
     scene.add(backWall);
+    backWallMeshRef.current = backWall;
 
     const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
     ceiling.rotation.x = Math.PI / 2;
@@ -919,6 +923,16 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         return renderer.domElement.toDataURL('image/png');
       };
 
+      // Hide room elements for technical-style captures
+      const prevVis = {
+        ceiling: ceilingMeshRef.current?.visible,
+        floor: floorMeshRef.current?.visible,
+        backWall: backWallMeshRef.current?.visible,
+      };
+      if (ceilingMeshRef.current) ceilingMeshRef.current.visible = false;
+      if (floorMeshRef.current) floorMeshRef.current.visible = false;
+      if (backWallMeshRef.current) backWallMeshRef.current.visible = false;
+
       // FRONT/HOME
       camera.position.set(target.x, target.y + 50, Math.abs(distance));
       camera.lookAt(target);
@@ -934,17 +948,16 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
       const side = renderAndGrab();
 
       // TOP
-      // Hide ceiling for top capture
-      const prevCeilingVisible = ceilingMeshRef.current ? ceilingMeshRef.current.visible : undefined;
-      if (ceilingMeshRef.current) ceilingMeshRef.current.visible = false;
       camera.position.set(target.x, target.y + distance, target.z);
       camera.lookAt(target);
       controls.target.copy(target);
       camera.up.set(0, 0, -1); // orient top view
       const top = renderAndGrab();
-      if (ceilingMeshRef.current && typeof prevCeilingVisible === 'boolean') {
-        ceilingMeshRef.current.visible = prevCeilingVisible;
-      }
+
+      // Restore room visibility
+      if (typeof prevVis.ceiling === 'boolean' && ceilingMeshRef.current) ceilingMeshRef.current.visible = prevVis.ceiling;
+      if (typeof prevVis.floor === 'boolean' && floorMeshRef.current) floorMeshRef.current.visible = prevVis.floor;
+      if (typeof prevVis.backWall === 'boolean' && backWallMeshRef.current) backWallMeshRef.current.visible = prevVis.backWall;
 
       // Restore
       camera.up.copy(originalUp);

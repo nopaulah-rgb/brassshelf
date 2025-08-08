@@ -67,6 +67,13 @@ export default function Index() {
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
 
+  // Derive rip length in cm from selectedRip url (e.g., /models/30cmRib.stl)
+  const ripLengthCm = React.useMemo(() => {
+    if (!selectedRip) return undefined;
+    const match = selectedRip.match(/(\d+)cm/i);
+    return match ? Number(match[1]) : undefined;
+  }, [selectedRip]);
+
   // Set loading false after a short delay
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -338,6 +345,7 @@ export default function Index() {
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
         shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}
+        ripLengthCm={ripLengthCm}
         frontImg={shots.front}
         sideImg={shots.side}
         topImg={shots.top}

@@ -16,6 +16,7 @@ interface DimensionsModalProps {
   useIndividualSpacing: boolean;
   shelfSpacingMm?: number; // mm when equal spacing
   shelfSpacingsMm?: number[]; // mm when individual spacing
+  ripLengthCm?: number; // rip length in cm for display
   frontImg?: string;
   sideImg?: string;
   topImg?: string;
@@ -162,6 +163,7 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
               useIndividualSpacing={useIndividualSpacing}
               shelfSpacingMm={shelfSpacingMm}
               shelfSpacingsMm={shelfSpacingsMm}
+              baySpacingMm={barCount > 1 ? baySpacingMm : undefined}
             />
           </div>
 
@@ -231,17 +233,23 @@ const HomeOverlay: React.FC<{
   useIndividualSpacing?: boolean;
   shelfSpacingMm?: number;
   shelfSpacingsMm?: number[];
-}> = ({ unit, height, totalWidth, widthPerBay, useIndividualSpacing, shelfSpacingMm, shelfSpacingsMm }) => (
-  <svg viewBox="0 0 1000 320" className="pointer-events-none absolute inset-x-0 bottom-0">
+  baySpacingMm?: number;
+}> = ({ unit, height, totalWidth, widthPerBay, useIndividualSpacing, shelfSpacingMm, shelfSpacingsMm, baySpacingMm }) => (
+  <svg viewBox="0 0 1000 320" className="pointer-events-none absolute inset-0">
     <OverlayDefs />
-    {/* total width below image */}
-    <Arrow x1={100} y1={290} x2={900} y2={290} />
-    <OverlayText x={500} y={282} text={`${formatNumber(totalWidth)}${unitSymbol(unit)}`} />
-    {/* height left side */}
-    <Arrow x1={60} y1={40} x2={60} y2={260} />
-    <OverlayText x={50} y={150} text={`${formatNumber(height)}${unitSymbol(unit)}`} anchor="end" />
-    {/* center to center example label */}
-    <OverlayText x={500} y={260} text={`Center to center: ${formatNumber(widthPerBay)}${unitSymbol(unit)}`} />
+    {/* total width and left height hidden per request */}
+    {false && (
+      <>
+        <Arrow x1={100} y1={290} x2={900} y2={290} />
+        <OverlayText x={500} y={282} text={`${formatNumber(totalWidth)}${unitSymbol(unit)}`} />
+        <Arrow x1={60} y1={40} x2={60} y2={260} />
+        <OverlayText x={50} y={150} text={`${formatNumber(height)}${unitSymbol(unit)}`} anchor="end" />
+      </>
+    )}
+    {/* center to center hidden per request */}
+    {false && (
+      <OverlayText x={500} y={260} text={`Center to center: ${formatNumber(widthPerBay)}${unitSymbol(unit)}`} />
+    )}
     {/* shelf spacings list on right */}
     {(() => {
       const spacings = useIndividualSpacing && shelfSpacingsMm && shelfSpacingsMm.length > 0
@@ -262,6 +270,28 @@ const HomeOverlay: React.FC<{
         return node;
       });
     })()}
+
+    {/* right-side vertical dimension showing shelf spacing (e.g., 12") like reference HOME drawing */}
+    {(() => {
+      const singleSpacingMm = useIndividualSpacing && shelfSpacingsMm && shelfSpacingsMm.length > 0
+        ? shelfSpacingsMm[0]
+        : (typeof shelfSpacingMm === 'number' ? shelfSpacingMm : undefined);
+      const showShelfSpacing = typeof singleSpacingMm === 'number';
+      const showBaySpacing = !showShelfSpacing && typeof baySpacingMm === 'number' && baySpacingMm > 0;
+      if (!showShelfSpacing && !showBaySpacing) return null;
+      const valueInUnit = mmToUnit(showShelfSpacing ? singleSpacingMm as number : baySpacingMm as number, unit);
+      // Position near right post; if bay spacing, center a bit lower for clarity
+      const x = 650; // closer to the model
+      const yBottom = showShelfSpacing ? 88 : 225;
+      const yTop = showShelfSpacing ? 152 : 185;
+      const label = showShelfSpacing ? `${formatNumber(valueInUnit)}${unitSymbol(unit)}` : `Bay: ${formatNumber(valueInUnit)}${unitSymbol(unit)}`;
+      return (
+        <g>
+          <Arrow x1={x} y1={yTop} x2={x} y2={yBottom} />
+          <OverlayText x={x + 3} y={(yTop + yBottom) / 2} text={label} anchor="start" />
+        </g>
+      );
+    })()}
   </svg>
 );
 
@@ -277,6 +307,12 @@ const SideOverlay: React.FC<{ unit: Unit; height: number; shelfDepth: number; to
     {/* height left */}
     <Arrow x1={80} y1={60} x2={80} y2={300} />
     <OverlayText x={70} y={190} text={`${formatNumber(height)}${unitSymbol(unit)}`} anchor="end" />
+
+    {/* short-edge style vertical markers on the right to show depths */}
+    <Arrow x1={930} y1={110} x2={930} y2={270} />
+    <OverlayText x={940} y={190} text={`${formatNumber(totalDepth)}${unitSymbol(unit)}`} anchor="start" />
+    <line x1={900} y1={130} x2={900} y2={250} stroke="#1E3A5F" strokeWidth="1.6" markerStart="url(#arrowBlue)" markerEnd="url(#arrowBlue)" />
+    <OverlayText x={910} y={190} text={`${formatNumber(shelfDepth)}${unitSymbol(unit)}`} anchor="start" />
   </svg>
 );
 
