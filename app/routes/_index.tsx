@@ -221,6 +221,7 @@ export default function Index() {
                 onFrontBarsChange={setFrontBars}
                 backBars={backBars}
                 onBackBarsChange={setBackBars}
+                mountType={mountType}
                 shelfCount={shelfQuantity}
                 selectedShelves={selectedShelvesForBars}
                 onSelectedShelvesChange={setSelectedShelvesForBars}

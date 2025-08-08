@@ -7,6 +7,7 @@ interface CrossbarSelectorProps {
   onFrontBarsChange: (value: boolean) => void;
   backBars: boolean;
   onBackBarsChange: (value: boolean) => void;
+  mountType?: string;
   shelfCount: number;
   selectedShelves: number[];
   onSelectedShelvesChange: (shelves: number[]) => void;
@@ -19,6 +20,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
   onFrontBarsChange,
   backBars,
   onBackBarsChange,
+  mountType,
   shelfCount,
   selectedShelves,
   onSelectedShelvesChange,
@@ -81,6 +83,8 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
     }
   }, [shelfCount, selectedShelves, onSelectedShelvesChange, selectedBackShelves, onSelectedBackShelvesChange]);
 
+  const hideBackBars = !!mountType && mountType.toLowerCase().includes('wall');
+
   return (
     <div className="space-y-4">
       {/* Front Horizontal Bars */}
@@ -129,7 +133,8 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
         )}
       </div>
 
-      {/* Back Horizontal Bars */}
+      {/* Back Horizontal Bars (conditionally hidden for wall mount types) */}
+      {!hideBackBars && (
       <div className="bg-[#8BBBD9] rounded-lg p-4">
         <div className="flex items-center justify-between">
           <span className="text-[#1E3A5F] font-medium">Back Horizontal Bars:</span>
@@ -174,6 +179,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };
