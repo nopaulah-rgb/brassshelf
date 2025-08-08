@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
 import { useState } from "react";
 import React from "react";
-import ThreeDViewer from "~/components/ThreeDViewer";
+import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
 
@@ -17,6 +17,7 @@ import BarSelector from "~/components/BarSelector";
 import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
 import PriceAndActions from "~/components/PriceAndActions";
+import DimensionsModal from "~/components/DimensionsModal";
 import WallConnectionSelector from "~/components/WallConnectionSelector";
 import BaySpacingInput from "~/components/BaySpacingInput";
 
@@ -43,6 +44,9 @@ export default function Index() {
   const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
   const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
   const [price] = useState<number>(599);
+  const [isDimensionsOpen, setIsDimensionsOpen] = useState<boolean>(false);
+  const viewerRef = React.useRef<ThreeDViewerHandle | null>(null);
+  const [shots, setShots] = useState<{front?: string; side?: string; top?: string}>({});
 
   // Material selections
   const [pipeDiameter, setPipeDiameter] = useState<string>('5/8');
@@ -256,6 +260,7 @@ export default function Index() {
               ) : isViewerReady ? (
                 <div className="w-full h-[400px]">
                   <ThreeDViewer
+                    ref={viewerRef}
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
@@ -294,15 +299,12 @@ export default function Index() {
               {/* Show Dimensions Button */}
               <div className="p-4 border-t">
                 <button 
-                  onClick={() => {
-                    const dimensionInfo = `
-                      Height: ${userHeight}${unit === 'inch' ? '"' : 'cm'}
-                      Width: ${userWidth}${unit === 'inch' ? '"' : 'cm'}
-                      Shelf Depth: ${shelfDepth}${unit === 'inch' ? '"' : 'cm'}
-                      Number of Shelves: ${shelfQuantity}
-                      Number of Bays: ${barCount}
-                    `;
-                    alert(dimensionInfo);
+                  onClick={async () => {
+                    if (viewerRef.current) {
+                      const imgs = await viewerRef.current.captureViews();
+                      setShots(imgs);
+                    }
+                    setIsDimensionsOpen(true);
                   }}
                   className="w-full py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                 >
@@ -320,6 +322,26 @@ export default function Index() {
           </div>
         </div>
       </main>
+
+      {/* Dimensions Modal */}
+      <DimensionsModal
+        isOpen={isDimensionsOpen}
+        onClose={() => setIsDimensionsOpen(false)}
+        unit={unit}
+        userHeight={userHeight}
+        userWidth={userWidth}
+        shelfDepth={shelfDepth}
+        totalDepth={totalDepth}
+        shelfQuantity={shelfQuantity}
+        barCount={barCount}
+        baySpacingMm={baySpacing}
+        useIndividualSpacing={useIndividualSpacing}
+        shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
+        shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}
+        frontImg={shots.front}
+        sideImg={shots.side}
+        topImg={shots.top}
+      />
     </div>
   );
 }
