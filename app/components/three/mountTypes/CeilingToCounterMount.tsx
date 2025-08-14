@@ -179,29 +179,15 @@ export const handleCeilingToCounterMount = async ({
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
 
-  // Calculate dynamic counter position based on system height
-  let dynamicCounterY;
-  if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
-    // Individual spacing kullanarak toplam sistem yüksekliğini hesapla
-    let totalSystemHeight = 0;
-    for (let j = 0; j < shelfQuantity; j++) {
-      totalSystemHeight += shelfSpacings[j];
-    }
-    // Counter'ı sistem yüksekliğine göre dinamik olarak konumlandır
-    // Sistem yüksekliği arttıkça counter aşağı iner, zemin gibi davranır
-    dynamicCounterY = Math.max(100, 600 - totalSystemHeight * 0.4); // Minimum 100, daha doğal zemin pozisyonu
-  } else {
-    // Fallback: eşit spacing için
-    const totalSystemHeight = shelfQuantity * shelfSpacing;
-    dynamicCounterY = Math.max(100, 600 - totalSystemHeight * 0.4);
-  }
+  // Counter artık zemin seviyesinde sabit konumlandırılıyor
+  // Sistem yüksekliğine göre dinamik pozisyonlama kaldırıldı
 
-  // Add counter and doors with DYNAMIC positioning based on system height
+  // Add counter and doors positioned at ground level (floor-like behavior)
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-  // Counter'ı zemin seviyesinde konumlandır ve sistem yüksekliğine göre ayarla
+  // Counter'ı zemin seviyesinde konumlandır
   // Counter zemin gibi davranmalı - geniş ve zeminde
-  counter.scale.set(1,1,1); // Genişlik 2x (zemin gibi geniş), yükseklik 1x, derinlik 3x (zemin gibi derin)
-  counter.position.set(0, dynamicCounterY, -600);
+  counter.scale.set(1, 1, 1); // Genişlik 2x (zemin gibi geniş), yükseklik 1x, derinlik 3x (zemin gibi derin)
+  counter.position.set(0, 0, -600); // Zemin seviyesinde (y=0) konumlandır
   scene.add(counter);
 
   // Kapıları da counter ile aynı seviyede konumlandır
@@ -212,8 +198,8 @@ export const handleCeilingToCounterMount = async ({
       material: whiteRoomMaterial, 
       xPos 
     });
-    // Kapıları counter ile aynı y seviyesinde konumlandır
-    door.position.y = dynamicCounterY;
+    // Kapıları counter ile aynı y seviyesinde konumlandır (zemin seviyesinde)
+    door.position.y = 0;
     scene.add(door);
   });
 
@@ -677,7 +663,7 @@ export const handleCeilingToCounterMount = async ({
       // Fallback: eşit spacing
       bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
     }
-    const counterTopY = dynamicCounterY + 200; // Counter'ın üst yüzeyi (dinamik pozisyon + yarı yükseklik)
+    const counterTopY = 200; // Counter'ın üst yüzeyi (zemin seviyesinde + yarı yükseklik)
     const bottomRipHeight = bottomShelfHeight - counterTopY;
     const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
