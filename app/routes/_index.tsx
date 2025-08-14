@@ -64,6 +64,52 @@ export default function Index() {
   // Wall connection point selection
   const [wallConnectionPoint, setWallConnectionPoint] = useState<string[]>(['all']);
 
+  // Function to reset selections when mount type changes
+  const resetSelections = (newMountType: string) => {
+    // Reset wall connection points to default
+    setWallConnectionPoint(['all']);
+    
+    // Reset crossbar selections
+    setFrontBars(false);
+    setBackBars(false);
+    setSelectedShelvesForBars([]);
+    setSelectedShelvesForBackBars([]);
+    
+    // Reset use top shelf selection
+    setUseTopShelf(false);
+    
+    // Reset shelf quantity to default
+    setShelfQuantity(1);
+    
+    // Reset spacing to default
+    setShelfSpacing(250);
+    setShelfSpacings([250]);
+    setUseIndividualSpacing(false);
+    
+    // Reset bar count to default
+    setBarCount(1);
+    
+    // Reset bay spacing to default
+    setBaySpacing(0);
+    
+    // Reset dimensions to default values based on mount type
+    if (newMountType.includes('wall to floor') || newMountType.includes('wall to counter')) {
+      // Keep height input for wall mount types
+      setUserHeight(42);
+    } else {
+      // Reset height for non-wall mount types
+      setUserHeight(42);
+    }
+    
+    // Reset width and depth to defaults
+    setUserWidth(36);
+    setShelfDepth(12);
+    setTotalDepth(12);
+    
+    // Reset pipe diameter to default
+    setPipeDiameter('5/8');
+  };
+
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf && selectedRip;
 
@@ -81,6 +127,8 @@ export default function Index() {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
+
 
   // Handler functions
   const handleExport = () => {
@@ -139,14 +187,16 @@ export default function Index() {
           <div className="w-full lg:w-1/2 space-y-4">
             {/* Left Column - Configuration Options */}
             <div className="space-y-4">
-              <MountTypeSelector onSelect={setMountType} />
+              <MountTypeSelector onSelect={setMountType} onMountTypeChange={resetSelections} />
               
               <WallConnectionSelector 
+                key={`wall-connection-${mountType}`}
                 onSelect={setWallConnectionPoint}
                 mountType={mountType}
               />
               
               <DimensionInputs
+                key={`dimensions-${mountType}`}
                 height={userHeight}
                 width={userWidth}
                 shelfDepth={shelfDepth}
@@ -159,7 +209,7 @@ export default function Index() {
                 onUnitChange={setUnit}
               />
 
-              <ShelfQuantitySelector onSelect={setShelfQuantity} />
+              <ShelfQuantitySelector key={`shelf-quantity-${mountType}`} onSelect={setShelfQuantity} />
               
               {/* Spacing Mode Toggle */}
               <div className="bg-[#8BBBD9] rounded-lg p-4">
@@ -190,33 +240,37 @@ export default function Index() {
 
               {/* Conditional Spacing Selector */}
               {!useIndividualSpacing ? (
-                <ShelfSpacingSelector onSelect={setShelfSpacing} />
+                <ShelfSpacingSelector key={`shelf-spacing-${mountType}`} onSelect={setShelfSpacing} />
               ) : (
-                              <IndividualShelfSpacingSelector 
-                shelfQuantity={shelfQuantity}
-                onSpacingChange={(spacings) => {
-                  console.log('Shelf spacings updated:', spacings);
-                  setShelfSpacings([...spacings]); // Yeni array oluştur
-                }}
-                defaultSpacing={shelfSpacing}
-              />
+                <IndividualShelfSpacingSelector 
+                  key={`individual-spacing-${mountType}`}
+                  shelfQuantity={shelfQuantity}
+                  onSpacingChange={(spacings) => {
+                    console.log('Shelf spacings updated:', spacings);
+                    setShelfSpacings([...spacings]); // Yeni array oluştur
+                  }}
+                  defaultSpacing={shelfSpacing}
+                />
               )}
               
-              <BarSelector onSelect={setBarCount} />
+              <BarSelector key={`bar-selector-${mountType}`} onSelect={setBarCount} />
               
               <BaySpacingInput 
+                key={`bay-spacing-${mountType}`}
                 baySpacing={baySpacing}
                 onBaySpacingChange={setBaySpacing}
                 barCount={barCount}
               />
               
               <PipeDiameterSelector
+                key={`pipe-diameter-${mountType}`}
                 pipeDiameter={pipeDiameter}
                 onChange={setPipeDiameter}
               />
 
               {/* Hidden ShelfSelector for logic */}
               <ShelfSelector 
+                key={`shelf-selector-${mountType}`}
                 onSelect={setSelectedShelf} 
                 shelfMaterial="glass"
               />
@@ -224,10 +278,11 @@ export default function Index() {
               {/* Rip Selector */}
               <div className="bg-[#8BBBD9] rounded-lg p-4">
                 <h3 className="text-[#1E3A5F] font-semibold mb-3">Rip Length:</h3>
-                <RipSelector onSelect={setSelectedRip} />
+                <RipSelector key={`rip-selector-${mountType}`} onSelect={setSelectedRip} />
               </div>
 
               <CrossbarSelector
+                key={`crossbar-${mountType}`}
                 frontBars={frontBars}
                 onFrontBarsChange={setFrontBars}
                 backBars={backBars}
@@ -242,6 +297,7 @@ export default function Index() {
 
               <div className="bg-[#8BBBD9] rounded-lg p-4">
                 <UseTopShelfSelector
+                  key={`use-top-shelf-${mountType}`}
                   mountType={mountType}
                   useTopShelf={useTopShelf}
                   onChange={setUseTopShelf}

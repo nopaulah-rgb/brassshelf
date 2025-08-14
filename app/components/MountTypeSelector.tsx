@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 
-const MountTypeSelector: React.FC<{ onSelect: (mountType: string) => void }> = ({ onSelect }) => {
+interface MountTypeSelectorProps {
+  onSelect: (mountType: string) => void;
+  onMountTypeChange?: (mountType: string) => void;
+}
+
+const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMountTypeChange }) => {
   const [selectedMount, setSelectedMount] = useState<string>('ceiling');
 
   const mountTypes = [
@@ -15,8 +20,14 @@ const MountTypeSelector: React.FC<{ onSelect: (mountType: string) => void }> = (
   ];
 
   const handleSelect = (id: string) => {
+    const previousMount = selectedMount;
     setSelectedMount(id);
     onSelect(id);
+    
+    // Call onMountTypeChange if the mount type actually changed
+    if (previousMount !== id && onMountTypeChange) {
+      onMountTypeChange(id);
+    }
   };
 
   return (
