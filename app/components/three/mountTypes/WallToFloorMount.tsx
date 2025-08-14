@@ -234,10 +234,12 @@ export const handleWallToFloorMount = async ({
     
     // Individual spacing için cumulative height hesaplama
     let currentHeight;
-    if (shelfSpacings && shelfSpacings.length >= totalShelves) {
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
       let cumulativeHeight = 0;
       for (let j = 0; j < i; j++) {
-        cumulativeHeight += shelfSpacings[j];
+        // Use shelfSpacings[j] if available, otherwise use shelfSpacing
+        const spacingToUse = j < shelfSpacings.length ? shelfSpacings[j] : shelfSpacing;
+        cumulativeHeight += spacingToUse;
       }
       currentHeight = adjustedBaseY - cumulativeHeight;
     } else {
@@ -486,16 +488,21 @@ export const handleWallToFloorMount = async ({
         const edgeExtension = (isFront || isBack) ? 60 : 0; // Ön ve arka ripler için ekstra uzatma
         const totalExtension = baseExtension + edgeExtension + type16AExtension;
         
+        // Individual spacing desteği
+        const spacingForNext = (shelfSpacings && shelfSpacings.length >= shelfQuantity && i < shelfSpacings.length)
+          ? shelfSpacings[i]
+          : shelfSpacing;
+        
         const verticalRipGeometry = new THREE.CylinderGeometry(
           pipeRadius, 
           pipeRadius, 
-          shelfSpacing + totalExtension, 
+          spacingForNext + totalExtension, 
           32
         );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - shelfSpacing / 2 + ((isFront || isBack) ? 17.5 : 0),
+          currentHeight - spacingForNext / 2 + ((isFront || isBack) ? 17.5 : 0),
           pos.z + zOffset
         );
         scene.add(verticalRip);
