@@ -179,12 +179,32 @@ export const handleCeilingToCounterMount = async ({
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)
 
-  // Add counter and doors with FIXED positioning (ceiling to counter = sabit sistem)
+  // Calculate dynamic counter position based on system height
+  let dynamicCounterY;
+  if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+    // Individual spacing kullanarak toplam sistem yüksekliğini hesapla
+    let totalSystemHeight = 0;
+    for (let j = 0; j < shelfQuantity; j++) {
+      totalSystemHeight += shelfSpacings[j];
+    }
+    // Counter'ı sistem yüksekliğine göre dinamik olarak konumlandır
+    // Sistem yüksekliği arttıkça counter aşağı iner, zemin gibi davranır
+    dynamicCounterY = Math.max(100, 600 - totalSystemHeight * 0.4); // Minimum 100, daha doğal zemin pozisyonu
+  } else {
+    // Fallback: eşit spacing için
+    const totalSystemHeight = shelfQuantity * shelfSpacing;
+    dynamicCounterY = Math.max(100, 600 - totalSystemHeight * 0.4);
+  }
+
+  // Add counter and doors with DYNAMIC positioning based on system height
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-  const fixedCounterY = 200; // Counter position is FIXED in ceiling-to-counter mount
-  counter.position.set(0, fixedCounterY, -600);
+  // Counter'ı zemin seviyesinde konumlandır ve sistem yüksekliğine göre ayarla
+  // Counter zemin gibi davranmalı - geniş ve zeminde
+  counter.scale.set(1,1,1); // Genişlik 2x (zemin gibi geniş), yükseklik 1x, derinlik 3x (zemin gibi derin)
+  counter.position.set(0, dynamicCounterY, -600);
   scene.add(counter);
 
+  // Kapıları da counter ile aynı seviyede konumlandır
   const doorPositions = [-750, -250, 250, 750];
   doorPositions.forEach((xPos) => {
     const door = createCabinetDoor({ 
@@ -192,6 +212,8 @@ export const handleCeilingToCounterMount = async ({
       material: whiteRoomMaterial, 
       xPos 
     });
+    // Kapıları counter ile aynı y seviyesinde konumlandır
+    door.position.y = dynamicCounterY;
     scene.add(door);
   });
 
@@ -238,10 +260,10 @@ export const handleCeilingToCounterMount = async ({
     let currentHeight;
     if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
       let cumulativeHeight = 0;
-      for (let j = 0; j < i; j++) {
+      for (let j = 0; j <= i; j++) {
         cumulativeHeight += shelfSpacings[j];
       }
-      currentHeight = baseY - cumulativeHeight;
+      currentHeight = baseCeilingY - cumulativeHeight; // i. rafın pozisyonu
     } else {
       // Fallback: eşit spacing
       currentHeight = baseY - i * shelfSpacing;
@@ -398,14 +420,17 @@ export const handleCeilingToCounterMount = async ({
 
       // Dikey ripler (son raf değilse)
       if (i < shelfQuantity - 1 && shelfQuantity > 1) {
+        // Next shelf spacing'i al
+        const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
+        
         // En son rafın bir öncesinde ise uzatma daha az olsun
         const extensionDown = (i === shelfQuantity - 2) ? 0 : 100; // Son rafın bir öncesinde uzatma yok
-        const extendedHeight = shelfSpacing + extensionDown;
+        const extendedHeight = nextSpacingToUse + extensionDown;
         const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
         verticalRip.position.set(
           pos.x,
-          currentHeight - (shelfSpacing + extensionDown) / 2, // Sadece aşağı uzat
+          currentHeight - (nextSpacingToUse + extensionDown) / 2, // Sadece aşağı uzat
           pos.z + zOffset
         );
         scene.add(verticalRip);
@@ -620,7 +645,14 @@ export const handleCeilingToCounterMount = async ({
 
   allCornerPositions.forEach((pos) => {
     // Dikey rip: en üst raftan tavana kadar - dinamik uzunluk
-    const topShelfHeight = baseY; // İlk shelf pozisyonu (en üst shelf)
+    let topShelfHeight;
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+      // Individual spacing kullanarak en üst rafın pozisyonunu hesapla
+      topShelfHeight = baseCeilingY - shelfSpacings[0]; // İlk spacing kadar aşağı
+    } else {
+      // Fallback: eşit spacing
+      topShelfHeight = baseY; // İlk shelf pozisyonu (en üst shelf)
+    }
     const actualTopRipHeight = baseCeilingY - topShelfHeight; // Tavan ile üst shelf arası mesafe
     const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
@@ -633,8 +665,19 @@ export const handleCeilingToCounterMount = async ({
     scene.add(verticalTopRip);
 
     // Dikey rip: en alt raftan counter'ın üst yüzeyine kadar
-    const bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
-    const counterTopY = fixedCounterY + 200; // Counter'ın üst yüzeyi (sabit pozisyon + yarı yükseklik)
+    let bottomShelfHeight;
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+      // Individual spacing kullanarak en alt rafın pozisyonunu hesapla
+      let totalCumulativeHeight = 0;
+      for (let j = 0; j < shelfQuantity; j++) {
+        totalCumulativeHeight += shelfSpacings[j];
+      }
+      bottomShelfHeight = baseCeilingY - totalCumulativeHeight;
+    } else {
+      // Fallback: eşit spacing
+      bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
+    }
+    const counterTopY = dynamicCounterY + 200; // Counter'ın üst yüzeyi (dinamik pozisyon + yarı yükseklik)
     const bottomRipHeight = bottomShelfHeight - counterTopY;
     const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
