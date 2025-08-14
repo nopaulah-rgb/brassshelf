@@ -63,11 +63,11 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
   }, []);
 
   return (
-    <div className="bg-[#8BBBD9] rounded-lg p-4">
-      <h3 className="text-[#1E3A5F] font-semibold mb-3">Shelf Spacing (Rib Length):</h3>
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Shelf Spacing (Rib Length)</h3>
       
       {/* Input and Unit Selection */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-3 mb-4">
         <div className="flex-1">
           <input
             type="number"
@@ -83,34 +83,34 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
                 handleValueChange(newValue);
               }
             }}
-                         min={unit === 'inch' ? "6" : "15.24"}
-             max={unit === 'inch' ? "20" : "50.8"}
+            min={unit === 'inch' ? "6" : "15.24"}
+            max={unit === 'inch' ? "20" : "50.8"}
             step={unit === 'inch' ? "0.5" : "0.5"}
-            className="w-full py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
-                     text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
+            className="w-full py-3 px-4 border border-slate-300 rounded-lg 
+                     text-slate-700 bg-white focus:border-slate-500 focus:ring-2 focus:ring-slate-500
                      focus:outline-none text-center font-medium transition-all duration-200"
-                         placeholder={unit === 'inch' ? "12" : "30.48"}
+            placeholder={unit === 'inch' ? "12" : "30.48"}
           />
         </div>
         
         {/* Unit Toggle */}
-        <div className="flex border-2 border-[#1E3A5F]/20 rounded-lg overflow-hidden">
+        <div className="flex border border-slate-300 rounded-lg overflow-hidden">
           <button
             onClick={() => handleUnitChange('inch')}
-            className={`px-3 py-2 text-sm font-medium transition-colors ${
+            className={`px-4 py-3 text-sm font-medium transition-all duration-200 ${
               unit === 'inch'
-                ? 'bg-[#1E3A5F] text-white'
-                : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             inch
           </button>
           <button
             onClick={() => handleUnitChange('cm')}
-            className={`px-3 py-2 text-sm font-medium transition-colors ${
+            className={`px-4 py-3 text-sm font-medium transition-all duration-200 ${
               unit === 'cm'
-                ? 'bg-[#1E3A5F] text-white'
-                : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             cm
@@ -119,13 +119,15 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
       </div>
 
       {/* Help Text */}
-      <p className="text-xs text-[#1E3A5F]/70">
-        Default rib length: {unit === 'inch' ? '12 inch' : '30.48 cm'} ({unit === 'inch' ? '12 inch' : '30.48 cm'})
-        <br />
-        Recommended range: {unit === 'inch' ? '6-20 inch' : '15.24-50.8 cm'}
-        <br />
-        This setting determines spacing between shelves and rib length
-      </p>
+      <div className="bg-white rounded-lg p-4 border border-slate-200">
+        <p className="text-sm text-slate-600 leading-relaxed">
+          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '30.48 cm'}
+          <br />
+          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '15.24-50.8 cm'}
+          <br />
+          <span className="font-medium">Note:</span> This setting determines spacing between shelves and rib length
+        </p>
+      </div>
     </div>
   );
 };

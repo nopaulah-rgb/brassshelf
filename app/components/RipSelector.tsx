@@ -12,8 +12,8 @@ const RipSelector: React.FC<{ onSelect: (ripUrl: string) => void }> = ({ onSelec
 
   return (
     <div className="flex justify-center">
-      <div className="h-12 border-2 border-[#1E3A5F] bg-[#1E3A5F] text-white rounded-lg
-                      flex items-center justify-center text-sm font-medium px-6">
+      <div className="h-12 border-2 border-slate-900 bg-slate-900 text-white rounded-lg
+                      flex items-center justify-center text-sm font-medium px-6 shadow-md">
         {ripOption.name}
       </div>
     </div>

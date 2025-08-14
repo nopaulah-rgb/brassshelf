@@ -101,155 +101,123 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     }
   };
 
-  // Handle bulk spacing change (set all to same value)
-  const handleBulkSpacingChange = (value: number) => {
-    // Validate the bulk input value
-    const valueInInches = unit === 'inch' ? value : value / 2.54;
-    const minInches = 6;
-    const maxInches = 70;
-    
-    if (valueInInches < minInches || valueInInches > maxInches) {
-      setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
-      setInvalidIndex(-1); // -1 indicates bulk input
-      setIsValidationOpen(true);
-      return;
-    }
-    
-    if (value > 0) {
-      const spacingInMm = convertToMm(value, unit);
-      const newSpacings = Array(shelfQuantity).fill(spacingInMm);
-      setIndividualSpacings(newSpacings);
+  // Handle blur event for validation
+  const handleBlur = (index: number, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      const valueInInches = unit === 'inch' ? numValue : numValue / 2.54;
+      const minInches = 6;
+      const maxInches = 70;
       
-      // Update display values
-      const newDisplayValues = Array(shelfQuantity).fill(value.toFixed(1));
-      setDisplayValues(newDisplayValues);
-      
-      console.log('Bulk spacing changed:', { value, newSpacings });
-      onSpacingChange([...newSpacings]);
+      if (valueInInches < minInches || valueInInches > maxInches) {
+        setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
+        setInvalidIndex(index);
+        setIsValidationOpen(true);
+      }
     }
   };
 
+  // Close validation message
+  const closeValidation = () => {
+    setIsValidationOpen(false);
+    setInvalidIndex(-1);
+  };
+
+  // Auto-close validation after 5 seconds
+  useEffect(() => {
+    if (isValidationOpen) {
+      const timer = setTimeout(() => {
+        closeValidation();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isValidationOpen]);
+
   return (
-    <div className="bg-[#8BBBD9] rounded-lg p-4">
-      <h3 className="text-[#1E3A5F] font-semibold mb-3">Individual Shelf Spacing:</h3>
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Shelf Spacing</h3>
       
-      {/* Unit Toggle */}
-      <div className="flex border-2 border-[#1E3A5F]/20 rounded-lg overflow-hidden mb-4">
+      {/* Unit Selector */}
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => handleUnitChange('inch')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            unit === 'inch'
-              ? 'bg-[#1E3A5F] text-white'
-              : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            unit === 'inch' 
+              ? 'bg-slate-900 text-white shadow-md' 
+              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
           }`}
         >
           inch
         </button>
         <button
           onClick={() => handleUnitChange('cm')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            unit === 'cm'
-              ? 'bg-[#1E3A5F] text-white'
-              : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            unit === 'cm' 
+              ? 'bg-slate-900 text-white shadow-md' 
+              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
           }`}
         >
           cm
         </button>
       </div>
 
-      {/* Bulk Spacing Control */}
-      <div className="mb-4">
-        <div className="block text-sm font-medium text-[#1E3A5F] mb-2">
-          Set All Shelves to Same Spacing:
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="number"
-            min={unit === 'inch' ? "6" : "15.24"}
-            max={unit === 'inch' ? "70" : "177.8"}
-            step={unit === 'inch' ? "0.5" : "0.5"}
-            placeholder={unit === 'inch' ? "12" : "30.48"}
-            className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
-                     text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
-                     focus:outline-none text-center font-medium transition-all duration-200"
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              console.log('Bulk input change:', { value });
-              if (value > 0) {
-                handleBulkSpacingChange(value);
-              }
-            }}
-          />
-          <span className="py-2 px-3 text-[#1E3A5F] font-medium">
-            {unit}
-          </span>
-        </div>
-      </div>
-
-      {/* Individual Shelf Spacing Controls */}
+      {/* Individual Spacing Inputs */}
       <div className="space-y-3">
-        <div className="block text-sm font-medium text-[#1E3A5F]">
-          Individual Shelf Spacing:
-        </div>
-        {individualSpacings && individualSpacings.length > 0 && individualSpacings.map((spacing, index) => (
+        {Array.from({ length: shelfQuantity }, (_, index) => (
           <div key={index} className="flex items-center gap-3">
-            <span className="text-sm font-medium text-[#1E3A5F] min-w-[80px]">
+            <label className="text-sm font-medium text-slate-700 w-20">
               Shelf {index + 1}:
-            </span>
+            </label>
             <input
               type="number"
-              defaultValue={displayValues[index] || ''}
+              value={displayValues[index] || ''}
+              onChange={(e) => handleSpacingChange(index, e.target.value)}
+              onBlur={(e) => handleBlur(index, e.target.value)}
               min={unit === 'inch' ? "6" : "15.24"}
               max={unit === 'inch' ? "70" : "177.8"}
               step={unit === 'inch' ? "0.5" : "0.5"}
-              className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
-                       text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
-                       focus:outline-none text-center font-medium transition-all duration-200"
-              onChange={(e) => {
-                const value = e.target.value;
-                console.log('Input change:', { index, value });
-                handleSpacingChange(index, value);
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                console.log('Input blur:', { index, value });
-                handleSpacingChange(index, value);
-              }}
+              className={`flex-1 py-2 px-3 border rounded-lg text-sm font-medium transition-all duration-200
+                       focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 ${
+                         invalidIndex === index 
+                           ? 'border-red-300 bg-red-50 text-red-700' 
+                           : 'border-slate-300 bg-white text-slate-700'
+                       }`}
+              placeholder={unit === 'inch' ? "12" : "30"}
             />
-            <span className="text-sm text-[#1E3A5F] font-medium min-w-[30px]">
-              {unit}
-            </span>
+            <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
         ))}
       </div>
 
       {/* Help Text */}
-      <div className="mt-4 p-3 bg-white/60 rounded-lg">
-        <p className="text-xs text-[#1E3A5F]/70">
-          <strong>Instructions:</strong>
+      <div className="mt-4 bg-white rounded-lg p-4 border border-slate-200">
+        <p className="text-sm text-slate-600 leading-relaxed">
+          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-70 inch' : '15.24-177.8 cm'}
           <br />
-          • Use the bulk control to set all shelves to the same spacing
-          <br />
-          • Use individual controls to set different spacing for each shelf
-          <br />
-          • Recommended range: {unit === 'inch' ? '6-70 inch' : '15.24-177.8 cm'}
-          <br />
-          • Spacing determines the distance between shelves and rip length
+          <span className="font-medium">Note:</span> Each shelf can have different spacing for custom layouts
         </p>
       </div>
 
-      {/* Validation Modal */}
+      {/* Validation Message */}
       {isValidationOpen && (
-        <div className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <div className="mb-3 text-lg font-semibold text-gray-900">Invalid Spacing Value</div>
-            <div className="mb-6 text-gray-700">{validationMessage}</div>
-            <div className="flex justify-end">
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{validationMessage}</p>
+            </div>
+            <div className="ml-auto pl-3">
               <button
-                onClick={() => setIsValidationOpen(false)}
-                className="rounded-md bg-[#1E3A5F] px-4 py-2 text-white hover:opacity-90"
+                onClick={closeValidation}
+                className="inline-flex text-red-400 hover:text-red-500"
               >
-                OK
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>

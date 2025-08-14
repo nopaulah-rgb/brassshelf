@@ -225,7 +225,7 @@ export const handleWallToCounterMount = async ({
 
   // Add counter and doors
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-  counter.position.set(0, 200, -600);
+  counter.position.set(0, 200, -800);
   scene.add(counter);
 
   const doorPositions = [-750, -250, 250, 750];

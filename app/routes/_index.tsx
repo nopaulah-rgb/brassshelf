@@ -186,8 +186,6 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
-
-
   // Handler functions
   const handleExport = () => {
     // Get the canvas element from ThreeJS
@@ -238,145 +236,175 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Configuration Panel */}
-          <div className="w-full lg:w-1/2 space-y-4">
-            {/* Left Column - Configuration Options */}
-            <div className="space-y-4">
-              <MountTypeSelector onSelect={setMountType} onMountTypeChange={resetSelections} />
-              
-              <WallConnectionSelector 
-                key={`wall-connection-${mountType}`}
-                onSelect={setWallConnectionPoint}
-                mountType={mountType}
-              />
-              
-              <DimensionInputs
-                key={`dimensions-${mountType}`}
-                height={userHeight}
-                width={userWidth}
-                shelfDepth={shelfDepth}
-                totalDepth={totalDepth}
-                unit={unit}
-                onHeightChange={setUserHeight}
-                onWidthChange={setUserWidth}
-                onShelfDepthChange={setShelfDepth}
-                onTotalDepthChange={setTotalDepth}
-                onUnitChange={setUnit}
-              />
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="container mx-auto px-6 py-16">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-5xl md:text-6xl font-light mb-6 tracking-tight">
+              The Origin
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed max-w-3xl mx-auto">
+              Custom Shelving Unit Designer
+            </p>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Create your perfect brass shelving unit with our comprehensive customization tool. 
+              Whether bound for the bar or basking in books, these brass shelves can support your every endeavor.
+            </p>
+          </div>
+        </div>
+      </div>
 
-              <ShelfQuantitySelector key={`shelf-quantity-${mountType}`} onSelect={setShelfQuantity} />
+      <main className="container mx-auto px-6 py-12">
+        <div className="flex flex-col xl:flex-row gap-12">
+          {/* Left Column - Configuration Panel */}
+          <div className="w-full xl:w-2/5 space-y-6">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              <h2 className="text-2xl font-light text-gray-900 mb-8 pb-4 border-b border-gray-200">
+                Configuration Options
+              </h2>
               
-              {/* Spacing Mode Toggle */}
-              <div className="bg-[#8BBBD9] rounded-lg p-4">
-                <h3 className="text-[#1E3A5F] font-semibold mb-3">Shelf Spacing Mode:</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setUseIndividualSpacing(false)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      !useIndividualSpacing
-                        ? 'bg-[#1E3A5F] text-white'
-                        : 'bg-white/60 text-[#1E3A5F] border border-[#1E3A5F]/20'
-                    }`}
-                  >
-                    Equal Spacing
-                  </button>
-                  <button
-                    onClick={() => setUseIndividualSpacing(true)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      useIndividualSpacing
-                        ? 'bg-[#1E3A5F] text-white'
-                        : 'bg-white/60 text-[#1E3A5F] border border-[#1E3A5F]/20'
-                    }`}
-                  >
-                    Individual Spacing
-                  </button>
-                </div>
-              </div>
-
-              {/* Conditional Spacing Selector */}
-              {!useIndividualSpacing ? (
-                <ShelfSpacingSelector key={`shelf-spacing-${mountType}`} onSelect={setShelfSpacing} />
-              ) : (
-                <IndividualShelfSpacingSelector 
-                  key={`individual-spacing-${mountType}`}
-                  shelfQuantity={shelfQuantity}
-                  onSpacingChange={handleIndividualSpacingChange}
-                  defaultSpacing={shelfSpacing}
-                />
-              )}
-              
-              <BarSelector key={`bar-selector-${mountType}`} onSelect={setBarCount} />
-              
-              <BaySpacingInput 
-                key={`bay-spacing-${mountType}`}
-                baySpacing={baySpacing}
-                onBaySpacingChange={setBaySpacing}
-                barCount={barCount}
-              />
-              
-              <PipeDiameterSelector
-                key={`pipe-diameter-${mountType}`}
-                pipeDiameter={pipeDiameter}
-                onChange={setPipeDiameter}
-              />
-
-              {/* Hidden ShelfSelector for logic */}
-              <ShelfSelector 
-                key={`shelf-selector-${mountType}`}
-                onSelect={setSelectedShelf} 
-                shelfMaterial="glass"
-              />
-              
-              {/* Rip Selector */}
-              <div className="bg-[#8BBBD9] rounded-lg p-4">
-                <h3 className="text-[#1E3A5F] font-semibold mb-3">Rip Length:</h3>
-                <RipSelector key={`rip-selector-${mountType}`} onSelect={setSelectedRip} />
-              </div>
-
-              <CrossbarSelector
-                key={`crossbar-${mountType}`}
-                frontBars={frontBars}
-                onFrontBarsChange={setFrontBars}
-                backBars={backBars}
-                onBackBarsChange={setBackBars}
-                mountType={mountType}
-                shelfCount={shelfQuantity}
-                selectedShelves={selectedShelvesForBars}
-                onSelectedShelvesChange={setSelectedShelvesForBars}
-                selectedBackShelves={selectedShelvesForBackBars}
-                onSelectedBackShelvesChange={setSelectedShelvesForBackBars}
-              />
-
-              <div className="bg-[#8BBBD9] rounded-lg p-4">
-                <UseTopShelfSelector
-                  key={`use-top-shelf-${mountType}`}
+              <div className="space-y-8">
+                <MountTypeSelector onSelect={setMountType} onMountTypeChange={resetSelections} />
+                
+                <WallConnectionSelector 
+                  key={`wall-connection-${mountType}`}
+                  onSelect={setWallConnectionPoint}
                   mountType={mountType}
-                  useTopShelf={useTopShelf}
-                  onChange={setUseTopShelf}
                 />
+                
+                <DimensionInputs
+                  key={`dimensions-${mountType}`}
+                  height={userHeight}
+                  width={userWidth}
+                  shelfDepth={shelfDepth}
+                  totalDepth={totalDepth}
+                  unit={unit}
+                  onHeightChange={setUserHeight}
+                  onWidthChange={setUserWidth}
+                  onShelfDepthChange={setShelfDepth}
+                  onTotalDepthChange={setTotalDepth}
+                  onUnitChange={setUnit}
+                />
+
+                <ShelfQuantitySelector key={`shelf-quantity-${mountType}`} onSelect={setShelfQuantity} />
+                
+                {/* Spacing Mode Toggle */}
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                  <h3 className="text-lg font-medium text-slate-900 mb-4">Shelf Spacing Mode</h3>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setUseIndividualSpacing(false)}
+                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        !useIndividualSpacing
+                          ? 'bg-slate-900 text-white shadow-lg'
+                          : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      Equal Spacing
+                    </button>
+                    <button
+                      onClick={() => setUseIndividualSpacing(true)}
+                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        useIndividualSpacing
+                          ? 'bg-slate-900 text-white shadow-lg'
+                          : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      Individual Spacing
+                    </button>
+                  </div>
+                </div>
+
+                {/* Conditional Spacing Selector */}
+                {!useIndividualSpacing ? (
+                  <ShelfSpacingSelector key={`shelf-spacing-${mountType}`} onSelect={setShelfSpacing} />
+                ) : (
+                  <IndividualShelfSpacingSelector 
+                    key={`individual-spacing-${mountType}`}
+                    shelfQuantity={shelfQuantity}
+                    onSpacingChange={handleIndividualSpacingChange}
+                    defaultSpacing={shelfSpacing}
+                  />
+                )}
+                
+                <BarSelector key={`bar-selector-${mountType}`} onSelect={setBarCount} />
+                
+                <BaySpacingInput 
+                  key={`bay-spacing-${mountType}`}
+                  baySpacing={baySpacing}
+                  onBaySpacingChange={setBaySpacing}
+                  barCount={barCount}
+                />
+                
+                <PipeDiameterSelector
+                  key={`pipe-diameter-${mountType}`}
+                  pipeDiameter={pipeDiameter}
+                  onChange={setPipeDiameter}
+                />
+
+                {/* Hidden ShelfSelector for logic */}
+                <ShelfSelector 
+                  key={`shelf-selector-${mountType}`}
+                  onSelect={setSelectedShelf} 
+                  shelfMaterial="glass"
+                />
+                
+                {/* Rip Selector */}
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                  <h3 className="text-lg font-medium text-slate-900 mb-4">Rip Length</h3>
+                  <RipSelector key={`rip-selector-${mountType}`} onSelect={setSelectedRip} />
+                </div>
+
+                <CrossbarSelector
+                  key={`crossbar-${mountType}`}
+                  frontBars={frontBars}
+                  onFrontBarsChange={setFrontBars}
+                  backBars={backBars}
+                  onBackBarsChange={setBackBars}
+                  mountType={mountType}
+                  shelfCount={shelfQuantity}
+                  selectedShelves={selectedShelvesForBars}
+                  onSelectedShelvesChange={setSelectedShelvesForBars}
+                  selectedBackShelves={selectedShelvesForBackBars}
+                  onSelectedBackShelvesChange={setSelectedShelvesForBackBars}
+                />
+
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                  <UseTopShelfSelector
+                    key={`use-top-shelf-${mountType}`}
+                    mountType={mountType}
+                    useTopShelf={useTopShelf}
+                    onChange={setUseTopShelf}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column - 3D Viewer and Actions */}
-          <div className="w-full lg:w-1/2 space-y-4">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="w-full xl:w-3/5 space-y-6">
+            {/* 3D Viewer */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-2xl font-light text-gray-900">3D Preview</h2>
+                <p className="text-slate-600 mt-1">See your custom configuration in real-time</p>
+              </div>
+              
               {isLoading ? (
-                <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
+                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
                   <div className="text-center">
-                    <h2 className="text-xl font-medium text-gray-700 mb-2">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
+                    <h3 className="text-lg font-medium text-slate-700 mb-2">
                       Loading 3D Model...
-                    </h2>
-                    <p className="text-gray-500">
-                      Please wait
+                    </h3>
+                    <p className="text-slate-500">
+                      Please wait while we prepare your preview
                     </p>
                   </div>
                 </div>
               ) : isViewerReady ? (
-                <div className="w-full h-[400px]">
+                <div className="w-full h-[500px]">
                   {areValuesValid() ? (
                     <ThreeDViewer
                       ref={viewerRef}
@@ -402,15 +430,20 @@ export default function Index() {
                       selectedBackShelvesForBars={selectedShelvesForBackBars}
                     />
                   ) : (
-                    <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
+                    <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
                       <div className="text-center">
-                        <h2 className="text-xl font-medium text-gray-700 mb-2">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-slate-700 mb-2">
                           Invalid Configuration
-                        </h2>
-                        <p className="text-gray-500 text-sm">
+                        </h3>
+                        <p className="text-slate-500 text-sm max-w-md mx-auto">
                           {getValidationMessage()}
                         </p>
-                        <p className="text-gray-400 text-xs mt-2">
+                        <p className="text-slate-400 text-xs mt-3">
                           Please adjust the values to see the 3D preview
                         </p>
                       </div>
@@ -418,12 +451,17 @@ export default function Index() {
                   )}
                 </div>
               ) : (
-                <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
+                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
                   <div className="text-center">
-                    <h2 className="text-xl font-medium text-gray-700 mb-2">
+                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-700 mb-2">
                       Configuration Preview
-                    </h2>
-                    <p className="text-gray-500">
+                    </h3>
+                    <p className="text-slate-500">
                       Your custom shelf will appear here
                     </p>
                   </div>
@@ -431,7 +469,7 @@ export default function Index() {
               )}
               
               {/* Show Dimensions Button */}
-              <div className="p-4 border-t">
+              <div className="p-6 border-t border-gray-200">
                 <button 
                   onClick={async () => {
                     if (viewerRef.current) {
@@ -440,9 +478,9 @@ export default function Index() {
                     }
                     setIsDimensionsOpen(true);
                   }}
-                  className="w-full py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="w-full py-3 px-4 text-slate-700 font-medium hover:bg-slate-50 transition-colors border border-slate-200 rounded-lg hover:border-slate-300"
                 >
-                  Show Dimensions
+                  Show Dimensions & Views
                 </button>
               </div>
             </div>

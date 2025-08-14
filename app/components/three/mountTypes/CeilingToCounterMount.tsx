@@ -187,7 +187,7 @@ export const handleCeilingToCounterMount = async ({
   // Counter'ı zemin seviyesinde konumlandır
   // Counter zemin gibi davranmalı - geniş ve zeminde
   counter.scale.set(1, 1, 1); // Genişlik 2x (zemin gibi geniş), yükseklik 1x, derinlik 3x (zemin gibi derin)
-  counter.position.set(0, 0, -600); // Zemin seviyesinde (y=0) konumlandır
+  counter.position.set(0, 0, -800); // Zemin seviyesinde (y=0) konumlandır
   scene.add(counter);
 
   // Kapıları da counter ile aynı seviyede konumlandır

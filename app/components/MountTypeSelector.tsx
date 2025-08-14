@@ -31,18 +31,18 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
   };
 
   return (
-    <div className="bg-[#8BBBD9] rounded-lg p-4">
-      <h3 className="text-[#1E3A5F] font-semibold mb-3">Mount Type:</h3>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Mount Type</h3>
+      <div className="grid grid-cols-2 gap-3">
         {mountTypes.map((type) => (
           <button
             key={type.id}
             onClick={() => handleSelect(type.id)}
-            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200
-                     focus:outline-none ${
+            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                     focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
                        selectedMount === type.id 
-                         ? 'bg-[#1E3A5F] text-white' 
-                         : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+                         ? 'bg-slate-900 text-white shadow-lg' 
+                         : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50'
                      }`}
           >
             {type.name}

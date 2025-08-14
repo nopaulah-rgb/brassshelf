@@ -237,7 +237,7 @@ export const handleCeilingToCounterToWallMount = async ({
 
   // Add counter and doors with FIXED positioning (like CeilingToCounter)
   const counter = new THREE.Mesh(roomGeometry.counter, whiteRoomMaterial);
-  counter.position.set(0, fixedCounterY, -600);
+  counter.position.set(0, fixedCounterY, -800);
   scene.add(counter);
 
   const doorPositions = [-750, -250, 250, 750];

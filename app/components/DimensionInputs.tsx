@@ -75,26 +75,26 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   return (
-    <div className="bg-[#8BBBD9] rounded-lg p-4 space-y-4">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-[#1E3A5F] font-semibold">Dimensions:</h3>
+        <h3 className="text-lg font-medium text-slate-900">Dimensions</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={handleUnitToggle}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               unit === 'inch' 
-                ? 'bg-[#1E3A5F] text-white' 
-                : 'bg-white/60 text-[#1E3A5F]'
+                ? 'bg-slate-900 text-white shadow-md' 
+                : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
             }`}
           >
             inch
           </button>
           <button
             onClick={handleUnitToggle}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               unit === 'cm' 
-                ? 'bg-[#1E3A5F] text-white' 
-                : 'bg-white/60 text-[#1E3A5F]'
+                ? 'bg-slate-900 text-white shadow-md' 
+                : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
             }`}
           >
             cm
@@ -102,78 +102,76 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[#1E3A5F] font-medium">Height:</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={height.toFixed(0)}
-              onChange={(e) => onHeightChange(parseFloat(e.target.value) || 0)}
-              className="w-20 px-2 py-1 text-center text-[#1E3A5F] font-bold text-lg bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
-            />
-            <span className="text-[#1E3A5F] font-medium">{unit === 'inch' ? '"' : 'cm'}</span>
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
+          <input
+            type="number"
+            value={height}
+            onChange={(e) => onHeightChange(parseFloat(e.target.value) || 0)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            placeholder="Height"
+          />
         </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[#1E3A5F] font-medium">Width:</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={width.toFixed(0)}
-              onChange={handleWidthInputChange}
-              onBlur={handleWidthBlur}
-              className="w-20 px-2 py-1 text-center text-[#1E3A5F] font-bold text-lg bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
-            />
-            <span className="text-[#1E3A5F] font-medium">{unit === 'inch' ? '"' : 'cm'}</span>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Width</label>
+          <input
+            type="number"
+            value={width}
+            onChange={handleWidthInputChange}
+            onBlur={handleWidthBlur}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            placeholder="Width"
+          />
         </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[#1E3A5F] font-medium">Depth:</span>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[#1E3A5F] text-sm">Total Depth:</span>
-              <input
-                type="number"
-                value={totalDepth.toFixed(0)}
-                onChange={(e) => onTotalDepthChange(parseFloat(e.target.value) || 0)}
-                className="w-16 px-2 py-1 text-center text-[#1E3A5F] font-bold bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
-              />
-              <span className="text-[#1E3A5F] font-medium">{unit === 'inch' ? '"' : 'cm'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#1E3A5F] text-sm">Shelf Depth:</span>
-              <input
-                type="number"
-                value={shelfDepth.toFixed(0)}
-                onChange={handleShelfDepthInputChange}
-                onBlur={handleShelfDepthBlur}
-                className="w-16 px-2 py-1 text-center text-[#1E3A5F] font-bold bg-transparent border-b-2 border-[#1E3A5F] focus:outline-none"
-              />
-              <span className="text-[#1E3A5F] font-medium">{unit === 'inch' ? '"' : 'cm'}</span>
-            </div>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Shelf Depth</label>
+          <input
+            type="number"
+            value={shelfDepth}
+            onChange={handleShelfDepthInputChange}
+            onBlur={handleShelfDepthBlur}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            placeholder="Shelf Depth"
+          />
         </div>
-    </div>
-
-    {isValidationOpen && (
-      <div className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/50">
-        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-          <div className="mb-3 text-lg font-semibold text-gray-900">Invalid Value</div>
-          <div className="mb-6 text-gray-700">{validationMessage}</div>
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsValidationOpen(false)}
-              className="rounded-md bg-[#1E3A5F] px-4 py-2 text-white hover:opacity-90"
-            >
-              OK
-            </button>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Total Depth</label>
+          <input
+            type="number"
+            value={totalDepth}
+            onChange={(e) => onTotalDepthChange(parseFloat(e.target.value) || 0)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            placeholder="Total Depth"
+          />
         </div>
       </div>
-    )}
+
+      {/* Validation Message */}
+      {isValidationOpen && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{validationMessage}</p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                onClick={() => setIsValidationOpen(false)}
+                className="inline-flex text-red-400 hover:text-red-500"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

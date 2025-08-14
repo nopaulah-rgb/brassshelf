@@ -70,34 +70,34 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   }
 
   return (
-    <div className="bg-[#8BBBD9] rounded-lg p-4">
-      <h3 className="text-[#1E3A5F] font-semibold mb-3">Bay Spacing:</h3>
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Bay Spacing</h3>
       
       {/* Unit Selector */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => handleUnitChange('mm')}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             unit === 'mm' 
-              ? 'bg-[#1E3A5F] text-white' 
-              : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+              ? 'bg-slate-900 text-white shadow-md' 
+              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
           }`}
         >
           mm
         </button>
         <button
           onClick={() => handleUnitChange('inch')}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             unit === 'inch' 
-              ? 'bg-[#1E3A5F] text-white' 
-              : 'bg-white/60 text-[#1E3A5F] hover:bg-white/80'
+              ? 'bg-slate-900 text-white shadow-md' 
+              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
           }`}
         >
           inch
         </button>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <input
           type="number"
           value={displayValue}
@@ -105,15 +105,15 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
           min="0"
           max={getMaxValue()}
           step={getStepValue()}
-          className="w-24 px-3 py-2 border-2 border-[#1E3A5F]/20 rounded-lg 
-                   bg-white/60 text-[#1E3A5F] font-medium
-                   focus:outline-none focus:border-[#1E3A5F] focus:bg-white/80"
+          className="w-32 px-4 py-3 border border-slate-300 rounded-lg 
+                   bg-white text-slate-700 font-medium
+                   focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
         />
-        <span className="text-[#1E3A5F] text-sm">{unit}</span>
+        <span className="text-slate-700 text-sm font-medium">{unit}</span>
       </div>
       
-      <p className="text-[#1E3A5F]/70 text-xs mt-2">
-        Space between bays: {baySpacing}mm ({Math.round((baySpacing / 25.4) * 100) / 100} inch)
+      <p className="text-slate-500 text-sm mt-3">
+        Space between bays: <span className="font-medium">{baySpacing}mm</span> ({Math.round((baySpacing / 25.4) * 100) / 100} inch)
       </p>
     </div>
   );
