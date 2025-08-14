@@ -232,11 +232,13 @@ export const handleWallMount = async ({
   for (let i = 0; i < totalShelves; i++) {
     // İlk raf her zaman baseY pozisyonunda kalmalı, diğer raflar aşağıya eklenmeli
     let currentHeight;
-    if (shelfSpacings && shelfSpacings.length >= totalShelves) {
+    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
       // Individual spacing için cumulative height hesaplama
       let cumulativeHeight = 0;
       for (let j = 0; j < i; j++) {
-        cumulativeHeight += shelfSpacings[j];
+        // Use shelfSpacings[j] if available, otherwise use shelfSpacing
+        const spacingToUse = j < shelfSpacings.length ? shelfSpacings[j] : shelfSpacing;
+        cumulativeHeight += spacingToUse;
       }
       currentHeight = adjustedBaseY - cumulativeHeight;
     } else {
@@ -450,7 +452,7 @@ export const handleWallMount = async ({
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
         const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü
         // Individual spacing desteği
-        const spacingForNext = (shelfSpacings && shelfSpacings.length >= totalShelves)
+        const spacingForNext = (shelfSpacings && shelfSpacings.length >= shelfQuantity && i < shelfSpacings.length)
           ? shelfSpacings[i]
           : shelfSpacing;
         
