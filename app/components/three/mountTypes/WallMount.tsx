@@ -160,7 +160,7 @@ export const handleWallMount = async ({
 
   // Ceiling'den başlayacak şekilde üst seviyeyi belirle
   void userHeight; // artık kullanılmıyor
-  const ceilingClearance = 80; // mm
+  const ceilingClearance = 200; // mm
   const modelHeightForOffset = model13Height > 0 ? model13Height : 120; // yedek değer
   const baseY = (roomHeight || 1500) - modelHeightForOffset - ceilingClearance;
   // Üst raf sabit: ek raflar aşağıya doğru eklensin
