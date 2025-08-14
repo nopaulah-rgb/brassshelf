@@ -11,6 +11,10 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   onSpacingChange,
   defaultSpacing = 250
 }) => {
+  const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
+  const [validationMessage, setValidationMessage] = useState<string>('');
+  const [invalidIndex, setInvalidIndex] = useState<number>(-1);
+
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'cm'): number => {
     if (unit === 'inch') {
@@ -63,12 +67,26 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const handleSpacingChange = (index: number, value: string) => {
     console.log('handleSpacingChange called:', { index, value, currentDisplayValues: displayValues });
     
+    // Validate the input value
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      const valueInInches = unit === 'inch' ? numValue : numValue / 2.54;
+      const minInches = 6;
+      const maxInches = 70;
+      
+      if (valueInInches < minInches || valueInInches > maxInches) {
+        setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
+        setInvalidIndex(index);
+        setIsValidationOpen(true);
+        return;
+      }
+    }
+    
     // Update display values immediately for better UX
     const newDisplayValues = [...displayValues];
     newDisplayValues[index] = value;
     setDisplayValues(newDisplayValues);
     
-    const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue > 0) {
       const spacingInMm = convertToMm(numValue, unit);
       const newSpacings = [...individualSpacings];
@@ -85,6 +103,18 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
 
   // Handle bulk spacing change (set all to same value)
   const handleBulkSpacingChange = (value: number) => {
+    // Validate the bulk input value
+    const valueInInches = unit === 'inch' ? value : value / 2.54;
+    const minInches = 6;
+    const maxInches = 70;
+    
+    if (valueInInches < minInches || valueInInches > maxInches) {
+      setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
+      setInvalidIndex(-1); // -1 indicates bulk input
+      setIsValidationOpen(true);
+      return;
+    }
+    
     if (value > 0) {
       const spacingInMm = convertToMm(value, unit);
       const newSpacings = Array(shelfQuantity).fill(spacingInMm);
@@ -136,7 +166,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
           <input
             type="number"
             min={unit === 'inch' ? "6" : "15.24"}
-            max={unit === 'inch' ? "20" : "50.8"}
+            max={unit === 'inch' ? "70" : "177.8"}
             step={unit === 'inch' ? "0.5" : "0.5"}
             placeholder={unit === 'inch' ? "12" : "30.48"}
             className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
@@ -170,7 +200,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
               type="number"
               defaultValue={displayValues[index] || ''}
               min={unit === 'inch' ? "6" : "15.24"}
-              max={unit === 'inch' ? "20" : "50.8"}
+              max={unit === 'inch' ? "70" : "177.8"}
               step={unit === 'inch' ? "0.5" : "0.5"}
               className="flex-1 py-2 px-3 border-2 border-[#1E3A5F]/20 rounded-lg 
                        text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
@@ -202,11 +232,29 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
           <br />
           • Use individual controls to set different spacing for each shelf
           <br />
-          • Recommended range: {unit === 'inch' ? '6-20 inch' : '15.24-50.8 cm'}
+          • Recommended range: {unit === 'inch' ? '6-70 inch' : '15.24-177.8 cm'}
           <br />
           • Spacing determines the distance between shelves and rip length
         </p>
       </div>
+
+      {/* Validation Modal */}
+      {isValidationOpen && (
+        <div className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-3 text-lg font-semibold text-gray-900">Invalid Spacing Value</div>
+            <div className="mb-6 text-gray-700">{validationMessage}</div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsValidationOpen(false)}
+                className="rounded-md bg-[#1E3A5F] px-4 py-2 text-white hover:opacity-90"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

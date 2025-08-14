@@ -64,6 +64,58 @@ export default function Index() {
   // Wall connection point selection
   const [wallConnectionPoint, setWallConnectionPoint] = useState<string[]>(['all']);
 
+  // Validation function to check if all values are within valid ranges
+  const areValuesValid = () => {
+    // Check width (5-100 inches)
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
+    if (widthInInches < 5 || widthInInches > 100) {
+      return false;
+    }
+
+    // Check shelf depth (12-20 inches)
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
+      return false;
+    }
+
+    // Check individual spacing values (6-70 inches)
+    if (useIndividualSpacing && shelfSpacings.length > 0) {
+      for (const spacing of shelfSpacings) {
+        const spacingInInches = spacing / 25.4; // Convert mm to inches
+        if (spacingInInches < 6 || spacingInInches > 70) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  // Get validation message
+  const getValidationMessage = () => {
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    
+    if (widthInInches < 5 || widthInInches > 100) {
+      return `Width must be between 5" and 100". Current value: ${widthInInches.toFixed(1)}"`;
+    }
+    
+    if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
+      return `Shelf depth must be between 12" and 20". Current value: ${shelfDepthInInches.toFixed(1)}"`;
+    }
+
+    if (useIndividualSpacing && shelfSpacings.length > 0) {
+      for (let i = 0; i < shelfSpacings.length; i++) {
+        const spacingInInches = shelfSpacings[i] / 25.4;
+        if (spacingInInches < 6 || spacingInInches > 70) {
+          return `Shelf spacing ${i + 1} must be between 6" and 70". Current value: ${spacingInInches.toFixed(1)}"`;
+        }
+      }
+    }
+
+    return '';
+  };
+
   // Callback for individual spacing changes
   const handleIndividualSpacingChange = useCallback((spacings: number[]) => {
     console.log('Shelf spacings updated:', spacings);
@@ -325,29 +377,45 @@ export default function Index() {
                 </div>
               ) : isViewerReady ? (
                 <div className="w-full h-[400px]">
-                  <ThreeDViewer
-                    ref={viewerRef}
-                    shelfUrl={selectedShelf}
-                    ripUrl={selectedRip}
-                    shelfQuantity={shelfQuantity}
-                    shelfSpacing={!useIndividualSpacing ? shelfSpacing : (shelfSpacings[0] || 250)}
-                    shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
-                    mountType={mountType}
-                    barCount={barCount}
-                    baySpacing={baySpacing}
-                    showCrossbars={frontBars || backBars}
-                    userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
-                    userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
-                    shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
-                    useTopShelf={useTopShelf}
-                    pipeDiameter={pipeDiameter}
-                    frontBars={frontBars}
-                    backBars={backBars}
-                    verticalBarsAtBack={verticalBarsAtBack}
-                    wallConnectionPoint={wallConnectionPoint}
-                    selectedShelvesForBars={selectedShelvesForBars}
-                    selectedBackShelvesForBars={selectedShelvesForBackBars}
-                  />
+                  {areValuesValid() ? (
+                    <ThreeDViewer
+                      ref={viewerRef}
+                      shelfUrl={selectedShelf}
+                      ripUrl={selectedRip}
+                      shelfQuantity={shelfQuantity}
+                      shelfSpacing={!useIndividualSpacing ? shelfSpacing : (shelfSpacings[0] || 250)}
+                      shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
+                      mountType={mountType}
+                      barCount={barCount}
+                      baySpacing={baySpacing}
+                      showCrossbars={frontBars || backBars}
+                      userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
+                      userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
+                      shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
+                      useTopShelf={useTopShelf}
+                      pipeDiameter={pipeDiameter}
+                      frontBars={frontBars}
+                      backBars={backBars}
+                      verticalBarsAtBack={verticalBarsAtBack}
+                      wallConnectionPoint={wallConnectionPoint}
+                      selectedShelvesForBars={selectedShelvesForBars}
+                      selectedBackShelvesForBars={selectedShelvesForBackBars}
+                    />
+                  ) : (
+                    <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
+                      <div className="text-center">
+                        <h2 className="text-xl font-medium text-gray-700 mb-2">
+                          Invalid Configuration
+                        </h2>
+                        <p className="text-gray-500 text-sm">
+                          {getValidationMessage()}
+                        </p>
+                        <p className="text-gray-400 text-xs mt-2">
+                          Please adjust the values to see the 3D preview
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="w-full h-[400px] flex items-center justify-center p-8 bg-gray-50">
