@@ -210,7 +210,7 @@ export const handleWallToCounterMount = async ({
   // Wall mount için shelf sistemini duvara göre konumlandır  
   // Wall to counter için baseY hesaplama - ceiling'den başla ve tavandan biraz aşağıda başlat
   // Model yüksekliğini ve küçük bir güvenlik payını düşerek tavana yapışmayı engelle
-  const ceilingClearance = 80; // mm
+  const ceilingClearance = 200; // mm - Daha aşağıda başlaması için artırıldı
   const modelHeightForOffset = model13Height > 0 ? model13Height : 120; // yedek değer
   const baseY = (roomHeight || 1500) - modelHeightForOffset - ceilingClearance;
   
