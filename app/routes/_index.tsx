@@ -52,7 +52,7 @@ export default function Index() {
   const [pipeDiameter, setPipeDiameter] = useState<string>('5/8');
 
   // Crossbar settings
-  const [frontBars, setFrontBars] = useState<boolean>(true);
+  const [frontBars, setFrontBars] = useState<boolean>(false);
   const [selectedShelvesForBars, setSelectedShelvesForBars] = useState<number[]>([]);
   const [backBars, setBackBars] = useState<boolean>(false);
   const [selectedShelvesForBackBars, setSelectedShelvesForBackBars] = useState<number[]>([]);
