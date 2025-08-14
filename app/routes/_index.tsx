@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import React from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
@@ -63,6 +63,12 @@ export default function Index() {
   
   // Wall connection point selection
   const [wallConnectionPoint, setWallConnectionPoint] = useState<string[]>(['all']);
+
+  // Callback for individual spacing changes
+  const handleIndividualSpacingChange = useCallback((spacings: number[]) => {
+    console.log('Shelf spacings updated:', spacings);
+    setShelfSpacings(spacings);
+  }, []);
 
   // Function to reset selections when mount type changes
   const resetSelections = (newMountType: string) => {
@@ -245,10 +251,7 @@ export default function Index() {
                 <IndividualShelfSpacingSelector 
                   key={`individual-spacing-${mountType}`}
                   shelfQuantity={shelfQuantity}
-                  onSpacingChange={(spacings) => {
-                    console.log('Shelf spacings updated:', spacings);
-                    setShelfSpacings([...spacings]); // Yeni array oluştur
-                  }}
+                  onSpacingChange={handleIndividualSpacingChange}
                   defaultSpacing={shelfSpacing}
                 />
               )}
@@ -327,8 +330,8 @@ export default function Index() {
                     shelfUrl={selectedShelf}
                     ripUrl={selectedRip}
                     shelfQuantity={shelfQuantity}
-                    shelfSpacing={useIndividualSpacing ? shelfSpacings[0] || 250 : shelfSpacing}
-                    shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? [...shelfSpacings] : undefined}
+                    shelfSpacing={!useIndividualSpacing ? shelfSpacing : (shelfSpacings[0] || 250)}
+                    shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
                     mountType={mountType}
                     barCount={barCount}
                     baySpacing={baySpacing}

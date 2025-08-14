@@ -11,9 +11,6 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   onSpacingChange,
   defaultSpacing = 250
 }) => {
-  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
-  const [individualSpacings, setIndividualSpacings] = useState<number[]>([defaultSpacing]);
-
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'cm'): number => {
     if (unit === 'inch') {
@@ -32,37 +29,57 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     }
   };
 
+  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [individualSpacings, setIndividualSpacings] = useState<number[]>([defaultSpacing]);
+  const [displayValues, setDisplayValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
+
   // Initialize spacings when shelf quantity changes
   useEffect(() => {
     if (shelfQuantity > 0) {
       const initialSpacings = Array(shelfQuantity).fill(defaultSpacing);
       setIndividualSpacings(initialSpacings);
+      // Initialize display values
+      const initialDisplayValues = initialSpacings.map(spacing => 
+        convertFromMm(spacing, unit).toFixed(1)
+      );
+      setDisplayValues(initialDisplayValues);
       // Yeni shelf quantity için parent'a bildir
-      onSpacingChange(initialSpacings);
+      console.log('Initializing spacings:', { shelfQuantity, initialSpacings });
+      onSpacingChange([...initialSpacings]);
     }
   }, [shelfQuantity, defaultSpacing, onSpacingChange]);
 
   // Handle unit change
   const handleUnitChange = (newUnit: 'inch' | 'cm') => {
     setUnit(newUnit);
-    // Convert all existing values to new unit
-    const convertedSpacings = individualSpacings.map(spacing => {
-      const displayValue = convertFromMm(spacing, unit);
-      return convertToMm(displayValue, newUnit);
-    });
-    setIndividualSpacings(convertedSpacings);
-    onSpacingChange(convertedSpacings);
+    // Only update display values, don't change the actual spacing values
+    const newDisplayValues = individualSpacings.map(spacing => 
+      convertFromMm(spacing, newUnit).toFixed(1)
+    );
+    setDisplayValues(newDisplayValues);
   };
 
   // Handle individual spacing change
-  const handleSpacingChange = (index: number, value: number) => {
-    if (value > 0) {
-      const spacingInMm = convertToMm(value, unit);
+  const handleSpacingChange = (index: number, value: string) => {
+    console.log('handleSpacingChange called:', { index, value, currentDisplayValues: displayValues });
+    
+    // Update display values immediately for better UX
+    const newDisplayValues = [...displayValues];
+    newDisplayValues[index] = value;
+    setDisplayValues(newDisplayValues);
+    
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      const spacingInMm = convertToMm(numValue, unit);
       const newSpacings = [...individualSpacings];
       newSpacings[index] = spacingInMm;
       setIndividualSpacings(newSpacings);
+      
       console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
-      onSpacingChange(newSpacings);
+      onSpacingChange([...newSpacings]);
+    } else if (value === '') {
+      // Allow empty values for better UX
+      console.log('Empty value entered for index:', index);
     }
   };
 
@@ -72,7 +89,13 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       const spacingInMm = convertToMm(value, unit);
       const newSpacings = Array(shelfQuantity).fill(spacingInMm);
       setIndividualSpacings(newSpacings);
-      onSpacingChange(newSpacings);
+      
+      // Update display values
+      const newDisplayValues = Array(shelfQuantity).fill(value.toFixed(1));
+      setDisplayValues(newDisplayValues);
+      
+      console.log('Bulk spacing changed:', { value, newSpacings });
+      onSpacingChange([...newSpacings]);
     }
   };
 
@@ -143,9 +166,9 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
             <span className="text-sm font-medium text-[#1E3A5F] min-w-[80px]">
               Shelf {index + 1}:
             </span>
-                        <input
+            <input
               type="number"
-              value={convertFromMm(spacing, unit).toFixed(1)}
+              defaultValue={displayValues[index] || ''}
               min={unit === 'inch' ? "6" : "15.24"}
               max={unit === 'inch' ? "20" : "50.8"}
               step={unit === 'inch' ? "0.5" : "0.5"}
@@ -153,11 +176,14 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
                        text-[#1E3A5F] bg-white/80 focus:border-[#1E3A5F] 
                        focus:outline-none text-center font-medium transition-all duration-200"
               onChange={(e) => {
-                const value = Number(e.target.value);
+                const value = e.target.value;
                 console.log('Input change:', { index, value });
-                if (value > 0) {
-                  handleSpacingChange(index, value);
-                }
+                handleSpacingChange(index, value);
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                console.log('Input blur:', { index, value });
+                handleSpacingChange(index, value);
               }}
             />
             <span className="text-sm text-[#1E3A5F] font-medium min-w-[30px]">
