@@ -381,8 +381,14 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, dynamicFloorY, -roomDepth / 2);
-    scene.add(floor);
-    floorMeshRef.current = floor;
+    
+    // Hide floor for ceiling to counter mount type since counter acts as floor
+    if (mountType !== "ceiling to counter") {
+      scene.add(floor);
+      floorMeshRef.current = floor;
+    } else {
+      floorMeshRef.current = null; // No floor reference for ceiling to counter
+    }
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
     backWall.position.set(0, roomHeight / 2, -roomDepth);
