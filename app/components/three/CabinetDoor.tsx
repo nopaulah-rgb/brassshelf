@@ -8,7 +8,7 @@ export interface CabinetDoorProps {
 
 export const createCabinetDoor = ({ geometry, material, xPos }: CabinetDoorProps) => {
   const door = new THREE.Mesh(geometry, material);
-  door.position.set(xPos, 190, -199);
+  door.position.set(xPos, 190, -399);
   door.rotateY(Math.PI);
 
   // Add door frame

@@ -13,30 +13,33 @@ const UseTopShelfSelector: React.FC<UseTopShelfSelectorProps> = ({ mountType, us
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-4">
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium text-slate-900">Top Shelf Option</h3>
+      
+      <div className="flex gap-3">
         <button
           onClick={() => onChange(false)}
-          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
             !useTopShelf
-              ? 'border-blue-500 bg-blue-50 text-blue-700'
-              : 'border-gray-300 hover:border-gray-400 text-gray-700'
+              ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+              : 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white'
           }`}
         >
           Do not use top as shelf
         </button>
         <button
           onClick={() => onChange(true)}
-          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
             useTopShelf
-              ? 'border-blue-500 bg-blue-50 text-blue-700'
-              : 'border-gray-300 hover:border-gray-400 text-gray-700'
+              ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+              : 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white'
           }`}
         >
           Use top as shelf
         </button>
       </div>
-      <p className="text-sm text-gray-500 italic">
+      
+      <p className="text-sm text-slate-500 italic">
         {useTopShelf 
           ? "A shelf will be placed at the top of your unit" 
           : "No shelf will be placed at the top of your unit"}

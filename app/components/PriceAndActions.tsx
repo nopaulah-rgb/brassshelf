@@ -12,28 +12,39 @@ const PriceAndActions: React.FC<PriceAndActionsProps> = ({
   onAddToCart,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
       {/* Price Display */}
-      <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-        <span className="text-sm text-gray-600">Price:</span>
-        <h2 className="text-3xl font-bold text-gray-900">${price.toFixed(0)}</h2>
+      <div className="text-center mb-8 pb-6 border-b border-gray-200">
+        <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">Total Price</span>
+        <h2 className="text-4xl font-light text-slate-900 mt-2">${price.toFixed(0)}</h2>
+        <p className="text-slate-500 text-sm mt-2">USD</p>
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <button
           onClick={onExport}
-          className="w-full py-3 px-4 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          className="w-full py-4 px-6 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-all duration-200 border border-slate-200 hover:border-slate-300"
         >
-          Export
+          Export Configuration
         </button>
         
         <button
           onClick={onAddToCart}
-          className="w-full py-3 px-4 bg-[#1E3A5F] text-white rounded-lg font-medium hover:bg-[#152844] transition-colors"
+          className="w-full py-4 px-6 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all duration-200 shadow-lg hover:shadow-xl"
         >
-          Add to cart
+          Add to Cart
         </button>
+      </div>
+      
+      {/* Additional Info */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-center text-slate-500 text-sm">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Lead time: 6-8 weeks after payment</span>
+        </div>
       </div>
     </div>
   );

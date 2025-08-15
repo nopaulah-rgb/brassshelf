@@ -4,7 +4,9 @@ export interface MountTypeProps {
   scene: THREE.Scene;
   shelfQuantity: number;
   shelfSpacing?: number;
+  shelfSpacings?: number[];
   barCount: number;
+  baySpacing?: number;  // Bayslar arası boşluk (mm cinsinden)
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;
@@ -32,12 +34,15 @@ export interface MountTypeProps {
   addHorizontalConnectingRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
   addFrontToBackRips: (baseHeight: number, positions: { x: number; z: number }[]) => void;
   frontBars?: boolean;
+  backBars?: boolean;
   verticalBarsAtBack?: boolean;
   pipeDiameter?: string;
   roomDepth?: number;
   roomHeight?: number;
   dynamicFloorY?: number;
-  wallConnectionPoint?: string;
+  wallConnectionPoint?: string[];
+  selectedShelvesForBars?: number[];
+  selectedBackShelvesForBars?: number[];
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";

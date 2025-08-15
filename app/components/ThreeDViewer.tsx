@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
@@ -17,13 +17,19 @@ import {
   handleCeilingFloorWallMount,
 } from "./three/MountTypes";
 
+export interface ThreeDViewerHandle {
+  captureViews: () => Promise<{ front: string; side: string; top: string }>;
+}
+
 interface ThreeDViewerProps {
   shelfUrl: string;
   ripUrl: string;
   shelfQuantity: number;
   shelfSpacing?: number;
+  shelfSpacings?: number[];
   mountType: string;
   barCount: number;
+  baySpacing?: number;
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;
@@ -31,17 +37,22 @@ interface ThreeDViewerProps {
   useTopShelf?: boolean;
   pipeDiameter?: string;
   frontBars?: boolean;
+  backBars?: boolean;
   verticalBarsAtBack?: boolean;
-  wallConnectionPoint?: string;
+  wallConnectionPoint?: string[];
+  selectedShelvesForBars?: number[];
+  selectedBackShelvesForBars?: number[];
 }
 
-const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
+const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({ 
   shelfUrl,
   ripUrl,
   shelfQuantity,
   shelfSpacing = 250,
+  shelfSpacings = [250],
   mountType,
   barCount,
+  baySpacing = 0,
   showCrossbars,
   userHeight,
   userWidth,
@@ -49,22 +60,32 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
   useTopShelf = false,
   pipeDiameter = '5/8',
   frontBars = false,
+  backBars = false,
   verticalBarsAtBack = true,
-  wallConnectionPoint = 'all',
-}): JSX.Element => {
+  wallConnectionPoint = ['all'],
+  selectedShelvesForBars = [],
+  selectedBackShelvesForBars = [],
+}, ref): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animationIdRef = useRef<number | null>(null);
+  const targetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  const ceilingMeshRef = useRef<THREE.Mesh | null>(null);
+  const floorMeshRef = useRef<THREE.Mesh | null>(null);
+  const backWallMeshRef = useRef<THREE.Mesh | null>(null);
   
   console.log('ThreeDViewer props:', {
     shelfUrl,
     ripUrl,
     shelfQuantity,
+    shelfSpacing,
+    shelfSpacings,
     mountType,
     barCount,
+    baySpacing,
     showCrossbars,
     userHeight,
     userWidth,
@@ -162,26 +183,62 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
   const handleFitToScreen = () => {
     if (cameraRef.current && controlsRef.current) {
-      // Reset camera to initial position
+      // Calculate dynamic room dimensions (same logic as in useEffect)
+      const heightInInches = userHeight ? userHeight / 25.4 : 47;
+      
+      // Base room dimensions
+      let roomWidth = 2000;
+      let roomDepth = 1200;
+      let roomHeight = 1500;
+      
+      // Adjust room width dynamically based on barCount
+      if (barCount > 1) {
+        const additionalWidth = (barCount - 1) * 950;
+        roomWidth = Math.max(2000, roomWidth + additionalWidth);
+      }
+      
+      // Calculate dynamic room height based on shelf quantity and spacing
+      const baseRoomHeight = 1500;
+      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
+      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
+      roomHeight = baseRoomHeight + heightExtension;
+      
+      // Adjust room size for taller shelf systems
+      if (heightInInches > 60) {
+        const scaleFactor = Math.max(1.2, heightInInches / 50);
+        roomWidth = Math.max(roomWidth, roomWidth * scaleFactor);
+        roomDepth = Math.max(1200, roomDepth * scaleFactor);
+        roomHeight = Math.max(roomHeight, userHeight! + 400);
+      }
+      
+      // Calculate dynamic floor position
+      const dynamicFloorY = -heightExtension;
+      
+      // Calculate camera distance based on room dimensions to ensure entire room is visible
+      const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
       const shelfHeightFactor = (userHeight || 1194) / 1000;
       const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
       const bayCountFactor = Math.max(1, barCount / 2);
+      const roomHeightFactor = roomHeight / 1500;
       
-      const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor;
-      const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 3500));
+      // Use room diagonal as base for camera distance to ensure full room visibility
+      const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
+      const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
       
-      const cameraX = cameraDistance * 0.6;
-      const cameraY = (userHeight || 1194) * 0.6;
-      const cameraZ = cameraDistance * 0.8;
+      // Position camera to show entire room
+      const cameraX = 0; // Center on x-axis
+      const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
+      const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
       
       cameraRef.current.position.set(cameraX, cameraY, cameraZ);
       
-      const shelfSystemCenterX = 0;
-      const shelfSystemCenterY = (userHeight || 1194) / 2;
-      const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+      // Calculate room center for camera target
+      const roomCenterX = 0;
+      const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
+      const roomCenterZ = -roomDepth / 2; // Center of the room depth
       
-      cameraRef.current.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
-      controlsRef.current.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      cameraRef.current.lookAt(roomCenterX, roomCenterY, roomCenterZ);
+      controlsRef.current.target.set(roomCenterX, roomCenterY, roomCenterZ);
       controlsRef.current.update();
     }
   };
@@ -324,16 +381,25 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, dynamicFloorY, -roomDepth / 2);
-    scene.add(floor);
+    
+    // Hide floor for ceiling to counter mount type since counter acts as floor
+    if (mountType !== "ceiling to counter") {
+      scene.add(floor);
+      floorMeshRef.current = floor;
+    } else {
+      floorMeshRef.current = null; // No floor reference for ceiling to counter
+    }
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
     backWall.position.set(0, roomHeight / 2, -roomDepth);
     scene.add(backWall);
+    backWallMeshRef.current = backWall;
 
     const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.set(0, roomHeight, -roomDepth / 2);
     scene.add(ceiling);
+    ceilingMeshRef.current = ceiling;
 
     // Adjust wall lights for dynamic room size
     const wallLight1 = new THREE.SpotLight(0xffffff, 0.3);
@@ -416,6 +482,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
     // Center target on the shelf system - same as camera lookAt
     controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
     controls.update();
+    targetRef.current.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
 
     // Remove scroll-based camera updates - 3D viewer now has independent controls
 
@@ -612,7 +679,15 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           baseHeight: number,
           positions: { x: number; z: number }[]
         ) => {
-          if (!showCrossbars) return;
+          if (!showCrossbars || !frontBars) return;
+          
+          // Calculate which shelf this height corresponds to
+          // Calculate which shelf this height corresponds to
+          const shelfIndex = Math.round((baseHeight - 100) / shelfSpacing);
+          
+          // Only add horizontal bars if this shelf is selected
+          if (!selectedShelvesForBars.includes(shelfIndex)) return;
+          
           for (let i = 0; i < positions.length - 1; i++) {
             const start = positions[i];
             const end = positions[i + 1];
@@ -659,7 +734,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
         // Calculate height-based scaling for system width
         // Taller systems should be proportionally wider for structural stability and aesthetics
         const calculateEffectiveWidth = (baseWidth: number, height: number): number => {
-          const defaultHeight = 1067; // 42 inches in mm (default height)
+          // const defaultHeight = 1067; // 42 inches in mm (default height)
           const heightInInches = height / 25.4; // Convert mm to inches for calculation
           
           // Apply scaling factor based on height
@@ -687,7 +762,9 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           scene,
           shelfQuantity,
           shelfSpacing,
+          shelfSpacings,
           barCount,
+          baySpacing,
           showCrossbars,
           userHeight,
           userWidth: effectiveUserWidth,
@@ -699,6 +776,8 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           shelfMaterial: materialShelf,
           ripGeometry,
           zOffset: -950 + (shelfBoundingBox.max.z - shelfBoundingBox.min.z) / 2  -220,
+          selectedShelvesForBars,
+          selectedBackShelvesForBars,
           shelfWidth: shelfBoundingBox.max.x - shelfBoundingBox.min.x,
           shelfBoundingBox,
           model1Geometry,
@@ -709,6 +788,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
           addHorizontalConnectingRips,
           addFrontToBackRips,
           frontBars,
+          backBars,
           verticalBarsAtBack,
           pipeDiameter,
           roomDepth,
@@ -719,9 +799,13 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
 
         // Handle different mount types
         const handleMountType = async () => {
+          console.log("Handling mount type:", mountType);
+          console.log("Mount type props:", mountTypeProps);
           switch (mountType) {
             case "ceiling":
+              console.log("Calling handleCeilingMount...");
               await handleCeilingMount(mountTypeProps);
+              console.log("handleCeilingMount completed");
               break;
             case "wall to counter":
               handleWallToCounterMount(mountTypeProps);
@@ -819,7 +903,78 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, mountType, barCount, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, verticalBarsAtBack, wallConnectionPoint]);
+  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, shelfSpacings, mountType, barCount, baySpacing, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
+
+  // Expose screenshot capture API
+  useImperativeHandle(ref, () => ({
+    captureViews: async () => {
+      if (!cameraRef.current || !controlsRef.current || !rendererRef.current || !sceneRef.current) {
+        return { front: "", side: "", top: "" };
+      }
+
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const renderer = rendererRef.current;
+      const target = targetRef.current.clone();
+
+      const originalPos = camera.position.clone();
+      const originalTarget = controls.target.clone();
+      const originalUp = camera.up.clone();
+
+      const distance = originalPos.distanceTo(originalTarget);
+
+      const renderAndGrab = () => {
+        controls.update();
+        renderer.render(sceneRef.current as THREE.Scene, camera);
+        return renderer.domElement.toDataURL('image/png');
+      };
+
+      // Hide room elements for technical-style captures
+      const prevVis = {
+        ceiling: ceilingMeshRef.current?.visible,
+        floor: floorMeshRef.current?.visible,
+        backWall: backWallMeshRef.current?.visible,
+      };
+      if (ceilingMeshRef.current) ceilingMeshRef.current.visible = false;
+      if (floorMeshRef.current) floorMeshRef.current.visible = false;
+      if (backWallMeshRef.current) backWallMeshRef.current.visible = false;
+
+      // FRONT/HOME
+      camera.position.set(target.x, target.y + 50, Math.abs(distance));
+      camera.lookAt(target);
+      controls.target.copy(target);
+      camera.up.set(0, 1, 0);
+      const front = renderAndGrab();
+
+      // SIDE (right side)
+      camera.position.set(target.x + distance, target.y + 50, target.z);
+      camera.lookAt(target);
+      controls.target.copy(target);
+      camera.up.set(0, 1, 0);
+      const side = renderAndGrab();
+
+      // TOP
+      camera.position.set(target.x, target.y + distance, target.z);
+      camera.lookAt(target);
+      controls.target.copy(target);
+      camera.up.set(0, 0, -1); // orient top view
+      const top = renderAndGrab();
+
+      // Restore room visibility
+      if (typeof prevVis.ceiling === 'boolean' && ceilingMeshRef.current) ceilingMeshRef.current.visible = prevVis.ceiling;
+      if (typeof prevVis.floor === 'boolean' && floorMeshRef.current) floorMeshRef.current.visible = prevVis.floor;
+      if (typeof prevVis.backWall === 'boolean' && backWallMeshRef.current) backWallMeshRef.current.visible = prevVis.backWall;
+
+      // Restore
+      camera.up.copy(originalUp);
+      camera.position.copy(originalPos);
+      controls.target.copy(originalTarget);
+      camera.lookAt(originalTarget);
+      controls.update();
+
+      return { front, side, top };
+    }
+  }));
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -929,6 +1084,7 @@ const ThreeDViewer: React.FC<ThreeDViewerProps> = ({
       </div>
     </div>
   );
-};
+});
+ThreeDViewer.displayName = 'ThreeDViewer';
 
 export default ThreeDViewer;
