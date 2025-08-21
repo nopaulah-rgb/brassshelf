@@ -840,6 +840,9 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         handleMountType().then(() => {
           if (!isMounted) return;
           
+          // Call handleFitToScreen to center the view initially
+          handleFitToScreen();
+          
           // Animation loop
           const animate = () => {
             if (!isMounted) return;
