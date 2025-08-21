@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import React, { useState } from 'react';
 
 interface DimensionInputsProps {
@@ -45,13 +46,39 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   const handleWidthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = parseFloat(e.target.value) || 0;
-    onWidthChange(nextValue);
+    const value = e.target.value;
+    // Allow decimal input with up to 3 decimal places
+    if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
+      const nextValue = parseFloat(value) || 0;
+      onWidthChange(nextValue);
+    }
   };
 
   const handleShelfDepthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = parseFloat(e.target.value) || 0;
-    onShelfDepthChange(nextValue);
+    const value = e.target.value;
+    // Allow decimal input with up to 3 decimal places
+    if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
+      const nextValue = parseFloat(value) || 0;
+      onShelfDepthChange(nextValue);
+    }
+  };
+
+  const handleHeightInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow decimal input with up to 3 decimal places
+    if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
+      const nextValue = parseFloat(value) || 0;
+      onHeightChange(nextValue);
+    }
+  };
+
+  const handleTotalDepthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow decimal input with up to 3 decimal places
+    if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
+      const nextValue = parseFloat(value) || 0;
+      onTotalDepthChange(nextValue);
+    }
   };
 
   const handleWidthBlur = () => {
@@ -106,44 +133,56 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
           <input
-            type="number"
+            type="text"
             value={height}
-            onChange={(e) => onHeightChange(parseFloat(e.target.value) || 0)}
+            onChange={handleHeightInputChange}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder="Height"
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 42.625)" : "Height"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 42.625)</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Width</label>
           <input
-            type="number"
+            type="text"
             value={width}
             onChange={handleWidthInputChange}
             onBlur={handleWidthBlur}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder="Width"
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 36.125)" : "Width"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 36.125)</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Shelf Depth</label>
           <input
-            type="number"
+            type="text"
             value={shelfDepth}
             onChange={handleShelfDepthInputChange}
             onBlur={handleShelfDepthBlur}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder="Shelf Depth"
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 12.375)</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Total Depth</label>
           <input
-            type="number"
+            type="text"
             value={totalDepth}
-            onChange={(e) => onTotalDepthChange(parseFloat(e.target.value) || 0)}
+            onChange={handleTotalDepthInputChange}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder="Total Depth"
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 12.375)</p>
+          )}
         </div>
       </div>
 
