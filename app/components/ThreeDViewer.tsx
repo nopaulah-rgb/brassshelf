@@ -23,7 +23,6 @@ export interface ThreeDViewerHandle {
 
 interface ThreeDViewerProps {
   shelfUrl: string;
-  ripUrl: string;
   shelfQuantity: number;
   shelfSpacing?: number;
   shelfSpacings?: number[];
@@ -47,7 +46,6 @@ interface ThreeDViewerProps {
 
 const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({ 
   shelfUrl,
-  ripUrl,
   shelfQuantity,
   shelfSpacing = 250,
   shelfSpacings = [250],
@@ -81,7 +79,6 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   
   console.log('ThreeDViewer props:', {
     shelfUrl,
-    ripUrl,
     shelfQuantity,
     shelfSpacing,
     shelfSpacings,
@@ -908,7 +905,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, ripUrl, shelfQuantity, shelfSpacing, shelfSpacings, mountType, barCount, baySpacing, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
+  }, [shelfUrl, shelfQuantity, shelfSpacing, shelfSpacings, mountType, barCount, baySpacing, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
 
   // Expose screenshot capture API
   useImperativeHandle(ref, () => ({

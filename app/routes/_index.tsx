@@ -1,13 +1,11 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
-import { useState, useCallback } from "react";
-import React from "react";
+import React, { useState, useCallback } from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
 
 // Components
-import RipSelector from "~/components/RipSelector";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import ShelfSpacingSelector from "~/components/ShelfSpacingSelector";
@@ -29,7 +27,7 @@ export const loader = async () => {
 export default function Index() {
   // State for storing user selections
   const [selectedShelf, setSelectedShelf] = useState<string | null>('/models/Glass Shelf v1_B.glb');
-  const [selectedRip, setSelectedRip] = useState<string | null>('/models/50cmRib.stl');
+
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [shelfSpacing, setShelfSpacing] = useState<number>(250); // in mm
   const [useIndividualSpacing, setUseIndividualSpacing] = useState<boolean>(false);
@@ -200,14 +198,9 @@ export default function Index() {
   };
 
   // Determine if all necessary selections have been made
-  const isViewerReady = selectedShelf && selectedRip;
+  const isViewerReady = selectedShelf;
 
-  // Derive rip length in cm from selectedRip url (e.g., /models/30cmRib.stl)
-  const ripLengthCm = React.useMemo(() => {
-    if (!selectedRip) return undefined;
-    const match = selectedRip.match(/(\d+)cm/i);
-    return match ? Number(match[1]) : undefined;
-  }, [selectedRip]);
+
 
   // Set loading false after a short delay
   React.useEffect(() => {
@@ -370,11 +363,7 @@ export default function Index() {
                   shelfMaterial="glass"
                 />
                 
-                {/* Rip Selector */}
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                  <h3 className="text-lg font-medium text-slate-900 mb-4">Rip Length</h3>
-                  <RipSelector key={`rip-selector-${mountType}`} onSelect={setSelectedRip} />
-                </div>
+
 
                 <CrossbarSelector
                   key={`crossbar-${mountType}`}
@@ -429,7 +418,6 @@ export default function Index() {
                     <ThreeDViewer
                       ref={viewerRef}
                       shelfUrl={selectedShelf}
-                      ripUrl={selectedRip}
                       shelfQuantity={shelfQuantity}
                       shelfSpacing={!useIndividualSpacing ? shelfSpacing : (shelfSpacings[0] || 250)}
                       shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
@@ -532,7 +520,6 @@ export default function Index() {
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
         shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}
-        ripLengthCm={ripLengthCm}
         frontImg={shots.front}
         sideImg={shots.side}
         topImg={shots.top}

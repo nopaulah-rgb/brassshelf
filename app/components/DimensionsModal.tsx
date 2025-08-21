@@ -17,7 +17,6 @@ interface DimensionsModalProps {
   useIndividualSpacing: boolean;
   shelfSpacingMm?: number; // mm when equal spacing
   shelfSpacingsMm?: number[]; // mm when individual spacing
-  ripLengthCm?: number; // rip length in cm for display
   frontImg?: string;
   sideImg?: string;
   topImg?: string;
