@@ -51,7 +51,14 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       console.log('Initializing spacings:', { shelfQuantity, initialSpacings });
       onSpacingChange([...initialSpacings]);
     }
-  }, [shelfQuantity, defaultSpacing, onSpacingChange]);
+  }, [shelfQuantity, defaultSpacing, unit]); // Remove onSpacingChange from dependencies to prevent unnecessary re-renders
+
+  // Call onSpacingChange when individualSpacings changes (but not during initial setup)
+  useEffect(() => {
+    if (individualSpacings.length > 0 && individualSpacings.length === shelfQuantity) {
+      onSpacingChange([...individualSpacings]);
+    }
+  }, [individualSpacings, onSpacingChange, shelfQuantity]);
 
   // Handle unit change
   const handleUnitChange = (newUnit: 'inch' | 'cm') => {
@@ -67,34 +74,26 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const handleSpacingChange = (index: number, value: string) => {
     console.log('handleSpacingChange called:', { index, value, currentDisplayValues: displayValues });
     
-    // Validate the input value
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue > 0) {
-      const valueInInches = unit === 'inch' ? numValue : numValue / 2.54;
-      const minInches = 6;
-      const maxInches = 70;
-      
-      if (valueInInches < minInches || valueInInches > maxInches) {
-        setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
-        setInvalidIndex(index);
-        setIsValidationOpen(true);
-        return;
-      }
-    }
-    
     // Update display values immediately for better UX
     const newDisplayValues = [...displayValues];
     newDisplayValues[index] = value;
     setDisplayValues(newDisplayValues);
     
+    // Only validate and update internal state for valid numbers
+    const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue > 0) {
+      // Clear any previous validation errors for this index
+      if (invalidIndex === index) {
+        setInvalidIndex(-1);
+        setIsValidationOpen(false);
+      }
+      
       const spacingInMm = convertToMm(numValue, unit);
       const newSpacings = [...individualSpacings];
       newSpacings[index] = spacingInMm;
       setIndividualSpacings(newSpacings);
       
       console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
-      onSpacingChange([...newSpacings]);
     } else if (value === '') {
       // Allow empty values for better UX
       console.log('Empty value entered for index:', index);
@@ -114,6 +113,11 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
         setInvalidIndex(index);
         setIsValidationOpen(true);
       }
+    } else if (value !== '' && (isNaN(numValue) || numValue <= 0)) {
+      // Show validation error for invalid non-empty values
+      setValidationMessage(`Please enter a valid positive number for shelf ${index + 1}`);
+      setInvalidIndex(index);
+      setIsValidationOpen(true);
     }
   };
 
