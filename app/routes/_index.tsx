@@ -36,7 +36,8 @@ export default function Index() {
   const [shelfSpacings, setShelfSpacings] = useState<number[]>([250]); // in mm - array for individual spacing
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
-  const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik)
+  const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik) - legacy
+  const [baySpacings, setBaySpacings] = useState<number[]>([]); // Individual bay spacings in mm
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
   const [userWidth, setUserWidth] = useState<number>(36); // in inches
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
@@ -349,9 +350,11 @@ export default function Index() {
                 
                 <BaySpacingInput 
                   key={`bay-spacing-${mountType}`}
-                  baySpacing={baySpacing}
-                  onBaySpacingChange={setBaySpacing}
+                  baySpacings={baySpacings}
+                  onBaySpacingsChange={setBaySpacings}
                   barCount={barCount}
+                  totalWidth={userWidth}
+                  unit={unit}
                 />
                 
                 <PipeDiameterSelector
@@ -432,7 +435,8 @@ export default function Index() {
                       shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
                       mountType={mountType}
                       barCount={barCount}
-                      baySpacing={baySpacing}
+                      baySpacing={baySpacings.length > 0 ? baySpacings[0] : baySpacing} // Use first bay spacing or legacy value
+                      baySpacings={baySpacings}
                       showCrossbars={frontBars || backBars}
                       userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
                       userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
@@ -523,7 +527,8 @@ export default function Index() {
         totalDepth={totalDepth}
         shelfQuantity={shelfQuantity}
         barCount={barCount}
-        baySpacingMm={baySpacing}
+        baySpacingMm={baySpacings.length > 0 ? baySpacings[0] : baySpacing}
+        baySpacingsMm={baySpacings}
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
         shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}

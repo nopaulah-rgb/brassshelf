@@ -30,6 +30,7 @@ interface ThreeDViewerProps {
   mountType: string;
   barCount: number;
   baySpacing?: number;
+  baySpacings?: number[];
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;
@@ -53,6 +54,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   mountType,
   barCount,
   baySpacing = 0,
+  baySpacings = [],
   showCrossbars,
   userHeight,
   userWidth,

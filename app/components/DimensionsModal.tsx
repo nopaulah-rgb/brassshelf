@@ -12,7 +12,8 @@ interface DimensionsModalProps {
   totalDepth: number; // in selected unit
   shelfQuantity: number;
   barCount: number;
-  baySpacingMm: number; // mm
+  baySpacingMm: number; // mm (legacy single spacing)
+  baySpacingsMm?: number[]; // mm (individual bay spacings)
   useIndividualSpacing: boolean;
   shelfSpacingMm?: number; // mm when equal spacing
   shelfSpacingsMm?: number[]; // mm when individual spacing
@@ -50,6 +51,7 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
   shelfQuantity,
   barCount,
   baySpacingMm,
+  baySpacingsMm,
   useIndividualSpacing,
   shelfSpacingMm,
   shelfSpacingsMm,
@@ -61,8 +63,19 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
 
   // Total width across bays including spacing (calculated in mm for precision)
   const widthPerBayMm = unitToMm(userWidth, unit);
+  
+  // Calculate total width using individual bay spacings if available
   const totalWidthMm = barCount > 1
-    ? (barCount * widthPerBayMm) + (barCount - 1) * baySpacingMm
+    ? (() => {
+        if (baySpacingsMm && baySpacingsMm.length > 0) {
+          // Use individual bay spacings
+          const totalSpacing = baySpacingsMm.reduce((sum, spacing) => sum + spacing, 0);
+          return (barCount * widthPerBayMm) + totalSpacing;
+        } else {
+          // Fall back to uniform spacing
+          return (barCount * widthPerBayMm) + (barCount - 1) * baySpacingMm;
+        }
+      })()
     : widthPerBayMm;
   const totalWidthInSelectedUnit = mmToUnit(totalWidthMm, unit);
 
