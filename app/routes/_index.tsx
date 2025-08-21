@@ -280,6 +280,7 @@ export default function Index() {
                   key={`wall-connection-${mountType}`}
                   onSelect={setWallConnectionPoint}
                   mountType={mountType}
+                  shelfQuantity={shelfQuantity}
                 />
                 
                 <DimensionInputs

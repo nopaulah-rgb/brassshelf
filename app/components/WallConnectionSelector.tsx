@@ -3,10 +3,40 @@ import React, { useState } from 'react';
 interface WallConnectionSelectorProps {
   onSelect: (connectionPoints: string[]) => void;
   mountType: string;
+  shelfQuantity: number;
 }
 
-const WallConnectionSelector: React.FC<WallConnectionSelectorProps> = ({ onSelect, mountType }) => {
+const WallConnectionSelector: React.FC<WallConnectionSelectorProps> = ({ onSelect, mountType, shelfQuantity }) => {
   const [selectedConnections, setSelectedConnections] = useState<string[]>(['all']);
+
+  // Helper function to get ordinal suffix
+  const getOrdinalSuffix = React.useCallback((num: number) => {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) return 'st';
+    if (j === 2 && k !== 12) return 'nd';
+    if (j === 3 && k !== 13) return 'rd';
+    return 'th';
+  }, []);
+
+  // Generate connection points dynamically based on shelf quantity
+  const connectionPoints = React.useMemo(() => {
+    const points = [
+      { id: 'all', name: 'All Shelves', description: 'Connect to all shelf levels' }
+    ];
+    
+    // Add individual shelf options based on quantity
+    for (let i = 1; i <= shelfQuantity; i++) {
+      const isLast = i === shelfQuantity;
+      points.push({
+        id: isLast ? 'top' : `shelf-${i}`,
+        name: isLast ? 'Top Shelf' : `${i}${getOrdinalSuffix(i)} Shelf`,
+        description: isLast ? 'Connect to highest shelf' : `Connect to ${i}${getOrdinalSuffix(i)} shelf level`
+      });
+    }
+    
+    return points;
+  }, [shelfQuantity, getOrdinalSuffix]);
 
   // Only show this selector for wall-related mount types
   const isWallMountType = mountType.includes('wall');
@@ -14,14 +44,6 @@ const WallConnectionSelector: React.FC<WallConnectionSelectorProps> = ({ onSelec
   if (!isWallMountType) {
     return null;
   }
-
-  const connectionPoints = [
-    { id: 'all', name: 'All Shelves', description: 'Connect to all shelf levels' },
-    { id: 'first', name: '1st Shelf', description: 'Connect to first shelf level' },
-    { id: 'second', name: '2nd Shelf', description: 'Connect to second shelf level' },
-    { id: 'third', name: '3rd Shelf', description: 'Connect to third shelf level' },
-    { id: 'top', name: 'Top Shelf', description: 'Connect to highest shelf' },
-  ];
 
   const handleSelect = (id: string) => {
     let newSelection: string[];
