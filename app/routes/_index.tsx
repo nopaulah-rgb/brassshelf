@@ -276,13 +276,6 @@ export default function Index() {
               <div className="space-y-8">
                 <MountTypeSelector onSelect={setMountType} onMountTypeChange={resetSelections} />
                 
-                <WallConnectionSelector 
-                  key={`wall-connection-${mountType}`}
-                  onSelect={setWallConnectionPoint}
-                  mountType={mountType}
-                  shelfQuantity={shelfQuantity}
-                />
-                
                 <DimensionInputs
                   key={`dimensions-${mountType}`}
                   height={userHeight}
@@ -300,6 +293,13 @@ export default function Index() {
                 />
 
                 <ShelfQuantitySelector key={`shelf-quantity-${mountType}`} onSelect={setShelfQuantity} />
+                
+                <WallConnectionSelector 
+                  key={`wall-connection-${mountType}-${shelfQuantity}`}
+                  onSelect={setWallConnectionPoint}
+                  mountType={mountType}
+                  shelfQuantity={shelfQuantity}
+                />
                 
                 {/* Spacing Mode Toggle */}
                 <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">

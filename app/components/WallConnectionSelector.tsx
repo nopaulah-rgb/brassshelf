@@ -9,6 +9,12 @@ interface WallConnectionSelectorProps {
 const WallConnectionSelector: React.FC<WallConnectionSelectorProps> = ({ onSelect, mountType, shelfQuantity }) => {
   const [selectedConnections, setSelectedConnections] = useState<string[]>(['all']);
 
+  // Reset selection to 'all' when shelfQuantity changes
+  React.useEffect(() => {
+    setSelectedConnections(['all']);
+    onSelect(['all']);
+  }, [shelfQuantity, onSelect]);
+
   // Helper function to get ordinal suffix
   const getOrdinalSuffix = React.useCallback((num: number) => {
     const j = num % 10;
