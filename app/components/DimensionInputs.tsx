@@ -7,10 +7,12 @@ interface DimensionInputsProps {
   shelfDepth: number;
   totalDepth: number;
   unit: 'inch' | 'cm';
+  selectedDepthType: 'shelf' | 'total';
   onHeightChange: (value: number) => void;
   onWidthChange: (value: number) => void;
   onShelfDepthChange: (value: number) => void;
   onTotalDepthChange: (value: number) => void;
+  onDepthTypeChange: (depthType: 'shelf' | 'total') => void;
   onUnitChange: (unit: 'inch' | 'cm') => void;
 }
 
@@ -20,10 +22,12 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   shelfDepth,
   totalDepth,
   unit,
+  selectedDepthType,
   onHeightChange,
   onWidthChange,
   onShelfDepthChange,
   onTotalDepthChange,
+  onDepthTypeChange,
   onUnitChange,
 }) => {
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
@@ -129,7 +133,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
           <input
@@ -157,31 +161,86 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 36.125)</p>
           )}
         </div>
+        {/* Depth Type Selection */}
+        <div className="col-span-3">
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="depthType"
+                value="shelf"
+                checked={selectedDepthType === 'shelf'}
+                onChange={(e) => onDepthTypeChange(e.target.value as 'shelf' | 'total')}
+                className="mr-2 text-slate-600 focus:ring-slate-500"
+              />
+              <span className="text-sm font-medium text-slate-700">Shelf Depth</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="depthType"
+                value="total"
+                checked={selectedDepthType === 'total'}
+                onChange={(e) => onDepthTypeChange(e.target.value as 'shelf' | 'total')}
+                className="mr-2 text-slate-600 focus:ring-slate-500"
+              />
+              <span className="text-sm font-medium text-slate-700">Total Depth</span>
+            </label>
+          </div>
+        </div>
+        
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Shelf Depth</label>
+          <label className={`block text-sm font-medium mb-2 ${
+            selectedDepthType === 'shelf' ? 'text-slate-700' : 'text-slate-400'
+          }`}>
+            Shelf Depth
+          </label>
           <input
             type="text"
             value={shelfDepth}
             onChange={handleShelfDepthInputChange}
             onBlur={handleShelfDepthBlur}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            disabled={selectedDepthType !== 'shelf'}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
+              selectedDepthType === 'shelf'
+                ? 'border-slate-300 bg-white text-slate-700'
+                : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth"}
           />
           {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 12.375)</p>
+            <p className={`text-xs mt-1 ${
+              selectedDepthType === 'shelf' ? 'text-slate-500' : 'text-slate-300'
+            }`}>
+              Enter measurement in decimal inches (e.g., 12.375)
+            </p>
           )}
         </div>
+        
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Total Depth</label>
+          <label className={`block text-sm font-medium mb-2 ${
+            selectedDepthType === 'total' ? 'text-slate-700' : 'text-slate-400'
+          }`}>
+            Total Depth
+          </label>
           <input
             type="text"
             value={totalDepth}
             onChange={handleTotalDepthInputChange}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            disabled={selectedDepthType !== 'total'}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
+              selectedDepthType === 'total'
+                ? 'border-slate-300 bg-white text-slate-700'
+                : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth"}
           />
           {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 12.375)</p>
+            <p className={`text-xs mt-1 ${
+              selectedDepthType === 'total' ? 'text-slate-500' : 'text-slate-300'
+            }`}>
+              Enter measurement in decimal inches (e.g., 12.375)
+            </p>
           )}
         </div>
       </div>

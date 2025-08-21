@@ -41,6 +41,7 @@ export default function Index() {
   const [userWidth, setUserWidth] = useState<number>(36); // in inches
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
   const [totalDepth, setTotalDepth] = useState<number>(12); // in inches
+  const [selectedDepthType, setSelectedDepthType] = useState<'shelf' | 'total'>('shelf'); // Track which depth type is selected
   const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
   const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
   const [price] = useState<number>(599);
@@ -121,6 +122,35 @@ export default function Index() {
     console.log('Shelf spacings updated:', spacings);
     setShelfSpacings(spacings);
   }, []);
+
+  // Handle depth type selection change
+  const handleDepthTypeChange = (depthType: 'shelf' | 'total') => {
+    setSelectedDepthType(depthType);
+    // When switching depth types, copy the current value to maintain consistency
+    if (depthType === 'shelf') {
+      setShelfDepth(totalDepth);
+    } else {
+      setTotalDepth(shelfDepth);
+    }
+  };
+
+  // Handle shelf depth change
+  const handleShelfDepthChange = (value: number) => {
+    setShelfDepth(value);
+    // If shelf depth is selected, update total depth to match
+    if (selectedDepthType === 'shelf') {
+      setTotalDepth(value);
+    }
+  };
+
+  // Handle total depth change
+  const handleTotalDepthChange = (value: number) => {
+    setTotalDepth(value);
+    // If total depth is selected, update shelf depth to match
+    if (selectedDepthType === 'total') {
+      setShelfDepth(value);
+    }
+  };
 
   // Function to reset selections when mount type changes
   const resetSelections = (newMountType: string) => {
@@ -265,10 +295,12 @@ export default function Index() {
                   shelfDepth={shelfDepth}
                   totalDepth={totalDepth}
                   unit={unit}
+                  selectedDepthType={selectedDepthType}
                   onHeightChange={setUserHeight}
                   onWidthChange={setUserWidth}
-                  onShelfDepthChange={setShelfDepth}
-                  onTotalDepthChange={setTotalDepth}
+                  onShelfDepthChange={handleShelfDepthChange}
+                  onTotalDepthChange={handleTotalDepthChange}
+                  onDepthTypeChange={handleDepthTypeChange}
                   onUnitChange={setUnit}
                 />
 
