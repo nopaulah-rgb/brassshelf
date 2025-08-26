@@ -34,7 +34,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   const [validationMessage, setValidationMessage] = useState<string>('');
   const convertValue = (value: number, fromUnit: 'inch' | 'mm', toUnit: 'inch' | 'mm'): number => {
     if (fromUnit === toUnit) return value;
-    if (fromUnit === 'inch' && toUnit === 'mm') return value * 25.4;
+    if (fromUnit === 'inch' && toUnit === 'mm') {
+      // Convert inches to mm and round to whole number
+      return Math.round(value * 25.4);
+    }
+    // Convert mm to inches
     return value / 25.4;
   };
 
@@ -138,27 +142,33 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
           <input
             type="text"
-            value={height}
+            value={unit === 'mm' ? Math.round(height) : height}
             onChange={handleHeightInputChange}
+            step={unit === 'inch' ? "0.001" : "1"}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 42.625)" : "Height"}
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 42.625)" : "Height in mm"}
           />
-          {unit === 'inch' && (
+          {unit === 'inch' ? (
             <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 42.625)</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in whole millimeters</p>
           )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Width</label>
           <input
             type="text"
-            value={width}
+            value={unit === 'mm' ? Math.round(width) : width}
             onChange={handleWidthInputChange}
             onBlur={handleWidthBlur}
+            step={unit === 'inch' ? "0.001" : "1"}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 36.125)" : "Width"}
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 36.125)" : "Width in mm"}
           />
-          {unit === 'inch' && (
+          {unit === 'inch' ? (
             <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 36.125)</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">Enter measurement in whole millimeters</p>
           )}
         </div>
         {/* Depth Type Selection */}
@@ -197,22 +207,29 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           </label>
           <input
             type="text"
-            value={shelfDepth}
+            value={unit === 'mm' ? Math.round(shelfDepth) : shelfDepth}
             onChange={handleShelfDepthInputChange}
             onBlur={handleShelfDepthBlur}
             disabled={selectedDepthType !== 'shelf'}
+            step={unit === 'inch' ? "0.001" : "1"}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
               selectedDepthType === 'shelf'
                 ? 'border-slate-300 bg-white text-slate-700'
                 : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
             }`}
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth"}
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth in mm"}
           />
-          {unit === 'inch' && (
+          {unit === 'inch' ? (
             <p className={`text-xs mt-1 ${
               selectedDepthType === 'shelf' ? 'text-slate-500' : 'text-slate-300'
             }`}>
               Enter measurement in decimal inches (e.g., 12.375)
+            </p>
+          ) : (
+            <p className={`text-xs mt-1 ${
+              selectedDepthType === 'shelf' ? 'text-slate-500' : 'text-slate-300'
+            }`}>
+              Enter measurement in whole millimeters
             </p>
           )}
         </div>
@@ -225,21 +242,28 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           </label>
           <input
             type="text"
-            value={totalDepth}
+            value={unit === 'mm' ? Math.round(totalDepth) : totalDepth}
             onChange={handleTotalDepthInputChange}
             disabled={selectedDepthType !== 'total'}
+            step={unit === 'inch' ? "0.001" : "1"}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
               selectedDepthType === 'total'
                 ? 'border-slate-300 bg-white text-slate-700'
                 : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
             }`}
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth"}
+            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth in mm"}
           />
-          {unit === 'inch' && (
+          {unit === 'inch' ? (
             <p className={`text-xs mt-1 ${
               selectedDepthType === 'total' ? 'text-slate-500' : 'text-slate-300'
             }`}>
               Enter measurement in decimal inches (e.g., 12.375)
+            </p>
+          ) : (
+            <p className={`text-xs mt-1 ${
+              selectedDepthType === 'total' ? 'text-slate-500' : 'text-slate-300'
+            }`}>
+              Enter measurement in whole millimeters
             </p>
           )}
         </div>

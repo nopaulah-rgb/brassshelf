@@ -11,9 +11,9 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
     if (unit === 'inch') {
-      return value * 25.4; // 1 inch = 25.4 mm
+      return Math.round(value * 25.4); // 1 inch = 25.4 mm, rounded to whole number
     } else {
-      return value; // Already in mm
+      return Math.round(value); // Already in mm, round to whole number
     }
   };
 
@@ -71,7 +71,7 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
         <div className="flex-1">
           <input
             type="number"
-            value={spacingValue}
+            value={unit === 'mm' ? Math.round(spacingValue) : spacingValue}
             onChange={(e) => {
               const newValue = Number(e.target.value);
               handleValueChange(newValue);
@@ -83,14 +83,20 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
                 handleValueChange(newValue);
               }
             }}
-            min={unit === 'inch' ? "6" : "152.4"}
+            min={unit === 'inch' ? "6" : "152"}
             max={unit === 'inch' ? "20" : "508"}
-            step={unit === 'inch' ? "0.5" : "5"}
+            step={unit === 'inch' ? "0.5" : "1"}
             className="w-full py-3 px-4 border border-slate-300 rounded-lg 
                      text-slate-700 bg-white focus:border-slate-500 focus:ring-2 focus:ring-slate-500
                      focus:outline-none text-center font-medium transition-all duration-200"
-            placeholder={unit === 'inch' ? "12" : "304.8"}
+            placeholder={unit === 'inch' ? "12" : "305"}
           />
+          <p className="text-xs text-slate-500 mt-2 text-center">
+            {unit === 'inch' 
+              ? 'Enter measurement in decimal inches (e.g., 12.5)' 
+              : 'Enter measurement in whole millimeters'
+            }
+          </p>
         </div>
         
         {/* Unit Toggle */}
@@ -121,9 +127,9 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
       {/* Help Text */}
       <div className="bg-white rounded-lg p-4 border border-slate-200">
         <p className="text-sm text-slate-600 leading-relaxed">
-          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '304.8 mm'}
+          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '305 mm'}
           <br />
-          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '152.4-508 mm'}
+          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '152-508 mm'}
           <br />
           <span className="font-medium">Note:</span> This setting determines spacing between shelves and rib length
         </p>
