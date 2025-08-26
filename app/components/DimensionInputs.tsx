@@ -35,11 +35,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   const convertValue = (value: number, fromUnit: 'inch' | 'mm', toUnit: 'inch' | 'mm'): number => {
     if (fromUnit === toUnit) return value;
     if (fromUnit === 'inch' && toUnit === 'mm') {
-      // Convert inches to mm and round to whole number
+      // Convert inches to mm: 42 inch → 1067 mm
       return Math.round(value * 25.4);
     }
-    // Convert mm to inches
-    return value / 25.4;
+    // Convert mm to inches: 1067 mm → 42 inch
+    return Math.round((value / 25.4) * 100) / 100;
   };
 
   const handleUnitToggle = () => {

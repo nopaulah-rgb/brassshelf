@@ -29,18 +29,15 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
     // Convert current value to the new unit
     let newValue: number;
     if (unit === 'inch' && newUnit === 'mm') {
-      // Convert from inches to mm: 1 inch = 25.4 mm
-      newValue = spacingValue * 25.4;
+      // Convert from inches to mm: 12 inch → 305 mm
+      newValue = Math.round(spacingValue * 25.4);
     } else if (unit === 'mm' && newUnit === 'inch') {
-      // Convert from mm to inches: 1 mm = 0.03937 inches
-      newValue = spacingValue / 25.4;
+      // Convert from mm to inches: 305 mm → 12 inch
+      newValue = Math.round((spacingValue / 25.4) * 100) / 100;
     } else {
       // Same unit, no conversion needed
       newValue = spacingValue;
     }
-    
-    // Round to 2 decimal places for better display
-    newValue = Math.round(newValue * 100) / 100;
     
     setSpacingValue(newValue);
     setUnit(newUnit);

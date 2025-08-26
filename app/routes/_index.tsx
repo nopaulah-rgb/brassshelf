@@ -67,13 +67,13 @@ export default function Index() {
   // Validation function to check if all values are within valid ranges
   const areValuesValid = () => {
     // Check width (5-100 inches)
-    const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
+    const widthInInches = unit === 'inch' ? userWidth : Math.round((userWidth / 25.4) * 100) / 100;
     if (widthInInches < 5 || widthInInches > 100) {
       return false;
     }
 
     // Check shelf depth (12-20 inches)
-    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : Math.round((shelfDepth / 25.4) * 100) / 100;
     if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
       return false;
     }
@@ -81,7 +81,7 @@ export default function Index() {
     // Check individual spacing values (6-70 inches)
     if (useIndividualSpacing && shelfSpacings.length > 0) {
       for (const spacing of shelfSpacings) {
-        const spacingInInches = spacing / 25.4; // Convert mm to inches
+        const spacingInInches = Math.round((spacing / 25.4) * 100) / 100; // Convert mm to inches
         if (spacingInInches < 6 || spacingInInches > 70) {
           return false;
         }
@@ -432,9 +432,9 @@ export default function Index() {
                       baySpacing={baySpacings.length > 0 ? baySpacings[0] : baySpacing} // Use first bay spacing or legacy value
                       baySpacings={baySpacings}
                       showCrossbars={frontBars || backBars}
-                      userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
-                      userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
-                      shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth * 10}
+                      userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight}
+                      userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth}
+                      shelfDepth={unit === 'inch' ? shelfDepth * 25.4 : shelfDepth}
                       useTopShelf={useTopShelf}
                       pipeDiameter={pipeDiameter}
                       frontBars={frontBars}
