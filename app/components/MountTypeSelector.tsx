@@ -12,6 +12,7 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
     { id: 'ceiling', name: 'Ceiling' },
     { id: 'ceiling to counter', name: 'Ceiling to Counter' },
     { id: 'ceiling to floor', name: 'Ceiling to Floor' },
+    { id: 'ceiling to wall', name: 'Ceiling to Wall' },
     { id: 'wall to counter', name: 'Wall to counter' },
     { id: 'wall', name: 'Wall' },
     { id: 'wall to floor', name: 'Wall to Floor' },

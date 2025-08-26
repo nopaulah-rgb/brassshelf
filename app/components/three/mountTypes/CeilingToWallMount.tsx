@@ -529,7 +529,7 @@ export const handleCeilingToWallMount = async ({
     });
 
           // Crossbar'ları ekle
-      if (showCrossbars && frontBars) {
+      if (showCrossbars) {
         // Her bay için arka crossbar'ları ekle
         shelfPositions.forEach((shelfX) => {
           // Sadece seçili raflarda horizontal bar ekle
