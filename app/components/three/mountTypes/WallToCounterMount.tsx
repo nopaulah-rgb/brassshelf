@@ -281,7 +281,18 @@ export const handleWallToCounterMount = async ({
       return true; // Connect to all shelf levels
     }
     
-    // Check specific shelf selections
+    // Check for top shelf
+    if (wallConnectionPoint.includes('top') && currentIndex === totalShelves - 1) {
+      return true;
+    }
+    
+    // Check for dynamic shelf IDs (shelf-1, shelf-2, etc.)
+    const shelfId = `shelf-${currentIndex + 1}`;
+    if (wallConnectionPoint.includes(shelfId)) {
+      return true;
+    }
+    
+    // Legacy support for old hardcoded IDs
     if (wallConnectionPoint.includes('first') && currentIndex === 0) {
       return true;
     }
@@ -289,9 +300,6 @@ export const handleWallToCounterMount = async ({
       return true;
     }
     if (wallConnectionPoint.includes('third') && currentIndex === 2 && totalShelves > 2) {
-      return true;
-    }
-    if (wallConnectionPoint.includes('top') && currentIndex === totalShelves - 1) {
       return true;
     }
     

@@ -1,13 +1,11 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
-import { useState, useCallback } from "react";
-import React from "react";
+import React, { useState, useCallback } from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
 
 // Components
-import RipSelector from "~/components/RipSelector";
 import ShelfSelector from "~/components/ShelfSelector";
 import ShelfQuantitySelector from "~/components/ShelfQuantitySelector";
 import ShelfSpacingSelector from "~/components/ShelfSpacingSelector";
@@ -29,19 +27,21 @@ export const loader = async () => {
 export default function Index() {
   // State for storing user selections
   const [selectedShelf, setSelectedShelf] = useState<string | null>('/models/Glass Shelf v1_B.glb');
-  const [selectedRip, setSelectedRip] = useState<string | null>('/models/50cmRib.stl');
+
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
   const [shelfSpacing, setShelfSpacing] = useState<number>(250); // in mm
   const [useIndividualSpacing, setUseIndividualSpacing] = useState<boolean>(false);
   const [shelfSpacings, setShelfSpacings] = useState<number[]>([250]); // in mm - array for individual spacing
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
-  const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik)
+  const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik) - legacy
+  const [baySpacings, setBaySpacings] = useState<number[]>([]); // Individual bay spacings in mm
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
   const [userWidth, setUserWidth] = useState<number>(36); // in inches
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
   const [totalDepth, setTotalDepth] = useState<number>(12); // in inches
-  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [selectedDepthType, setSelectedDepthType] = useState<'shelf' | 'total'>('shelf'); // Track which depth type is selected
+  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
   const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
   const [price] = useState<number>(599);
   const [isDimensionsOpen, setIsDimensionsOpen] = useState<boolean>(false);
@@ -67,13 +67,13 @@ export default function Index() {
   // Validation function to check if all values are within valid ranges
   const areValuesValid = () => {
     // Check width (5-100 inches)
-    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
     if (widthInInches < 5 || widthInInches > 100) {
       return false;
     }
 
     // Check shelf depth (12-20 inches)
-    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
       return false;
     }
@@ -93,22 +93,27 @@ export default function Index() {
 
   // Get validation message
   const getValidationMessage = () => {
-    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
-    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     
     if (widthInInches < 5 || widthInInches > 100) {
-      return `Width must be between 5" and 100". Current value: ${widthInInches.toFixed(1)}"`;
+      const displayValue = unit === 'inch' ? userWidth : Math.round(userWidth);
+      const unitLabel = unit === 'inch' ? 'inch' : 'mm';
+      return `Width must be between 5" and 100". Current value: ${displayValue} ${unitLabel}`;
     }
     
     if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
-      return `Shelf depth must be between 12" and 20". Current value: ${shelfDepthInInches.toFixed(1)}"`;
+      const displayValue = unit === 'inch' ? shelfDepth : Math.round(shelfDepth);
+      const unitLabel = unit === 'inch' ? 'inch' : 'mm';
+      return `Shelf depth must be between 12" and 20". Current value: ${displayValue} ${unitLabel}`;
     }
 
     if (useIndividualSpacing && shelfSpacings.length > 0) {
       for (let i = 0; i < shelfSpacings.length; i++) {
         const spacingInInches = shelfSpacings[i] / 25.4;
         if (spacingInInches < 6 || spacingInInches > 70) {
-          return `Shelf spacing ${i + 1} must be between 6" and 70". Current value: ${spacingInInches.toFixed(1)}"`;
+          const displayValue = Math.round(shelfSpacings[i]);
+          return `Shelf spacing ${i + 1} must be between 6" and 70". Current value: ${displayValue} mm`;
         }
       }
     }
@@ -121,6 +126,35 @@ export default function Index() {
     console.log('Shelf spacings updated:', spacings);
     setShelfSpacings(spacings);
   }, []);
+
+  // Handle depth type selection change
+  const handleDepthTypeChange = (depthType: 'shelf' | 'total') => {
+    setSelectedDepthType(depthType);
+    // When switching depth types, copy the current value to maintain consistency
+    if (depthType === 'shelf') {
+      setShelfDepth(totalDepth);
+    } else {
+      setTotalDepth(shelfDepth);
+    }
+  };
+
+  // Handle shelf depth change
+  const handleShelfDepthChange = (value: number) => {
+    setShelfDepth(value);
+    // If shelf depth is selected, update total depth to match
+    if (selectedDepthType === 'shelf') {
+      setTotalDepth(value);
+    }
+  };
+
+  // Handle total depth change
+  const handleTotalDepthChange = (value: number) => {
+    setTotalDepth(value);
+    // If total depth is selected, update shelf depth to match
+    if (selectedDepthType === 'total') {
+      setShelfDepth(value);
+    }
+  };
 
   // Function to reset selections when mount type changes
   const resetSelections = (newMountType: string) => {
@@ -151,7 +185,7 @@ export default function Index() {
     setBaySpacing(0);
     
     // Reset dimensions to default values based on mount type
-    if (newMountType.includes('wall to floor') || newMountType.includes('wall to counter')) {
+    if (newMountType.includes('wall')) {
       // Keep height input for wall mount types
       setUserHeight(42);
     } else {
@@ -169,14 +203,9 @@ export default function Index() {
   };
 
   // Determine if all necessary selections have been made
-  const isViewerReady = selectedShelf && selectedRip;
+  const isViewerReady = selectedShelf;
 
-  // Derive rip length in cm from selectedRip url (e.g., /models/30cmRib.stl)
-  const ripLengthCm = React.useMemo(() => {
-    if (!selectedRip) return undefined;
-    const match = selectedRip.match(/(\d+)cm/i);
-    return match ? Number(match[1]) : undefined;
-  }, [selectedRip]);
+
 
   // Set loading false after a short delay
   React.useEffect(() => {
@@ -252,12 +281,6 @@ export default function Index() {
               <div className="space-y-8">
                 <MountTypeSelector onSelect={setMountType} onMountTypeChange={resetSelections} />
                 
-                <WallConnectionSelector 
-                  key={`wall-connection-${mountType}`}
-                  onSelect={setWallConnectionPoint}
-                  mountType={mountType}
-                />
-                
                 <DimensionInputs
                   key={`dimensions-${mountType}`}
                   height={userHeight}
@@ -265,14 +288,23 @@ export default function Index() {
                   shelfDepth={shelfDepth}
                   totalDepth={totalDepth}
                   unit={unit}
+                  selectedDepthType={selectedDepthType}
                   onHeightChange={setUserHeight}
                   onWidthChange={setUserWidth}
-                  onShelfDepthChange={setShelfDepth}
-                  onTotalDepthChange={setTotalDepth}
+                  onShelfDepthChange={handleShelfDepthChange}
+                  onTotalDepthChange={handleTotalDepthChange}
+                  onDepthTypeChange={handleDepthTypeChange}
                   onUnitChange={setUnit}
                 />
 
                 <ShelfQuantitySelector key={`shelf-quantity-${mountType}`} onSelect={setShelfQuantity} />
+                
+                <WallConnectionSelector 
+                  key={`wall-connection-${mountType}-${shelfQuantity}`}
+                  onSelect={setWallConnectionPoint}
+                  mountType={mountType}
+                  shelfQuantity={shelfQuantity}
+                />
                 
                 {/* Spacing Mode Toggle */}
                 <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
@@ -317,9 +349,11 @@ export default function Index() {
                 
                 <BaySpacingInput 
                   key={`bay-spacing-${mountType}`}
-                  baySpacing={baySpacing}
-                  onBaySpacingChange={setBaySpacing}
+                  baySpacings={baySpacings}
+                  onBaySpacingsChange={setBaySpacings}
                   barCount={barCount}
+                  totalWidth={userWidth}
+                  unit={unit}
                 />
                 
                 <PipeDiameterSelector
@@ -335,11 +369,7 @@ export default function Index() {
                   shelfMaterial="glass"
                 />
                 
-                {/* Rip Selector */}
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                  <h3 className="text-lg font-medium text-slate-900 mb-4">Rip Length</h3>
-                  <RipSelector key={`rip-selector-${mountType}`} onSelect={setSelectedRip} />
-                </div>
+
 
                 <CrossbarSelector
                   key={`crossbar-${mountType}`}
@@ -394,13 +424,13 @@ export default function Index() {
                     <ThreeDViewer
                       ref={viewerRef}
                       shelfUrl={selectedShelf}
-                      ripUrl={selectedRip}
                       shelfQuantity={shelfQuantity}
                       shelfSpacing={!useIndividualSpacing ? shelfSpacing : (shelfSpacings[0] || 250)}
                       shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
                       mountType={mountType}
                       barCount={barCount}
-                      baySpacing={baySpacing}
+                      baySpacing={baySpacings.length > 0 ? baySpacings[0] : baySpacing} // Use first bay spacing or legacy value
+                      baySpacings={baySpacings}
                       showCrossbars={frontBars || backBars}
                       userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight * 10}
                       userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth * 10}
@@ -491,11 +521,11 @@ export default function Index() {
         totalDepth={totalDepth}
         shelfQuantity={shelfQuantity}
         barCount={barCount}
-        baySpacingMm={baySpacing}
+        baySpacingMm={baySpacings.length > 0 ? baySpacings[0] : baySpacing}
+        baySpacingsMm={baySpacings}
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
         shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}
-        ripLengthCm={ripLengthCm}
         frontImg={shots.front}
         sideImg={shots.side}
         topImg={shots.top}
