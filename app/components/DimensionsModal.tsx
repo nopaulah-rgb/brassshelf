@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Unit = 'inch' | 'cm';
+type Unit = 'inch' | 'mm';
 
 interface DimensionsModalProps {
   isOpen: boolean;
@@ -22,16 +22,16 @@ interface DimensionsModalProps {
   topImg?: string;
 }
 
-const unitSymbol = (unit: Unit): string => (unit === 'inch' ? '"' : 'cm');
+const unitSymbol = (unit: Unit): string => (unit === 'inch' ? '"' : 'mm');
 
 const mmToUnit = (mm: number, unit: Unit): number => {
   if (unit === 'inch') return mm / 25.4;
-  return mm / 10; // cm
+  return mm; // mm
 };
 
 const unitToMm = (value: number, unit: Unit): number => {
   if (unit === 'inch') return value * 25.4;
-  return value * 10;
+  return value; // mm
 };
 
 const formatNumber = (value: number): string => {

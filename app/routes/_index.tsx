@@ -41,7 +41,7 @@ export default function Index() {
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
   const [totalDepth, setTotalDepth] = useState<number>(12); // in inches
   const [selectedDepthType, setSelectedDepthType] = useState<'shelf' | 'total'>('shelf'); // Track which depth type is selected
-  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
   const [useTopShelf, setUseTopShelf] = useState<boolean>(false);
   const [price] = useState<number>(599);
   const [isDimensionsOpen, setIsDimensionsOpen] = useState<boolean>(false);
@@ -67,13 +67,13 @@ export default function Index() {
   // Validation function to check if all values are within valid ranges
   const areValuesValid = () => {
     // Check width (5-100 inches)
-    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
     if (widthInInches < 5 || widthInInches > 100) {
       return false;
     }
 
     // Check shelf depth (12-20 inches)
-    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
       return false;
     }
@@ -93,22 +93,27 @@ export default function Index() {
 
   // Get validation message
   const getValidationMessage = () => {
-    const widthInInches = unit === 'inch' ? userWidth : userWidth / 2.54;
-    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
+    const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     
     if (widthInInches < 5 || widthInInches > 100) {
-      return `Width must be between 5" and 100". Current value: ${widthInInches.toFixed(1)}"`;
+      const displayValue = unit === 'inch' ? userWidth : Math.round(userWidth);
+      const unitLabel = unit === 'inch' ? 'inch' : 'mm';
+      return `Width must be between 5" and 100". Current value: ${displayValue} ${unitLabel}`;
     }
     
     if (shelfDepthInInches < 12 || shelfDepthInInches > 20) {
-      return `Shelf depth must be between 12" and 20". Current value: ${shelfDepthInInches.toFixed(1)}"`;
+      const displayValue = unit === 'inch' ? shelfDepth : Math.round(shelfDepth);
+      const unitLabel = unit === 'inch' ? 'inch' : 'mm';
+      return `Shelf depth must be between 12" and 20". Current value: ${displayValue} ${unitLabel}`;
     }
 
     if (useIndividualSpacing && shelfSpacings.length > 0) {
       for (let i = 0; i < shelfSpacings.length; i++) {
         const spacingInInches = shelfSpacings[i] / 25.4;
         if (spacingInInches < 6 || spacingInInches > 70) {
-          return `Shelf spacing ${i + 1} must be between 6" and 70". Current value: ${spacingInInches.toFixed(1)}"`;
+          const displayValue = Math.round(shelfSpacings[i]);
+          return `Shelf spacing ${i + 1} must be between 6" and 70". Current value: ${displayValue} mm`;
         }
       }
     }

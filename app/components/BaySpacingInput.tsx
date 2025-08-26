@@ -5,7 +5,7 @@ interface BaySpacingInputProps {
   onBaySpacingsChange: (spacings: number[]) => void;
   barCount: number;
   totalWidth: number; // Total width in the current unit
-  unit: 'inch' | 'cm'; // Current unit from parent
+  unit: 'inch' | 'mm'; // Current unit from parent
 }
 
 type Unit = 'mm' | 'inch';
@@ -21,7 +21,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   const [firstBaySpacing, setFirstBaySpacing] = useState<number>(0);
 
   // Convert parent unit to mm for calculations
-  const totalWidthMm = parentUnit === 'inch' ? totalWidth * 25.4 : totalWidth * 10;
+  const totalWidthMm = parentUnit === 'inch' ? totalWidth * 25.4 : totalWidth;
   
   // Constants for calculations (2" protrusion on each side = 4" total = 101.6mm)
   const protrusionsMm = 2 * 25.4 * 2; // 2 inches on each side converted to mm
