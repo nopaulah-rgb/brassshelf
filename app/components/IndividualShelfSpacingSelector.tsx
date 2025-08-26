@@ -16,24 +16,24 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const [invalidIndex, setInvalidIndex] = useState<number>(-1);
 
   // Convert to mm for internal use
-  const convertToMm = (value: number, unit: 'inch' | 'cm'): number => {
+  const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
     if (unit === 'inch') {
-      return value * 25.4; // 1 inch = 25.4 mm
+      return Math.round(value * 25.4); // 1 inch = 25.4 mm, rounded to whole number
     } else {
-      return value * 10; // 1 cm = 10 mm
+      return Math.round(value); // Already in mm, round to whole number
     }
   };
 
   // Convert from mm to display unit
-  const convertFromMm = (value: number, unit: 'inch' | 'cm'): number => {
+  const convertFromMm = (value: number, unit: 'inch' | 'mm'): number => {
     if (unit === 'inch') {
-      return value / 25.4;
+      return Math.round((value / 25.4) * 100) / 100; // Convert mm to inches, round to 2 decimal places
     } else {
-      return value / 10;
+      return value; // Already in mm
     }
   };
 
-  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
   const [individualSpacings, setIndividualSpacings] = useState<number[]>([defaultSpacing]);
   const [displayValues, setDisplayValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
 
@@ -61,7 +61,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   }, [individualSpacings, onSpacingChange, shelfQuantity]);
 
   // Handle unit change
-  const handleUnitChange = (newUnit: 'inch' | 'cm') => {
+  const handleUnitChange = (newUnit: 'inch' | 'mm') => {
     setUnit(newUnit);
     // Only update display values, don't change the actual spacing values
     const newDisplayValues = individualSpacings.map(spacing => 
@@ -154,14 +154,14 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
           inch
         </button>
         <button
-          onClick={() => handleUnitChange('cm')}
+          onClick={() => handleUnitChange('mm')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-            unit === 'cm' 
+            unit === 'mm' 
               ? 'bg-slate-900 text-white shadow-md' 
               : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
           }`}
         >
-          cm
+          mm
         </button>
       </div>
 
@@ -177,16 +177,16 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
               value={displayValues[index] || ''}
               onChange={(e) => handleSpacingChange(index, e.target.value)}
               onBlur={(e) => handleBlur(index, e.target.value)}
-              min={unit === 'inch' ? "6" : "15.24"}
-              max={unit === 'inch' ? "70" : "177.8"}
-              step={unit === 'inch' ? "0.5" : "0.5"}
+              min={unit === 'inch' ? "6" : "152"}
+              max={unit === 'inch' ? "70" : "1778"}
+              step={unit === 'inch' ? "0.5" : "1"}
               className={`flex-1 py-2 px-3 border rounded-lg text-sm font-medium transition-all duration-200
                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 ${
                          invalidIndex === index 
                            ? 'border-red-300 bg-red-50 text-red-700' 
                            : 'border-slate-300 bg-white text-slate-700'
                        }`}
-              placeholder={unit === 'inch' ? "12" : "30"}
+              placeholder={unit === 'inch' ? "12" : "305"}
             />
             <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
@@ -196,7 +196,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       {/* Help Text */}
       <div className="mt-4 bg-white rounded-lg p-4 border border-slate-200">
         <p className="text-sm text-slate-600 leading-relaxed">
-          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-70 inch' : '15.24-177.8 cm'}
+          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-70 inch' : '152-1778 mm'}
           <br />
           <span className="font-medium">Note:</span> Each shelf can have different spacing for custom layouts
         </p>
