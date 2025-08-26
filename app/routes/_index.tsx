@@ -185,7 +185,7 @@ export default function Index() {
     setBaySpacing(0);
     
     // Reset dimensions to default values based on mount type
-    if (newMountType.includes('wall to floor') || newMountType.includes('wall to counter')) {
+    if (newMountType.includes('wall')) {
       // Keep height input for wall mount types
       setUserHeight(42);
     } else {
