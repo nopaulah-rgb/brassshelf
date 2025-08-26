@@ -6,14 +6,14 @@ interface DimensionInputsProps {
   width: number;
   shelfDepth: number;
   totalDepth: number;
-  unit: 'inch' | 'cm';
+  unit: 'inch' | 'mm';
   selectedDepthType: 'shelf' | 'total';
   onHeightChange: (value: number) => void;
   onWidthChange: (value: number) => void;
   onShelfDepthChange: (value: number) => void;
   onTotalDepthChange: (value: number) => void;
   onDepthTypeChange: (depthType: 'shelf' | 'total') => void;
-  onUnitChange: (unit: 'inch' | 'cm') => void;
+  onUnitChange: (unit: 'inch' | 'mm') => void;
 }
 
 const DimensionInputs: React.FC<DimensionInputsProps> = ({
@@ -32,14 +32,14 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
 }) => {
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
   const [validationMessage, setValidationMessage] = useState<string>('');
-  const convertValue = (value: number, fromUnit: 'inch' | 'cm', toUnit: 'inch' | 'cm'): number => {
+  const convertValue = (value: number, fromUnit: 'inch' | 'mm', toUnit: 'inch' | 'mm'): number => {
     if (fromUnit === toUnit) return value;
-    if (fromUnit === 'inch' && toUnit === 'cm') return value * 2.54;
-    return value / 2.54;
+    if (fromUnit === 'inch' && toUnit === 'mm') return value * 25.4;
+    return value / 25.4;
   };
 
   const handleUnitToggle = () => {
-    const newUnit = unit === 'inch' ? 'cm' : 'inch';
+    const newUnit = unit === 'inch' ? 'mm' : 'inch';
     onUnitChange(newUnit);
     
     // Convert all values
@@ -86,7 +86,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   const handleWidthBlur = () => {
-    const valueInInches = unit === 'inch' ? width : width / 2.54;
+    const valueInInches = unit === 'inch' ? width : width / 25.4;
     const minInches = 5;
     const maxInches = 100;
     if (valueInInches < minInches || valueInInches > maxInches) {
@@ -96,7 +96,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   const handleShelfDepthBlur = () => {
-    const valueInInches = unit === 'inch' ? shelfDepth : shelfDepth / 2.54;
+    const valueInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     const minInches = 12;
     const maxInches = 20;
     if (valueInInches < minInches || valueInInches > maxInches) {
@@ -123,12 +123,12 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <button
             onClick={handleUnitToggle}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              unit === 'cm' 
+              unit === 'mm' 
                 ? 'bg-slate-900 text-white shadow-md' 
                 : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
             }`}
           >
-            cm
+            mm
           </button>
         </div>
       </div>

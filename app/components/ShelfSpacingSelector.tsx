@@ -6,14 +6,14 @@ interface ShelfSpacingSelectorProps {
 
 const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect }) => {
   const [spacingValue, setSpacingValue] = useState<number>(12); // Default 12 inch 
-  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
 
   // Convert to mm for internal use
-  const convertToMm = (value: number, unit: 'inch' | 'cm'): number => {
+  const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
     if (unit === 'inch') {
       return value * 25.4; // 1 inch = 25.4 mm
     } else {
-      return value * 10; // 1 cm = 10 mm
+      return value; // Already in mm
     }
   };
 
@@ -25,15 +25,15 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
     }
   };
 
-  const handleUnitChange = (newUnit: 'inch' | 'cm') => {
+  const handleUnitChange = (newUnit: 'inch' | 'mm') => {
     // Convert current value to the new unit
     let newValue: number;
-    if (unit === 'inch' && newUnit === 'cm') {
-      // Convert from inches to cm: 1 inch = 2.54 cm
-      newValue = spacingValue * 2.54;
-    } else if (unit === 'cm' && newUnit === 'inch') {
-      // Convert from cm to inches: 1 cm = 0.3937 inches
-      newValue = spacingValue / 2.54;
+    if (unit === 'inch' && newUnit === 'mm') {
+      // Convert from inches to mm: 1 inch = 25.4 mm
+      newValue = spacingValue * 25.4;
+    } else if (unit === 'mm' && newUnit === 'inch') {
+      // Convert from mm to inches: 1 mm = 0.03937 inches
+      newValue = spacingValue / 25.4;
     } else {
       // Same unit, no conversion needed
       newValue = spacingValue;
@@ -83,13 +83,13 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
                 handleValueChange(newValue);
               }
             }}
-            min={unit === 'inch' ? "6" : "15.24"}
-            max={unit === 'inch' ? "20" : "50.8"}
-            step={unit === 'inch' ? "0.5" : "0.5"}
+            min={unit === 'inch' ? "6" : "152.4"}
+            max={unit === 'inch' ? "20" : "508"}
+            step={unit === 'inch' ? "0.5" : "5"}
             className="w-full py-3 px-4 border border-slate-300 rounded-lg 
                      text-slate-700 bg-white focus:border-slate-500 focus:ring-2 focus:ring-slate-500
                      focus:outline-none text-center font-medium transition-all duration-200"
-            placeholder={unit === 'inch' ? "12" : "30.48"}
+            placeholder={unit === 'inch' ? "12" : "304.8"}
           />
         </div>
         
@@ -106,14 +106,14 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
             inch
           </button>
           <button
-            onClick={() => handleUnitChange('cm')}
+            onClick={() => handleUnitChange('mm')}
             className={`px-4 py-3 text-sm font-medium transition-all duration-200 ${
-              unit === 'cm'
+              unit === 'mm'
                 ? 'bg-slate-900 text-white shadow-md'
                 : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
-            cm
+            mm
           </button>
         </div>
       </div>
@@ -121,9 +121,9 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
       {/* Help Text */}
       <div className="bg-white rounded-lg p-4 border border-slate-200">
         <p className="text-sm text-slate-600 leading-relaxed">
-          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '30.48 cm'}
+          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '304.8 mm'}
           <br />
-          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '15.24-50.8 cm'}
+          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '152.4-508 mm'}
           <br />
           <span className="font-medium">Note:</span> This setting determines spacing between shelves and rib length
         </p>
