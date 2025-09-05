@@ -127,27 +127,27 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   }
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+    <div className="bg-white p-6 border border-gray-300">
       <h3 className="text-lg font-medium text-slate-900 mb-4">Bay Spacing Calculator</h3>
       
       {/* Unit Selector */}
       <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => handleUnitChange('mm')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
             unit === 'mm' 
-              ? 'bg-slate-900 text-white shadow-md' 
-              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+              ? 'bg-black text-white' 
+              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
           }`}
         >
           mm
         </button>
         <button
           onClick={() => handleUnitChange('inch')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
             unit === 'inch' 
-              ? 'bg-slate-900 text-white shadow-md' 
-              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+              ? 'bg-black text-white' 
+              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
           }`}
         >
           inch
@@ -167,9 +167,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
             min="0"
             max={getMaxValue()}
             step={getStepValue()}
-            className="w-32 px-4 py-3 border border-slate-300 rounded-lg 
-                     bg-white text-slate-700 font-medium
-                     focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            className="w-32 px-4 py-3 border border-gray-300 bg-white text-gray-800 font-medium focus:outline-none focus:border-black transition-colors"
             placeholder="Enter spacing"
           />
           <span className="text-slate-700 text-sm font-medium">{unit}</span>
@@ -177,7 +175,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
       </div>
 
       {/* Calculation Summary */}
-      <div className="bg-white rounded-lg p-4 border border-slate-200">
+      <div className="bg-white p-4 border border-gray-300">
         <h4 className="text-sm font-semibold text-slate-900 mb-3">Spacing Breakdown</h4>
         
         <div className="space-y-2 text-sm">
@@ -213,13 +211,13 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
 
         {/* Individual Bay Spacings Display */}
         {baySpacings.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-slate-200">
+          <div className="mt-4 pt-3 border-t border-gray-300">
             <h5 className="text-xs font-semibold text-slate-700 mb-2">All Bay Spacings:</h5>
             <div className="flex flex-wrap gap-2">
               {baySpacings.map((spacing, index) => (
                 <span 
                   key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium"
+                  className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium"
                 >
                   Bay {index + 1}: {getDisplayValue(spacing)}{unit}
                 </span>
@@ -231,7 +229,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
 
       {/* Warning if spacing is too small */}
       {spacingPerRemainingBay < (unit === 'inch' ? 1 : 25.4) && remainingBays > 0 && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200">
           <p className="text-yellow-800 text-sm">
             ⚠️ Warning: Remaining bay spacing is very small. Consider reducing the first bay spacing or total width.
           </p>

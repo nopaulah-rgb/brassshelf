@@ -54,3 +54,4 @@ export { handleCeilingToFloorMount } from "./mountTypes/CeilingToFloorMount";
 export { handleCeilingToCounterMount } from "./mountTypes/CeilingToCounterMount";
 export { handleCeilingToCounterToWallMount } from "./mountTypes/CeilingToCounterToWallMount";
 export { handleCeilingFloorWallMount } from "./mountTypes/CeilingFloorWallMount";
+export { handleFreestandingMount } from "./mountTypes/Freestanding";
