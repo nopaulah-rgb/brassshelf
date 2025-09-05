@@ -2,7 +2,21 @@ module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Assistant", "sans-serif"],
+      },
+      letterSpacing: {
+        tightish: "0.6px",
+        wideish: "1px",
+      },
       colors: {
+        brand: {
+          text: "#121212",
+          muted: "rgba(18,18,18,0.75)",
+          surface: "#ffffff",
+          cta: "#121212",
+          ctaText: "#f3f3f3",
+        },
         olive: {
           50: '#fafaf5',
           100: '#f5f5e9',

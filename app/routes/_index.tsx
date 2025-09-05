@@ -265,7 +265,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Header */}
      
 
@@ -273,8 +273,8 @@ export default function Index() {
         <div className="flex flex-col xl:flex-row gap-12">
           {/* Left Column - Configuration Panel */}
           <div className="w-full xl:w-2/5 space-y-6">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-              <h2 className="text-2xl font-light text-gray-900 mb-8 pb-4 border-b border-gray-200">
+            <div className="bg-white border border-gray-300 p-8">
+              <h2 className="text-2xl font-light text-gray-900 mb-8 pb-4 border-b border-gray-300">
                 Configuration Options
               </h2>
               
@@ -307,25 +307,25 @@ export default function Index() {
                 />
                 
                 {/* Spacing Mode Toggle */}
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <div className="bg-white p-6 border border-gray-300">
                   <h3 className="text-lg font-medium text-slate-900 mb-4">Shelf Spacing Mode</h3>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setUseIndividualSpacing(false)}
-                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${
                         !useIndividualSpacing
-                          ? 'bg-slate-900 text-white shadow-lg'
-                          : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-slate-800 border border-gray-300 hover:bg-gray-100'
                       }`}
                     >
                       Equal Spacing
                     </button>
                     <button
                       onClick={() => setUseIndividualSpacing(true)}
-                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`flex-1 py-3 px-4 text-sm font-medium transition-all duration-200 ${
                         useIndividualSpacing
-                          ? 'bg-slate-900 text-white shadow-lg'
-                          : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-slate-800 border border-gray-300 hover:bg-gray-100'
                       }`}
                     >
                       Individual Spacing
@@ -385,7 +385,7 @@ export default function Index() {
                   onSelectedBackShelvesChange={setSelectedShelvesForBackBars}
                 />
 
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <div className="bg-white p-6 border border-gray-300">
                   <UseTopShelfSelector
                     key={`use-top-shelf-${mountType}`}
                     mountType={mountType}
@@ -400,16 +400,16 @@ export default function Index() {
           {/* Right Column - 3D Viewer and Actions */}
           <div className="w-full xl:w-3/5 space-y-6">
             {/* 3D Viewer */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
+            <div className="bg-white border border-gray-300">
+              <div className="p-6 border-b border-gray-300">
                 <h2 className="text-2xl font-light text-gray-900">3D Preview</h2>
                 <p className="text-slate-600 mt-1">See your custom configuration in real-time</p>
               </div>
               
               {isLoading ? (
-                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
+                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-gray-50">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
+                    <div className="animate-spin h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
                     <h3 className="text-lg font-medium text-slate-700 mb-2">
                       Loading 3D Model...
                     </h3>
@@ -445,9 +445,9 @@ export default function Index() {
                       selectedBackShelvesForBars={selectedShelvesForBackBars}
                     />
                   ) : (
-                    <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
+                    <div className="w-full h-[500px] flex items-center justify-center p-8 bg-gray-50">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-red-100 flex items-center justify-center mx-auto mb-4">
                           <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
@@ -466,9 +466,9 @@ export default function Index() {
                   )}
                 </div>
               ) : (
-                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-slate-50">
+                <div className="w-full h-[500px] flex items-center justify-center p-8 bg-gray-50">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-gray-200 flex items-center justify-center mx-auto mb-4">
                       <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
@@ -484,7 +484,7 @@ export default function Index() {
               )}
               
               {/* Show Dimensions Button */}
-              <div className="p-6 border-t border-gray-200">
+              <div className="p-6 border-t border-gray-300">
                 <button 
                   onClick={async () => {
                     if (viewerRef.current) {
@@ -493,7 +493,7 @@ export default function Index() {
                     }
                     setIsDimensionsOpen(true);
                   }}
-                  className="w-full py-3 px-4 text-slate-700 font-medium hover:bg-slate-50 transition-colors border border-slate-200 rounded-lg hover:border-slate-300"
+                  className="w-full py-3 px-4 text-gray-800 font-medium hover:bg-gray-100 transition-colors border border-gray-300"
                 >
                   Show Dimensions & Views
                 </button>

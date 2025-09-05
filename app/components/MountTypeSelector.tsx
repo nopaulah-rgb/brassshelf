@@ -13,10 +13,15 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
     { id: 'wall', name: 'Wall', icon: '🧱' },
     { id: 'floor', name: 'Floor', icon: '🟫' },
     { id: 'counter', name: 'Counter', icon: '🪑' },
+    { id: 'freestanding', name: 'Freestanding', icon: '🧍' },
   ];
 
   // Convert simplified selection to original mount type system
   const convertToOriginalMountType = (selectedMounts: string[]): string => {
+    if (selectedMounts.includes('freestanding')) {
+      if (selectedMounts.includes('wall')) return 'freestanding to wall';
+      return 'freestanding';
+    }
     if (selectedMounts.includes('ceiling') && selectedMounts.includes('wall') && selectedMounts.includes('counter')) {
       return 'ceiling & counter & wall';
     }
@@ -67,22 +72,48 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
   const handleToggle = (id: string) => {
     let newSelection: string[];
     
+    if (id === 'freestanding') {
+      // Freestanding allows optional wall only; others are cleared
+      if (selectedMounts.includes('freestanding')) {
+        // Toggling off freestanding -> default back to ceiling
+        newSelection = ['ceiling'];
+      } else {
+        newSelection = ['freestanding'];
+      }
+      setSelectedMounts(newSelection);
+      const originalMountType = convertToOriginalMountType(newSelection);
+      onSelect(originalMountType);
+      if (onMountTypeChange) onMountTypeChange(originalMountType);
+      return;
+    }
+
+    // If any other option is selected while freestanding is active, only allow wall
+    if (selectedMounts.includes('freestanding')) {
+      if (id !== 'wall') {
+        // Disallow selecting anything other than wall with freestanding
+        return;
+      }
+      newSelection = [...selectedMounts];
+    } else {
+      newSelection = [...selectedMounts];
+    }
+
     if (id === 'floor' && selectedMounts.includes('counter')) {
       // Can't select floor if counter is already selected
       return;
     } else if (id === 'counter' && selectedMounts.includes('floor')) {
       // Can't select counter if floor is already selected
       return;
-    } else if (selectedMounts.includes(id)) {
+    } else if (newSelection.includes(id)) {
       // Deselect the mount type
-      newSelection = selectedMounts.filter(mount => mount !== id);
+      newSelection = newSelection.filter(mount => mount !== id);
       // Ensure at least one mount type is selected
       if (newSelection.length === 0) {
         newSelection = ['ceiling'];
       }
     } else {
       // Select the mount type
-      newSelection = [...selectedMounts, id];
+      newSelection = [...newSelection, id];
     }
 
     setSelectedMounts(newSelection);
@@ -97,13 +128,14 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
   };
 
   const isDisabled = (id: string) => {
+    if (selectedMounts.includes('freestanding') && id !== 'freestanding' && id !== 'wall') return true;
     if (id === 'floor' && selectedMounts.includes('counter')) return true;
     if (id === 'counter' && selectedMounts.includes('floor')) return true;
     return false;
   };
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+    <div className="bg-white p-6 border border-gray-300">
       <h3 className="text-lg font-medium text-slate-900 mb-4">Mount Type</h3>
       <p className="text-sm text-slate-600 mb-4">Select one or more mounting options</p>
       
@@ -117,17 +149,17 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
               key={type.id}
               onClick={() => handleToggle(type.id)}
               disabled={isDisabledState}
-              className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                       focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
+              className={`px-4 py-3 text-sm font-medium transition-colors duration-200
+                       focus:outline-none
                        ${isDisabledState 
-                         ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
                          : isSelected 
-                           ? 'bg-slate-900 text-white shadow-lg' 
-                           : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50'
+                           ? 'bg-black text-white'
+                           : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
                        }`}
             >
               <div className="flex items-center justify-center gap-2">
-                <span className="text-base">{type.icon}</span>
+                {/* <span className="text-base">{type.icon}</span> */}
                 <span>{type.name}</span>
               </div>
             </button>
@@ -141,11 +173,11 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
         </p>
       )}
       
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      {/* <div className="mt-4 p-3 bg-blue-50 border border-blue-200">
         <p className="text-xs text-blue-700">
           <strong>Selected:</strong> {convertToOriginalMountType(selectedMounts)}
         </p>
-      </div>
+      </div> */}
     </div>
   );
 };

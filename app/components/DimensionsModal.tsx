@@ -93,12 +93,12 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
-      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-white p-6 border border-gray-300">
         <div className="mb-4 flex items-start justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Dimensions</h3>
           <button
             onClick={onClose}
-            className="rounded-md px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100"
+            className="px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-300"
           >
             Close
           </button>
@@ -160,12 +160,12 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
         {/* Technical Views */}
         <div className="mt-6 space-y-4">
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white">HOME</span>
+            <span className="bg-black px-3 py-1 text-sm font-semibold text-white">HOME</span>
             <span className="text-xs text-gray-500">Front view with overall width and height</span>
           </div>
-          <div className="relative rounded-lg border bg-white p-3">
+          <div className="relative border bg-white p-3">
             {frontImg && (
-              <img src={frontImg} alt="front" className="h-auto w-full rounded-md border object-contain" />
+              <img src={frontImg} alt="front" className="h-auto w-full border object-contain" />
             )}
             <HomeOverlay
               unit={unit}
@@ -180,12 +180,12 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white">SIDE</span>
+            <span className="bg-black px-3 py-1 text-sm font-semibold text-white">SIDE</span>
             <span className="text-xs text-gray-500">Side view with depths</span>
           </div>
-          <div className="relative rounded-lg border bg-white p-3">
+          <div className="relative border bg-white p-3">
             {sideImg && (
-              <img src={sideImg} alt="side" className="h-auto w-full rounded-md border object-contain" />
+              <img src={sideImg} alt="side" className="h-auto w-full border object-contain" />
             )}
             <SideOverlay
               unit={unit}
@@ -196,12 +196,12 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-black px-3 py-1 text-sm font-semibold text-white">TOP</span>
+            <span className="bg-black px-3 py-1 text-sm font-semibold text-white">TOP</span>
             <span className="text-xs text-gray-500">Top view with widths</span>
           </div>
-          <div className="relative rounded-lg border bg-white p-3">
+          <div className="relative border bg-white p-3">
             {topImg && (
-              <img src={topImg} alt="top" className="h-auto w-full rounded-md border object-contain" />
+              <img src={topImg} alt="top" className="h-auto w-full border object-contain" />
             )}
             <TopOverlay
               unit={unit}

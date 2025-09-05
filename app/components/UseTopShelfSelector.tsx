@@ -19,20 +19,20 @@ const UseTopShelfSelector: React.FC<UseTopShelfSelectorProps> = ({ mountType, us
       <div className="flex gap-3">
         <button
           onClick={() => onChange(false)}
-          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+          className={`flex-1 px-4 py-3 border transition-colors duration-200 ${
             !useTopShelf
-              ? 'border-slate-900 bg-slate-900 text-white shadow-md'
-              : 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white'
+              ? 'border-black bg-black text-white'
+              : 'border-gray-300 text-gray-800 bg-white hover:bg-gray-100'
           }`}
         >
           Do not use top as shelf
         </button>
         <button
           onClick={() => onChange(true)}
-          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+          className={`flex-1 px-4 py-3 border transition-colors duration-200 ${
             useTopShelf
-              ? 'border-slate-900 bg-slate-900 text-white shadow-md'
-              : 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white'
+              ? 'border-black bg-black text-white'
+              : 'border-gray-300 text-gray-800 bg-white hover:bg-gray-100'
           }`}
         >
           Use top as shelf

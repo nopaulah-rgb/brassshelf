@@ -86,7 +86,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
   const hideBackBars = !!mountType && mountType.toLowerCase().includes('wall');
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 space-y-6">
+    <div className="bg-white p-6 border border-gray-300 space-y-6">
       <h3 className="text-lg font-medium text-slate-900 mb-4">Crossbar Options</h3>
       
       <div className="space-y-6">
@@ -97,10 +97,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
             <button
               onClick={() => handleFrontBarsChange(!frontBars)}
               disabled={isUpdating}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 frontBars 
-                  ? 'bg-green-600 text-white shadow-md' 
-                  : 'bg-red-600 text-white shadow-md'
+                  ? 'bg-black text-white' 
+                  : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
               }`}
             >
               {frontBars ? 'Enabled' : 'Disabled'}
@@ -108,7 +108,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
           </div>
           
           {frontBars && (
-            <div className="bg-white rounded-lg p-4 border border-slate-200">
+            <div className="bg-white p-4 border border-gray-300">
               <p className="text-slate-600 text-sm mb-3">Select shelves for front bars:</p>
               <div className="grid grid-cols-5 gap-2">
                 {Array.from({ length: shelfCount }, (_, index) => (
@@ -116,11 +116,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
                     key={index}
                     onClick={() => handleShelfToggle(index)}
                     disabled={isUpdating}
-                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200
-                             focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
+                    className={`w-10 h-10 text-sm font-medium transition-colors border ${
                                selectedShelves.includes(index)
-                                 ? 'bg-slate-900 text-white shadow-md'
-                                 : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'
+                                 ? 'bg-black text-white border-black'
+                                 : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
                              }`}
                   >
                     {index + 1}
@@ -139,10 +138,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
               <button
                 onClick={() => handleBackBarsChange(!backBars)}
                 disabled={isUpdating}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
                   backBars 
-                    ? 'bg-green-600 text-white shadow-md' 
-                    : 'bg-red-600 text-white shadow-md'
+                    ? 'bg-black text-white' 
+                    : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
                 }`}
               >
                 {backBars ? 'Enabled' : 'Disabled'}
@@ -150,7 +149,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
             </div>
             
             {backBars && (
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
+              <div className="bg-white p-4 border border-gray-300">
                 <p className="text-slate-600 text-sm mb-3">Select shelves for back bars:</p>
                 <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: shelfCount }, (_, index) => (
@@ -158,11 +157,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
                       key={index}
                       onClick={() => handleBackShelfToggle(index)}
                       disabled={isUpdating}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200
-                               focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
+                      className={`w-10 h-10 text-sm font-medium transition-colors border ${
                                  selectedBackShelves.includes(index)
-                                   ? 'bg-slate-900 text-white shadow-md'
-                                   : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'
+                                   ? 'bg-black text-white border-black'
+                                   : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
                                }`}
                     >
                       {index + 1}

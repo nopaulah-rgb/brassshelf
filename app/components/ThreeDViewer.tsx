@@ -15,6 +15,7 @@ import {
   handleCeilingToCounterMount,
   handleCeilingToCounterToWallMount,
   handleCeilingFloorWallMount,
+  handleFreestandingMount,
 } from "./three/MountTypes";
 
 export interface ThreeDViewerHandle {
@@ -52,7 +53,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   mountType,
   barCount,
   baySpacing = 0,
-  baySpacings = [],
+  // baySpacings prop is accepted in type but not used here
   showCrossbars,
   userHeight,
   userWidth,
@@ -757,6 +758,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         const baseUserWidth = userWidth || 914.4; // Default 36 inches in mm
         const effectiveUserWidth = calculateEffectiveWidth(baseUserWidth, userHeight || 1067);
 
+        // Derive wall connection for freestanding based on mountType string
+        const isFreestanding = mountType === 'freestanding' || mountType === 'freestanding to wall';
+        const freestandingWall = mountType === 'freestanding to wall';
+
         const mountTypeProps = {
           scene,
           shelfQuantity,
@@ -793,7 +798,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           roomDepth,
           roomHeight,
           dynamicFloorY,
-          wallConnectionPoint,
+          wallConnectionPoint: isFreestanding ? (freestandingWall ? ['all'] : []) : wallConnectionPoint,
         };
 
         // Handle different mount types
@@ -805,6 +810,9 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
               console.log("Calling handleCeilingMount...");
               await handleCeilingMount(mountTypeProps);
               console.log("handleCeilingMount completed");
+              break;
+            case "freestanding":
+              await handleFreestandingMount(mountTypeProps);
               break;
             case "wall to counter":
               handleWallToCounterMount(mountTypeProps);
@@ -831,6 +839,9 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
             case "ceiling to floor to wall":
             case "ceiling & floor & wall":
               handleCeilingFloorWallMount(mountTypeProps);
+              break;
+            case "freestanding to wall":
+              await handleFreestandingMount(mountTypeProps);
               break;
           }
         };
@@ -1001,10 +1012,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           onClick={handleFitToScreen}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#1E3A5F',
+            backgroundColor: '#000',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '0px',
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: 'bold'
@@ -1014,15 +1025,15 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           Sığdır
         </button>
         
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '0px' }}>
           <button
             onClick={handleZoomIn}
             style={{
               padding: '8px 12px',
-              backgroundColor: '#1E3A5F',
+              backgroundColor: '#000',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '0px',
               cursor: 'pointer',
               fontSize: '18px',
               fontWeight: 'bold'
@@ -1035,10 +1046,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
             onClick={handleZoomOut}
             style={{
               padding: '8px 12px',
-              backgroundColor: '#1E3A5F',
+              backgroundColor: '#000',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '0px',
               cursor: 'pointer',
               fontSize: '18px',
               fontWeight: 'bold'
@@ -1049,15 +1060,15 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           </button>
         </div>
         
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '0px' }}>
           <button
             onClick={handleRotateLeft}
             style={{
               padding: '8px 12px',
-              backgroundColor: '#1E3A5F',
+              backgroundColor: '#000',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '0px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: 'bold'
@@ -1070,10 +1081,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
             onClick={handleRotateRight}
             style={{
               padding: '8px 12px',
-              backgroundColor: '#1E3A5F',
+              backgroundColor: '#000',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '0px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: 'bold'

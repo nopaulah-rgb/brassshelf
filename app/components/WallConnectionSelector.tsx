@@ -79,18 +79,17 @@ const WallConnectionSelector: React.FC<WallConnectionSelectorProps> = ({ onSelec
   };
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+    <div className="bg-white p-6 border border-gray-300">
       <h3 className="text-lg font-medium text-slate-900 mb-4">Wall Connection Point</h3>
       <div className="grid grid-cols-1 gap-3">
         {connectionPoints.map((point) => (
           <button
             key={point.id}
             onClick={() => handleSelect(point.id)}
-            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                     focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 text-left ${
+            className={`px-4 py-3 text-sm font-medium transition-colors duration-200 text-left ${
                        selectedConnections.includes(point.id)
-                         ? 'bg-slate-900 text-white shadow-md' 
-                         : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50'
+                         ? 'bg-black text-white' 
+                         : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
                      }`}
           >
             <div className="font-medium">{point.name}</div>

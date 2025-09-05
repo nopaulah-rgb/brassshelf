@@ -138,27 +138,27 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   }, [isValidationOpen]);
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+    <div className="bg-white p-6 border border-gray-300">
       <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Shelf Spacing</h3>
       
       {/* Unit Selector */}
       <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => handleUnitChange('inch')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
             unit === 'inch' 
-              ? 'bg-slate-900 text-white shadow-md' 
-              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+              ? 'bg-black text-white' 
+              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
           }`}
         >
           inch
         </button>
         <button
           onClick={() => handleUnitChange('mm')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
             unit === 'mm' 
-              ? 'bg-slate-900 text-white shadow-md' 
-              : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+              ? 'bg-black text-white' 
+              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
           }`}
         >
           mm
@@ -180,11 +180,11 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
               min={unit === 'inch' ? "6" : "152"}
               max={unit === 'inch' ? "70" : "1778"}
               step={unit === 'inch' ? "0.5" : "1"}
-              className={`flex-1 py-2 px-3 border rounded-lg text-sm font-medium transition-all duration-200
-                       focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 ${
+              className={`flex-1 py-2 px-3 border text-sm font-medium transition-colors
+                       focus:outline-none focus:border-black ${
                          invalidIndex === index 
                            ? 'border-red-300 bg-red-50 text-red-700' 
-                           : 'border-slate-300 bg-white text-slate-700'
+                           : 'border-gray-300 bg-white text-gray-800'
                        }`}
               placeholder={unit === 'inch' ? "12" : "305"}
             />
@@ -194,7 +194,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       </div>
 
       {/* Help Text */}
-      <div className="mt-4 bg-white rounded-lg p-4 border border-slate-200">
+      <div className="mt-4 bg-white p-4 border border-gray-300">
         <p className="text-sm text-slate-600 leading-relaxed">
           <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-70 inch' : '152-1778 mm'}
           <br />
@@ -204,7 +204,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
 
       {/* Validation Message */}
       {isValidationOpen && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="mt-4 bg-red-50 border border-red-200 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

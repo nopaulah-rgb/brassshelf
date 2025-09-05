@@ -17,13 +17,13 @@ const PipeDiameterSelector: React.FC<PipeDiameterSelectorProps> = ({
   }, [pipeDiameter, onChange]);
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Pipe Diameter</h3>
+    <div className="bg-white p-6 border border-gray-300">
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Pipe Diameter</h3>
       <div className="flex items-center gap-4">
-        <div className="w-5 h-5 bg-slate-900 rounded-full shadow-md"></div>
+        <div className="w-5 h-5 bg-black"></div>
         <div>
-          <span className="text-slate-900 font-medium">5/8" (16mm)</span>
-          <p className="text-slate-500 text-sm mt-1">Standard brass tube diameter</p>
+          <span className="text-gray-900 font-medium">5/8" (16mm)</span>
+          <p className="text-gray-600 text-sm mt-1">Standard brass tube diameter</p>
         </div>
       </div>
     </div>

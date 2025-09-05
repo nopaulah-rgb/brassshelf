@@ -110,26 +110,26 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   return (
-    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 space-y-6">
+    <div className="bg-white p-6 border border-gray-300 space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium text-slate-900">Dimensions</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={handleUnitToggle}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               unit === 'inch' 
-                ? 'bg-slate-900 text-white shadow-md' 
-                : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                ? 'bg-black text-white' 
+                : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
             }`}
           >
             inch
           </button>
           <button
             onClick={handleUnitToggle}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               unit === 'mm' 
-                ? 'bg-slate-900 text-white shadow-md' 
-                : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                ? 'bg-black text-white' 
+                : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
             }`}
           >
             mm
@@ -145,7 +145,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             value={unit === 'mm' ? Math.round(height) : height}
             onChange={handleHeightInputChange}
             step={unit === 'inch' ? "0.001" : "1"}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 42.625)" : "Height in mm"}
           />
           {unit === 'inch' ? (
@@ -162,7 +162,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleWidthInputChange}
             onBlur={handleWidthBlur}
             step={unit === 'inch' ? "0.001" : "1"}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors"
+            className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 36.125)" : "Width in mm"}
           />
           {unit === 'inch' ? (
@@ -212,10 +212,10 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onBlur={handleShelfDepthBlur}
             disabled={selectedDepthType !== 'shelf'}
             step={unit === 'inch' ? "0.001" : "1"}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
+            className={`w-full px-4 py-3 border focus:outline-none focus:border-black transition-colors ${
               selectedDepthType === 'shelf'
-                ? 'border-slate-300 bg-white text-slate-700'
-                : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                ? 'border-gray-300 bg-white text-gray-800'
+                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth in mm"}
           />
@@ -246,10 +246,10 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleTotalDepthInputChange}
             disabled={selectedDepthType !== 'total'}
             step={unit === 'inch' ? "0.001" : "1"}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors ${
+            className={`w-full px-4 py-3 border focus:outline-none focus:border-black transition-colors ${
               selectedDepthType === 'total'
-                ? 'border-slate-300 bg-white text-slate-700'
-                : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                ? 'border-gray-300 bg-white text-gray-800'
+                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
             placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth in mm"}
           />
@@ -271,7 +271,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
 
       {/* Validation Message */}
       {isValidationOpen && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -12,9 +12,9 @@ const PriceAndActions: React.FC<PriceAndActionsProps> = ({
   onAddToCart,
 }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+    <div className="bg-white border border-gray-300 p-8">
       {/* Price Display */}
-      <div className="text-center mb-8 pb-6 border-b border-gray-200">
+      <div className="text-center mb-8 pb-6 border-b border-gray-300">
         <span className="text-sm font-medium text-slate-600 uppercase tracking-wide">Total Price</span>
         <h2 className="text-4xl font-light text-slate-900 mt-2">${price.toFixed(0)}</h2>
         <p className="text-slate-500 text-sm mt-2">USD</p>
@@ -24,14 +24,14 @@ const PriceAndActions: React.FC<PriceAndActionsProps> = ({
       <div className="space-y-4">
         <button
           onClick={onExport}
-          className="w-full py-4 px-6 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-all duration-200 border border-slate-200 hover:border-slate-300"
+          className="w-full py-4 px-6 bg-white text-gray-800 font-medium transition-colors duration-200 border border-gray-300 hover:bg-gray-100"
         >
           Export Configuration
         </button>
         
         <button
           onClick={onAddToCart}
-          className="w-full py-4 px-6 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-full py-4 px-6 bg-black text-white font-medium transition-colors duration-200"
         >
           Add to Cart
         </button>
