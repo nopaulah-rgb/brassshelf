@@ -26,6 +26,7 @@ export const handleCeilingFloorWallMount = async ({
   roomHeight = 1500,
   wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
+  backVertical = true, // Default: Yes (arkaya dikey bağlantı aktif)
 }: MountTypeProps) => {
   // showCrossbars artık kullanılmıyor - frontBars ve backBars ile değiştirildi
   void showCrossbars;
@@ -338,9 +339,17 @@ export const handleCeilingFloorWallMount = async ({
 
   const adjustedCornerPositions = getAllCornerPositions();
 
-  // Tavan ve taban bağlantıları
+  // Tavan ve taban bağlantıları - backVertical seçeneğine göre
   adjustedCornerPositions.forEach((pos) => {
-    // Tavan bağlantıları
+    const isFrontPosition = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
+    
+    // Back Vertical: NO ve ön pozisyonlarda ceiling/floor modellerini kaldır (dikey rip olmadığı için gerek yok)
+    if (!backVertical && isFrontPosition) {
+      // Ön pozisyonlarda Type16E kullanılacak ama dikey rip olmayacağı için ceiling/floor bağlantısı ekleme
+      return;
+    }
+    
+    // Normal tavan bağlantıları
     const ceilingGeometry = type16EGeometry || model11Geometry;
     const ceilingMaterial = type16EMaterial || materialGold;
     const ceilingConnector = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
@@ -358,7 +367,7 @@ export const handleCeilingFloorWallMount = async ({
     ceilingConnector.position.set(pos.x, connectorCeilingY, pos.z + zOffset);
     scene.add(ceilingConnector);
 
-    // Dikey rip: en üst raftan tavana kadar - dinamik uzunluk
+    // Dikey rip: en üst raftan tavana kadar - sadece ceiling/floor bağlantısı olan pozisyonlarda
     const topShelfHeight = adjustedBaseY; // İlk shelf pozisyonu (en üst shelf)
     const actualTopRipHeight = baseCeilingY - topShelfHeight; // Tavan ile üst shelf arası mesafe
     const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
@@ -371,7 +380,7 @@ export const handleCeilingFloorWallMount = async ({
     );
     scene.add(verticalTopRip);
 
-    // Dikey rip: en alt raftan zemine kadar
+    // Dikey rip: en alt raftan zemine kadar - sadece ceiling/floor bağlantısı olan pozisyonlarda
     const bottomShelfHeight = adjustedBaseY - ((shelfQuantity - 1) * shelfSpacing);
     const floorTopY = floorHeight; // Floor'ın üst yüzeyi
     const bottomRipHeight = bottomShelfHeight - floorTopY;
@@ -384,7 +393,7 @@ export const handleCeilingFloorWallMount = async ({
     );
     scene.add(verticalBottomRip);
 
-    // Taban bağlantıları
+    // Normal taban bağlantıları
     const floorGeometry = type16EGeometry || model11Geometry;
     const floorMaterial = type16EMaterial || materialGold;
     const floorConnector = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -463,22 +472,43 @@ export const handleCeilingFloorWallMount = async ({
     }
 
     allCornerPositions.forEach((pos) => {
-      // Add wall connections for all front positions
+      // Add wall connections for all front positions - backVertical seçeneğine göre
       if (pos.z === shelfBoundingBox.min.z + 5 && shouldAddWallConnection(i, shelfQuantity)) {
-        // Duvar bağlantıları
-        const wallGeometry = type16FGeometry || model11Geometry;
-        const wallMaterial = type16FMaterial || materialGold;
+        let wallGeometry, wallMaterial;
+        
+        if (backVertical) {
+          // Back Vertical: YES -> Type16F kullan (hiçbir şey değişmez)
+          wallGeometry = type16FGeometry || model11Geometry;
+          wallMaterial = type16FMaterial || materialGold;
+        } else {
+          // Back Vertical: NO -> Type16E kullan (duvara bağlanan model değişir)
+          wallGeometry = type16EGeometry || model11Geometry;
+          wallMaterial = type16EMaterial || materialGold;
+        }
+        
         const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
         wallConnector.scale.set(1.5, 1.5, 1.5);
         
-        // Type16F modeli için rotasyonlar
-        if (type16FGeometry) {
-          wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
-          wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+        if (backVertical) {
+          // Type16F rotasyonları
+          if (type16FGeometry) {
+            wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
+            wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+          } else {
+            // Eski model rotasyonları
+            wallConnector.rotation.z = Math.PI / 2;
+            wallConnector.rotation.y = Math.PI / 2;
+          }
         } else {
-          // Eski model rotasyonları
-          wallConnector.rotation.z = Math.PI / 2;
-          wallConnector.rotation.y = Math.PI / 2;
+          // Type16E rotasyonları (aynı rotasyon)
+          if (type16EGeometry) {
+            wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6;
+            wallConnector.rotation.y = Math.PI;
+          } else {
+            // Fallback rotasyon
+            wallConnector.rotation.z = Math.PI / 2;
+            wallConnector.rotation.y = Math.PI / 2;
+          }
         }
         
         wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Wall connection position
@@ -491,8 +521,9 @@ export const handleCeilingFloorWallMount = async ({
         let geometryToUse, materialToUse;
         
         // Model seçim mantığı:
-        // Ceiling floor wall'da normal davranış (Type16A)
-        const shouldUseModel13 = false;
+        // Front bar YES ve bu raf seçili -> öndeki modeller Model13 kullan (çünkü arkaya bağlanır)
+        const isFrente = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
+        const shouldUseModel13 = (isFrente && frontBars && selectedShelvesForBars.includes(i));
         
         if (shouldUseModel13) {
           // Model13 kullan
@@ -568,8 +599,8 @@ export const handleCeilingFloorWallMount = async ({
         let geometryToUse, materialToUse;
         
         // Model seçim mantığı:
-        // Front bar YES -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
-        const shouldUseModel13 = (isBack && frontBars);
+        // Front bar YES ve bu raf seçili -> arkadaki modeller Model13 kullan
+        const shouldUseModel13 = (isBack && frontBars && selectedShelvesForBars.includes(i));
         
         if (shouldUseModel13) {
           // Model13 kullan
@@ -627,7 +658,15 @@ export const handleCeilingFloorWallMount = async ({
         }
       }
 
-      // Dikey ripler
+      // Dikey ripler - backVertical seçeneğine göre
+      const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
+      
+      // Back Vertical: NO ve duvar bağlantısı olan pozisyonlarda Type16E ripi kaldır
+      if (!backVertical && isFront && shouldAddWallConnection(i, shelfQuantity)) {
+        // Type16E kullanılan duvar bağlantısı pozisyonunda dikey rip ekleme
+        return;
+      }
+      
       if (i === shelfQuantity - 1) {
         // En alt raftan tabana kadar olan rip
         const ripHeight = currentHeight - floorHeight;
@@ -670,29 +709,13 @@ export const handleCeilingFloorWallMount = async ({
       let zFront = leftFront.z + zOffset + 5;
       let zBack = leftBack.z + zOffset + 5;
       
-      // Ön modellerin pozisyonunu hesapla - horizontal bar durumuna göre
-      if (selectedShelvesForBars.includes(i)) {
-        // Horizontal bar açık - Model13 pozisyonu
-        if (type16AGeometry) {
-          zFront += model13Depth - 20; // Type16A modelini daha öne kaydır
-        } else {
-          zFront += model13Depth + 3; // Normal öndeki modeli kaydır
-        }
-      } else {
-        // Horizontal bar kapalı - Type16A pozisyonu
-        if (type16AGeometry) {
-          zFront += model13Depth - 20; // Type16A öndeki pozisyon
-        } else {
-          zFront += model13Depth + 3;
-        }
-      }
+      // Ön modellerin pozisyonunu hesapla - duvar bağlantısının gerçek pozisyonuna göre
+      zFront = -roomDepth + 140; // Duvar bağlantısının pozisyonuyla tam eşleş
       
-      // Arka modellerin pozisyonunu hesapla - horizontal bar durumuna göre
-      if (selectedShelvesForBars.includes(i)) {
-        // Horizontal bar açık - Model13 pozisyonu
+      // Arka modellerin pozisyonunu hesapla
+      if (frontBars && selectedShelvesForBars.includes(i)) {
         zBack -= model13Depth; // Arkadaki modeli öne yaklaştır
       } else {
-        // Horizontal bar kapalı - Type16A pozisyonu
         if (type16AGeometry) {
           zBack += model13Depth - 108; // Type16A arkadaki pozisyon
         } else {
@@ -700,10 +723,12 @@ export const handleCeilingFloorWallMount = async ({
         }
       }
       
-      // Type16A için kısa yatay rip uzaması
+      // Kısa kenar ribi, modellerin içine girecek kadar uzat
       let length = Math.abs(zBack - zFront);
+      
+      // Type16A modeli kullanıldığında kısa kenar riplerini uzat
       if (!selectedShelvesForBars.includes(i) && type16AGeometry) {
-        length += 60; // Type16A için ek uzama
+        length += 60; // Type16A için kısa kenar riplerini 60 birim uzat
       }
 
       // Bay'in pozisyonunu kontrol et

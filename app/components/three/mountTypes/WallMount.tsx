@@ -28,6 +28,7 @@ export const handleWallMount = async ({
   roomHeight = 1500,
   wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
+  backVertical = true,
 }: MountTypeProps) => {
   // showCrossbars artık kullanılmıyor - frontBars ve backBars ile değiştirildi
   void showCrossbars;
@@ -144,6 +145,38 @@ export const handleWallMount = async ({
     });
   } catch (error) {
     console.error('Type16F v1.glb yüklenemedi:', error);
+  }
+  
+  // Type16E v1.glb dosyasını back vertical bağlantıları için yükle
+  let type16EGeometry: THREE.BufferGeometry | null = null;
+  let type16EMaterial: THREE.Material | null = null;
+
+  try {
+    const type16EGLTF = await loader.loadAsync('/models/Type16E v1.glb');
+    console.log('Type16E v1.glb yüklendi:', type16EGLTF);
+    
+    let foundType16E = false;
+    type16EGLTF.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.geometry && !foundType16E) {
+        type16EGeometry = child.geometry.clone() as THREE.BufferGeometry;
+        
+        const originalMaterial = child.material as THREE.Material;
+        if (originalMaterial instanceof THREE.MeshStandardMaterial) {
+          const clonedMaterial = originalMaterial.clone();
+          clonedMaterial.metalness = 0.6;
+          clonedMaterial.roughness = 0.4;
+          clonedMaterial.envMapIntensity = 1.0;
+          type16EMaterial = clonedMaterial;
+        } else {
+          type16EMaterial = originalMaterial;
+        }
+        
+        foundType16E = true;
+        console.log('Type16E geometry ve material bulundu:', child.geometry, type16EMaterial);
+      }
+    });
+  } catch (error) {
+    console.error('Type16E v1.glb yüklenemedi:', error);
   }
   
   // Hata durumunda model1Geometry'yi kullan
@@ -323,21 +356,43 @@ export const handleWallMount = async ({
     allCornerPositions.forEach((pos) => {
       const isFront = pos.z === shelfBoundingBox.min.z + 5;  // Ön pozisyon
       
-      // Ön pozisyonlar için duvar bağlantıları
+      // Ön pozisyonlar için duvar bağlantıları - backVertical seçeneğine göre
       if (isFront && shouldAddWallConnection(i, totalShelves)) {
-        const wallGeometry = type16FGeometry || model11Geometry;
-        const wallMaterial = type16FMaterial || materialGold;
+        let wallGeometry, wallMaterial;
+        
+        if (backVertical) {
+          // Back Vertical: YES -> Type16F kullan (hiçbir şey değişmez)
+          wallGeometry = type16FGeometry || model11Geometry;
+          wallMaterial = type16FMaterial || materialGold;
+        } else {
+          // Back Vertical: NO -> Type16E kullan (duvara bağlanan model değişir)
+          wallGeometry = type16EGeometry || model11Geometry;
+          wallMaterial = type16EMaterial || materialGold;
+        }
+        
         const wallConnector = new THREE.Mesh(wallGeometry, wallMaterial);
         wallConnector.scale.set(1.5, 1.5, 1.5);
         
-        // Type16F modeli için rotasyonlar
-        if (type16FGeometry) {
-          wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
-          wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+        if (backVertical) {
+          // Type16F rotasyonları
+          if (type16FGeometry) {
+            wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // 90 + 45 + 30 = 165 derece Z ekseninde
+            wallConnector.rotation.y = Math.PI; // 180 derece Y ekseninde
+          } else {
+            // Eski model rotasyonları
+            wallConnector.rotation.z = Math.PI / 2;
+            wallConnector.rotation.y = Math.PI / 2;
+          }
         } else {
-          // Eski model rotasyonları
-          wallConnector.rotation.z = Math.PI / 2;
-          wallConnector.rotation.y = Math.PI / 2;
+          // Type16E rotasyonları
+          if (type16EGeometry) {
+            wallConnector.rotation.z = Math.PI / 2 + Math.PI / 4 + Math.PI / 6; // Type16E için aynı rotasyon
+            wallConnector.rotation.y = Math.PI;
+          } else {
+            // Fallback rotasyon
+            wallConnector.rotation.z = Math.PI / 2;
+            wallConnector.rotation.y = Math.PI / 2;
+          }
         }
         
         wallConnector.position.set(pos.x, currentHeight, -roomDepth + 140); // Wall connection position
@@ -405,7 +460,7 @@ export const handleWallMount = async ({
         }
       }
 
-      // Arka bağlantılar için Model seçimi - horizontal bar durumuna göre
+      // Arka bağlantılar için Model seçimi - normal mantık (değişiklik yok)
       const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon
       
       if (isBack) {
@@ -434,7 +489,7 @@ export const handleWallMount = async ({
           const backConnectorMesh = new THREE.Mesh(geometryToUse, materialToUse);
           backConnectorMesh.scale.set(1.5, 1.5, 1.5);
           
-          // Model tipine göre rotasyonlar
+          // Model tipine göre rotasyonlar (normal mantık)
           if (selectedShelvesForBars.includes(i)) {
             // Horizontal bar açık - Model13 rotasyonu
             if (model13Geometry) {
@@ -451,7 +506,7 @@ export const handleWallMount = async ({
             }
           }
           
-          // Pozisyon ayarlamaları
+          // Pozisyon ayarlamaları (normal mantık)
           let backZPos = pos.z + zOffset + 5;
           
           if (selectedShelvesForBars.includes(i)) {
@@ -471,11 +526,21 @@ export const handleWallMount = async ({
         }
       }
 
-      // Dikey ripler
+      // Dikey ripler - backVertical seçeneğine göre
       if (i < totalShelves - 1) {
         // Raflar arası normal ripler
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon kontrolü
         const isBack = pos.z === shelfBoundingBox.max.z - 5;   // Arka pozisyon kontrolü
+        
+        // Dikey ripler - backVertical NO iken Type16E kullanılan yerlerde rip kaldır
+        
+        // Back Vertical: NO ve duvar bağlantısı olan pozisyonlarda Type16E ripi kaldır
+        if (!backVertical && isFront && shouldAddWallConnection(i, totalShelves)) {
+          // Type16E kullanılan duvar bağlantısı pozisyonunda dikey rip ekleme
+          return;
+        }
+        
+        // Normal raflar arası ripler
         // Individual spacing desteği
         const spacingForNext = (shelfSpacings && shelfSpacings.length >= shelfQuantity && i < shelfSpacings.length)
           ? shelfSpacings[i]

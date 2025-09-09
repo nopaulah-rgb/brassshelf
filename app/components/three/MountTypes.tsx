@@ -44,6 +44,7 @@ export interface MountTypeProps {
   wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
   selectedBackShelvesForBars?: number[];
+  backVertical?: boolean; // Arkaya dikey bağlantı (Type16E kullanımı için)
 }
 
 export { handleCeilingMount } from "./mountTypes/CeilingMount";

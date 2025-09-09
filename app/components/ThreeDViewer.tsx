@@ -43,6 +43,7 @@ interface ThreeDViewerProps {
   wallConnectionPoint?: string[];
   selectedShelvesForBars?: number[];
   selectedBackShelvesForBars?: number[];
+  backVertical?: boolean;
 }
 
 const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({ 
@@ -66,6 +67,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   wallConnectionPoint = ['all'],
   selectedShelvesForBars = [],
   selectedBackShelvesForBars = [],
+  backVertical = true,
 }, ref): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -801,6 +803,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           roomHeight,
           dynamicFloorY,
           wallConnectionPoint: isFreestanding ? (freestandingWall ? ['all'] : []) : wallConnectionPoint,
+          backVertical,
         };
 
         // Handle different mount types
