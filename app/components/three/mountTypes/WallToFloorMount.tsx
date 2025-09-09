@@ -545,8 +545,8 @@ export const handleWallToFloorMount = async ({
               horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
               horizontalRip.position.set(
                 start.x + (end.x - start.x) / 2,
-                currentHeight + model13Height / 2 - 20,
-                (zStart + zEnd) / 2 + 15 - 28 // Horizontal bar ofseti
+                currentHeight + model13Height / 2 - 12, // Y pozisyonu -12'ye güncellendi
+                (zStart + zEnd) / 2 -15 // Z pozisyonu +28'e güncellendi
               );
               scene.add(horizontalRip);
             }

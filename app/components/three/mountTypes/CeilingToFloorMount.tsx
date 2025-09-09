@@ -434,8 +434,8 @@ export const handleCeilingToFloorMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
-              currentHeight + model13Height / 2 -20,
-              (zStart + zEnd) / 2 + 25 // Horizontal ripi 5 birim daha arkaya kaydırıldı (15 -> 10)
+              currentHeight + model13Height / 2 - 12, // Front horizontal Y pozisyonu -12'ye güncellendi
+              (zStart + zEnd) / 2 + 28 // Front horizontal Z pozisyonu +28'e güncellendi
             );
             scene.add(horizontalRip);
           }
@@ -469,8 +469,8 @@ export const handleCeilingToFloorMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 -50// Öndeki crossbar pozisyonu - 5 birim daha öne
+              currentHeight + model13Height / 2 - 15, // Back horizontal Y pozisyonu -15'e güncellendi
+              (zStart + zEnd) / 2 - 45 // Back horizontal Z pozisyonu -45'e güncellendi
             );
             scene.add(horizontalRip);
           }

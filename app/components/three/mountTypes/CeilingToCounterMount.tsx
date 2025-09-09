@@ -444,13 +444,13 @@ export const handleCeilingToCounterMount = async ({
             zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32); // Çap 18'den 14'e küçültüldü
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
-              currentHeight + model13Height / 2 -20,
-              (zStart + zEnd) / 2 + 15 // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı
+              currentHeight + model13Height / 2 - 12, // 5 birim yukarıya kaldırıldı (-20'den -15'e)
+              (zStart + zEnd) / 2 +28 // 20 birim öne taşındı (15'ten -5'e)
             );
             scene.add(horizontalRip);
           }
@@ -478,13 +478,13 @@ export const handleCeilingToCounterMount = async ({
             zEnd += model13Depth + 3;
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 - 57 // Öndeki crossbar pozisyonu - 5 birim daha öne
+              currentHeight + model13Height / 2 - 15 ,
+              (zStart + zEnd) / 2 - 45 // Öndeki crossbar pozisyonu - 20 birim daha öne taşındı (57+20=77)
             );
             scene.add(horizontalRip);
           }

@@ -539,7 +539,7 @@ export const handleCeilingFloorWallMount = async ({
         horizontalRip.position.set(
           pos.x,
           currentHeight,
-          (pos.z + zOffset - roomDepth + 140) / 2 // 105'ten 140'a güncellendi
+          (pos.z + zOffset - roomDepth + 140) / 2 + 35// 105'ten 140'a güncellendi
         );
         scene.add(horizontalRip);
       }
@@ -772,9 +772,9 @@ export const handleCeilingFloorWallMount = async ({
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
             horizontalRip.position.set(
-              start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 + 15
+              start.x + (end.x - start.x) / 2 ,
+              currentHeight + model13Height / 2 - 16,
+              (zStart + zEnd) / 2 + 10
             );
             scene.add(horizontalRip);
           }

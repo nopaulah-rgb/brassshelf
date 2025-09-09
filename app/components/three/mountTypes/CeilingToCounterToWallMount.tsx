@@ -364,10 +364,16 @@ export const handleCeilingToCounterToWallMount = async ({
     const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
     
+    // Arka pozisyonlardaki tavan ripleri arkaya doğru hareket ettir
+    let topRipZPos = pos.z + zOffset;
+    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka pozisyon
+      topRipZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
+    }
+    
     verticalTopRip.position.set(
       pos.x,
       topShelfHeight + actualTopRipHeight / 2,
-      pos.z + zOffset
+      topRipZPos
     );
     scene.add(verticalTopRip);
 
@@ -376,10 +382,16 @@ export const handleCeilingToCounterToWallMount = async ({
     const bottomRipHeight = bottomShelfHeight - counterTopY;
     const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
+    // Arka pozisyonlardaki counter ripleri de öne getir
+    let bottomRipZPos = pos.z + zOffset;
+    if (pos.z === shelfBoundingBox.max.z - 5) { // Arka pozisyon
+      bottomRipZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
+    }
+    
     verticalBottomRip.position.set(
       pos.x,
       counterTopY + bottomRipHeight / 2,
-      pos.z + zOffset
+      bottomRipZPos
     );
     scene.add(verticalBottomRip);
 
@@ -636,11 +648,17 @@ export const handleCeilingToCounterToWallMount = async ({
           32
         );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-        verticalRip.position.set(
-          pos.x,
-          currentHeight - shelfSpacing / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
-          pos.z + zOffset
-        );
+                 // Arka pozisyonlardaki dikey ripleri öne getir
+         let finalZPos = pos.z + zOffset;
+         if (isBack) { // Arka pozisyonlar öne
+           finalZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
+         }
+         
+         verticalRip.position.set(
+           pos.x,
+           currentHeight - shelfSpacing / 2, // Merkez pozisyonda tut (hem yukarı hem aşağı eşit uzatma)
+           finalZPos
+         );
         scene.add(verticalRip);
       }
     });
@@ -671,8 +689,8 @@ export const handleCeilingToCounterToWallMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 + 34 // Horizontal bar'ı arkadaki modelin içinden geçir
+              currentHeight + model13Height / 2 - 15 , // Horizontal bar 5 birim yukarı
+              (zStart + zEnd) / 2 + 44 // Horizontal bar'ı arkadaki modelin içinden geçir
             );
             scene.add(horizontalRip);
           }

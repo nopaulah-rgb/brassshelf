@@ -513,61 +513,53 @@ export const handleWallToCounterMount = async ({
         // Ön bağlantılar - Type16F (duvar bağlantısı) kullanıldığı için ön modelleri eklemeye gerek yok
         // Model13 veya Type16A eklenmeyecek, sadece duvar bağlantısı yeterli
 
-        // Dikey ripler
-        
-        if (i === totalShelves - 1) {
-          // En alt raftan counter'a kadar olan rip
-          const ripHeight = currentHeight - counterHeight;
-          let extendedHeight = ripHeight;
-                      if (isWallSide || isBackSide) {
-            extendedHeight = ripHeight + 35; // Ön ve arka ripler 35 birim daha uzun
+        // Dikey ripler - Tek sürekli rip sistemi
+        if (i === 0) {
+          // Sadece ilk iterasyonda tek sürekli rip oluştur
+          let topShelfHeight;
+          
+          // Shelf sayısı 1 ise, tek rafın pozisyonunu kullan
+          if (shelfQuantity === 1) {
+            topShelfHeight = currentHeight; // Tek rafın pozisyonu
+          } else {
+            topShelfHeight = adjustedBaseY; // En üst shelf pozisyonu (çoklu raf durumu)
           }
-          const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, extendedHeight, 32);
+          
+          const topExtension = 50; // 2 inches ≈ 50mm çıkıntı
+          
+          // Bottom shelf pozisyonu artık gerekmez - tek sürekli rip kullanıyoruz
+          
+          // Sürekli rip uzunluğu: counter'dan top shelf'e + 2 inç çıkıntı
+          const continuousRipHeight = topShelfHeight - counterHeight + topExtension;
+          
+          const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, continuousRipHeight, 32);
           const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
+          
+          // Pozisyon ayarları
+          let ripZPos = pos.z + zOffset;
+          const isFrente = pos.z === shelfBoundingBox.min.z + 5;
+          const isBacke = pos.z === shelfBoundingBox.max.z - 5;
+          
+          if (isFrente) {
+            ripZPos += 5; // Base offset
+          }
+          if (isBacke) {
+            ripZPos += 5; // Base offset
+          }
+          
+          // Ripi counter'dan başlatıp en üste + extension kadar uzat
           verticalRip.position.set(
             pos.x,
-            counterHeight + extendedHeight / 2,
-            pos.z + zOffset
+            counterHeight + continuousRipHeight / 2,
+            ripZPos
           );
           scene.add(verticalRip);
-        } else {
-          // Raflar arası normal ripler (son raf değilse)
-          if (i < shelfQuantity - 1 && shelfQuantity > 1) {
-            // Next shelf spacing'i al
-            const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
-            
-            // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafe + model yüksekliği
-            const ripLength = nextSpacingToUse + model13Height + 10; // Model yüksekliğini de dahil et ve biraz boşluk bırak
-            
-            // Ön ve arka ripler için farklı çaplar kullan
-            const isFrente = pos.z === shelfBoundingBox.min.z + 5;
-            const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
-            
-            const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripLength, 16);
-            const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-            
-            // Ön ve arka ripler için pozisyon ayarları
-            let ripZPos = pos.z + zOffset;
-            const isBacke = pos.z === shelfBoundingBox.max.z - 5;
-            
-            // Öndeki ripler için pozisyon ayarı
-            if (isFrente) {
-              ripZPos += 5; // Base offset
-            }
-            
-            if (isBacke) {
-              // Sadece arkadaki ripler için pozisyon ayarla
-              ripZPos += 5; // Base offset
-            }
-            
-            // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat
-            verticalRip.position.set(
-              pos.x,
-              currentHeight - ripLength / 2, // Mevcut model altından başla
-              ripZPos
-            );
-            scene.add(verticalRip);
-          }
+          
+          console.log('WallToCounter - Continuous rip created:', { 
+            height: continuousRipHeight, 
+            topExtension,
+            position: { x: pos.x, y: counterHeight + continuousRipHeight / 2, z: ripZPos }
+          });
         }
       });
 
@@ -595,7 +587,7 @@ export const handleWallToCounterMount = async ({
           horizontalRip.rotation.z = Math.PI / 2; // Yatay pozisyon için Z ekseninde 90 derece döndür
           horizontalRip.position.set(
             start.x + (end.x - start.x) / 2,
-            currentHeight + model13Height / 2 - 20,
+            currentHeight + model13Height / 2 - 15, // 5 birim yukarı çıkarıldı (-20 -> -15)
             (zStart + zEnd) / 2 + 5 // Front YES: 20 mm öne al
           );
           scene.add(horizontalRip);
@@ -757,30 +749,8 @@ export const handleWallToCounterMount = async ({
   }
 
   allBottomCornerPositions.forEach((pos) => {
-    // Dikey rip: en alt raftan tezgaha kadar
-    // En alt rafın pozisyonunu hesapla (shelfQuantity - 1 çünkü 0-based index)
-    let bottomShelfHeight;
-    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
-      // Individual spacing kullanarak en alt rafın pozisyonunu hesapla
-      let totalCumulativeHeight = 0;
-      for (let j = 0; j < shelfQuantity; j++) {
-        totalCumulativeHeight += shelfSpacings[j];
-      }
-      bottomShelfHeight = adjustedBaseY - totalCumulativeHeight;
-    } else {
-      // Fallback: eşit spacing
-      bottomShelfHeight = adjustedBaseY - ((shelfQuantity - 1) * shelfSpacing);
-    }
-    const bottomRipHeight = bottomShelfHeight - counterHeight;
-    const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
-    const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
-    verticalBottomRip.position.set(
-      pos.x,
-      counterHeight + bottomRipHeight / 2,
-      pos.z + zOffset
-    );
-    scene.add(verticalBottomRip);
-
+    // Tek sürekli ripler zaten ana döngüde oluşturuldu
+    
     // Tezgah bağlantıları
     const counterGeometry = type16EGeometry || model11Geometry;
     const counterMaterial = type16EMaterial || materialGold;
