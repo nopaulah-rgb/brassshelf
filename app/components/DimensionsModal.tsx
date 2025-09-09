@@ -145,8 +145,18 @@ const DimensionsModal: React.FC<DimensionsModalProps> = ({
           </div>
           <div className="space-y-1 col-span-2">
             <div className="text-sm text-gray-500">Bay Spacing</div>
-            <div className="text-base font-medium text-gray-900">
-              {barCount > 1 ? `${formatNumber(baySpacingInSelectedUnit)}${unitSymbol(unit)}` : '—'}
+            <div className="text-base font-medium text-gray-900 break-words">
+              {barCount > 1 ? (() => {
+                if (baySpacingsMm && baySpacingsMm.length > 0) {
+                  // Show individual bay spacings
+                  return baySpacingsMm
+                    .map((mm, idx) => `${idx + 1}: ${formatNumber(mmToUnit(mm, unit))}${unitSymbol(unit)}`)
+                    .join(', ');
+                } else {
+                  // Fall back to single spacing
+                  return `${formatNumber(baySpacingInSelectedUnit)}${unitSymbol(unit)}`;
+                }
+              })() : '—'}
             </div>
           </div>
           <div className="space-y-1 col-span-2">

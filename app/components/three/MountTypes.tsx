@@ -6,7 +6,8 @@ export interface MountTypeProps {
   shelfSpacing?: number;
   shelfSpacings?: number[];
   barCount: number;
-  baySpacing?: number;  // Bayslar arası boşluk (mm cinsinden)
+  baySpacing?: number;  // Bayslar arası boşluk (mm cinsinden) - legacy single spacing
+  baySpacings?: number[]; // Individual bay spacings array (mm cinsinden)
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;

@@ -11,6 +11,7 @@ export const handleFreestandingMount = async ({
   shelfSpacings = [250],
   barCount,
   baySpacing = 0,
+  baySpacings = [],
   showCrossbars,
   userHeight,
   userWidth,
@@ -192,7 +193,23 @@ export const handleFreestandingMount = async ({
     if (barCount === 1) {
       positions.push(0);
     } else {
-      if (baySpacing === 0) {
+      // Check if we have individual bay spacings
+      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
+      
+      if (hasIndividualSpacings) {
+        // Use individual bay spacings
+        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        positions.push(startX); // First bay position
+        
+        let currentX = startX;
+        for (let i = 1; i < barCount; i++) {
+          currentX += effectiveWidth + baySpacings[i - 1];
+          positions.push(currentX);
+        }
+      } else if (baySpacing === 0) {
         const startX = -(barCount - 1) * effectiveWidth / 2;
         for (let i = 0; i < barCount; i++) positions.push(startX + i * effectiveWidth);
       } else {

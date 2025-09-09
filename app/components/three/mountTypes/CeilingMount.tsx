@@ -8,7 +8,8 @@ export const handleCeilingMount = async ({
   shelfSpacing = 250,
   shelfSpacings = [250],
   barCount,
-  baySpacing = 0, // Bayslar arası default boşluk 0mm (birleşik)
+  baySpacing = 0,
+  baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
   userHeight,
   userWidth,
@@ -192,13 +193,31 @@ export const handleCeilingMount = async ({
     if (barCount === 1) {
       positions.push(0);
     } else {
-      // For multiple bars, arrange them side by side with spacing between them
-      const totalSpacing = (barCount - 1) * baySpacing; // Toplam boşluk
-      const totalWidth = (barCount * effectiveWidth) + totalSpacing; // Toplam genişlik
-      const startX = -totalWidth / 2 + effectiveWidth / 2; // İlk bay'in merkezi
+      // Check if we have individual bay spacings
+      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
       
-      for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * (effectiveWidth + baySpacing));
+      if (hasIndividualSpacings) {
+        // Use individual bay spacings
+        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        positions.push(startX); // First bay position
+        
+        let currentX = startX;
+        for (let i = 1; i < barCount; i++) {
+          currentX += effectiveWidth + baySpacings[i - 1];
+          positions.push(currentX);
+        }
+      } else {
+        // Fall back to uniform spacing
+        const totalSpacing = (barCount - 1) * baySpacing;
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        for (let i = 0; i < barCount; i++) {
+          positions.push(startX + i * (effectiveWidth + baySpacing));
+        }
       }
     }
     return positions;
