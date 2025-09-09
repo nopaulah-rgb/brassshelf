@@ -178,6 +178,38 @@ export const handleWallToFloorMount = async ({
     console.error('Type16F v1.glb yüklenemedi:', error);
   }
   
+  // Type16E v1.glb dosyasını floor bağlantıları için yükle
+  let type16EGeometry: THREE.BufferGeometry | null = null;
+  let type16EMaterial: THREE.Material | null = null;
+
+  try {
+    const type16EGLTF = await loader.loadAsync('/models/Type16E v1.glb');
+    console.log('Type16E v1.glb yüklendi:', type16EGLTF);
+    
+    let foundType16E = false;
+    type16EGLTF.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.geometry && !foundType16E) {
+        type16EGeometry = child.geometry.clone() as THREE.BufferGeometry;
+        
+        const originalMaterial = child.material as THREE.Material;
+        if (originalMaterial instanceof THREE.MeshStandardMaterial) {
+          const clonedMaterial = originalMaterial.clone();
+          clonedMaterial.metalness = 0.6;
+          clonedMaterial.roughness = 0.4;
+          clonedMaterial.envMapIntensity = 1.0;
+          type16EMaterial = clonedMaterial;
+        } else {
+          type16EMaterial = originalMaterial;
+        }
+        
+        foundType16E = true;
+        console.log('Type16E geometry ve material bulundu:', child.geometry, type16EMaterial);
+      }
+    });
+  } catch (error) {
+    console.error('Type16E v1.glb yüklenemedi:', error);
+  }
+  
   // Hata durumunda model1Geometry'yi kullan
   if (!model13Geometry && model1Geometry) {
     console.log('Model13 yüklenemedi, model1Geometry kullanılıyor');
@@ -484,16 +516,15 @@ export const handleWallToFloorMount = async ({
         );
         scene.add(verticalRip);
 
-        // Yer bağlantıları - Type16F v1.glb kullan (CeilingToFloorMount'daki gibi)
-        const floorGeometry = type16FGeometry || model11Geometry;
-        const floorMaterial = type16FMaterial || materialGold;
+        // Yer bağlantıları - Type16E v1.glb kullan (WallToCounterMount'daki gibi)
+        const floorGeometry = type16EGeometry || model11Geometry;
+        const floorMaterial = type16EMaterial || materialGold;
         const floorConnector = new THREE.Mesh(floorGeometry, floorMaterial);
         floorConnector.scale.set(1.5, 1.5, 1.5);
         
-        // Type16F modeli için farklı rotasyon, eski model için normal
-        if (type16FGeometry) {
-          // Type16F modelini 450 derece döndür (floor için)
-          floorConnector.rotation.x = 2 * Math.PI + Math.PI / 2;
+        // Type16E modeli için farklı rotasyon - floor için
+        if (type16EGeometry) {
+          floorConnector.rotation.x = Math.PI / 2; // Type16E için floor'da 90 derece öne rotasyon
         }
         
         floorConnector.position.set(pos.x, 0, pos.z + zOffset); // Floor height = 0
