@@ -570,9 +570,9 @@ export const handleWallToCounterMount = async ({
           
         // Dikey ripler - backVertical NO iken Type16E kullanılan yerlerde rip kaldır
         
-        // Back Vertical: NO ve duvar bağlantısı olan pozisyonlarda Type16E ripi kaldır
-        if (!backVertical && isFrente && shouldAddWallConnection(i)) {
-          // Type16E kullanılan duvar bağlantısı pozisyonunda dikey rip ekleme
+        // Back Vertical: NO olduğunda TÜM ön pozisyonlardaki dikey ripler kaldırılır
+        if (!backVertical && isFrente) {
+          // Back Vertical NO - ön pozisyonlarda dikey rip ekleme
           return;
         }
           

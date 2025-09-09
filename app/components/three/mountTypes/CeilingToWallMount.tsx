@@ -653,9 +653,9 @@ export const handleCeilingToWallMount = async ({
       if (i < shelfQuantity - 1) {
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
         
-        // Back Vertical: NO ve duvar bağlantısı olan pozisyonlarda Type16E ripi kaldır
-        if (!backVertical && isFront && shouldAddWallConnection(i, shelfQuantity)) {
-          // Type16E kullanılan duvar bağlantısı pozisyonunda dikey rip ekleme
+        // Back Vertical: NO olduğunda TÜM ön pozisyonlardaki dikey ripler kaldırılır
+        if (!backVertical && isFront) {
+          // Back Vertical NO - ön pozisyonlarda dikey rip ekleme
           return;
         }
         
@@ -695,9 +695,9 @@ export const handleCeilingToWallMount = async ({
         // En alttaki raf için 2 inç (50mm) aşağı uzanan rip ekle - backVertical seçeneğine göre
         const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
         
-        // Back Vertical: NO ve duvar bağlantısı olan pozisyonlarda Type16E ripi kaldır
-        if (!backVertical && isFront && shouldAddWallConnection(i, shelfQuantity)) {
-          // Type16E kullanılan duvar bağlantısı pozisyonunda alt çıkıntı ripi ekleme
+        // Back Vertical: NO olduğunda TÜM ön pozisyonlardaki alt ripler kaldırılır
+        if (!backVertical && isFront) {
+          // Back Vertical NO - ön pozisyonlarda alt rip ekleme
           return;
         }
         
