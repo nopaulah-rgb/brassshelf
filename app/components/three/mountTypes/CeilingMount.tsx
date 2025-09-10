@@ -8,7 +8,8 @@ export const handleCeilingMount = async ({
   shelfSpacing = 250,
   shelfSpacings = [250],
   barCount,
-  baySpacing = 0, // Bayslar arası default boşluk 0mm (birleşik)
+  baySpacing = 0,
+  baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
   userHeight,
   userWidth,
@@ -166,6 +167,10 @@ export const handleCeilingMount = async ({
   // Ceiling mount için shelf sistemini yukarı çıkar ki ripler ceiling connectorlara ulaşsın
   const baseCeilingY = roomHeight || 1500;
   const baseY = baseCeilingY - shelfSpacing; // Ceiling'den rip uzunluğu kadar aşağı
+  
+  // For ceiling mount: keep first shelf at baseY, add others going down
+  const adjustedBaseY = baseY; // First shelf stays at original position
+  
   // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
   void userHeight;
   // shelfSpacing now comes from props
@@ -188,13 +193,31 @@ export const handleCeilingMount = async ({
     if (barCount === 1) {
       positions.push(0);
     } else {
-      // For multiple bars, arrange them side by side with spacing between them
-      const totalSpacing = (barCount - 1) * baySpacing; // Toplam boşluk
-      const totalWidth = (barCount * effectiveWidth) + totalSpacing; // Toplam genişlik
-      const startX = -totalWidth / 2 + effectiveWidth / 2; // İlk bay'in merkezi
+      // Check if we have individual bay spacings
+      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
       
-      for (let i = 0; i < barCount; i++) {
-        positions.push(startX + i * (effectiveWidth + baySpacing));
+      if (hasIndividualSpacings) {
+        // Use individual bay spacings
+        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        positions.push(startX); // First bay position
+        
+        let currentX = startX;
+        for (let i = 1; i < barCount; i++) {
+          currentX += effectiveWidth + baySpacings[i - 1];
+          positions.push(currentX);
+        }
+      } else {
+        // Fall back to uniform spacing
+        const totalSpacing = (barCount - 1) * baySpacing;
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        for (let i = 0; i < barCount; i++) {
+          positions.push(startX + i * (effectiveWidth + baySpacing));
+        }
       }
     }
     return positions;
@@ -226,7 +249,7 @@ export const handleCeilingMount = async ({
         currentHeight = baseCeilingY - cumulativeHeight; // i. rafın pozisyonu
       } else {
         // Fallback: eşit spacing
-        currentHeight = baseY - i * shelfSpacing;
+        currentHeight = adjustedBaseY - i * shelfSpacing;
       }
     }
 
@@ -352,12 +375,12 @@ export const handleCeilingMount = async ({
         // Pozisyon ayarlamaları
         let zPos = pos.z + zOffset + 5;
         
-        if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
-          // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
-          zPos += model13Depth + 3; // Normal öndeki model pozisyonu
-        } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
-          // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
-          zPos -= model13Depth + 23; // Arkadaki model13.glb pozisyonu - 20 birim geri çekildi
+                 if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
+           // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
+           zPos += model13Depth +20; // 5 birim geriye hareket ettirildi (3'ten -2'ye)
+         } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
+           // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
+           zPos -= model13Depth +28; // 5 birim daha geriye hareket ettirildi (23'ten 28'e)
         } else {
           // Type16A pozisyonu (bu raf için horizontal bar yok)
           if (type16AGeometry) {
@@ -417,6 +440,9 @@ export const handleCeilingMount = async ({
           // Back bar YES ve raf seçili değilse öndeki ripi öne al
           if (backBars && !selectedBackShelvesForBars.includes(i)) {
             ripZPos += 15; // 15 birim öne al
+          } else if (backBars && selectedBackShelvesForBars.includes(i)) {
+            // Back bar YES ve raf seçili - modeller ile tutarlı
+            ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
           }
         }
         
@@ -507,9 +533,9 @@ export const handleCeilingMount = async ({
             // Öndeki modellerin pozisyonuna göre ayarla
             // Back bar YES olduğunda öndeki modeller Model13 olur
             if (backBars) {
-              // Back bar açık - öndeki modeller Model13
-              zStart += model13Depth + 3; // Model13 pozisyonu
-              zEnd += model13Depth + 3;
+              // Back bar açık - öndeki modeller Model13 (şu anki doğru pozisyon)
+              zStart += model13Depth + 20; // Modeller ile aynı pozisyon (+20)
+              zEnd += model13Depth + 20;
             } else {
               // Back bar kapalı - öndeki modeller Type16A
               if (type16AGeometry) {
@@ -528,7 +554,7 @@ export const handleCeilingMount = async ({
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 - 48 // Öndeki crossbar pozisyonu - 20 birim öne hareket ettirildi
+              (zStart + zEnd) / 2 - 40 // Öndeki crossbar pozisyonu - 5 birim ileriye çekildi
             );
             scene.add(horizontalRip);
           }
@@ -547,7 +573,7 @@ export const handleCeilingMount = async ({
       // Ön modellerin pozisyonunu hesapla
       if (backBars && selectedBackShelvesForBars.includes(i)) {
         // Back bar açık ve bu raf seçili - öndeki model Model13
-        zFront += model13Depth + 3; // Model13 öndeki pozisyon
+        zFront += model13Depth + 20; // Model13 öndeki pozisyon (şu anki doğru pozisyon)
       } else {
         // Back bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
@@ -565,7 +591,7 @@ export const handleCeilingMount = async ({
       // Arka modellerin pozisyonunu hesapla
       if (frontBars && selectedShelvesForBars.includes(i)) {
         // Front bar açık ve bu raf seçili - arkadaki model Model13
-        zBack -= model13Depth; // Model13 arkadaki pozisyon
+        zBack -= model13Depth + 5; // Model13 arkadaki pozisyon (5 birim daha geriye hareket ettirildi)
       } else {
         // Front bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
@@ -685,7 +711,7 @@ export const handleCeilingMount = async ({
 
     singleShelfCornerPositions.forEach((pos) => {
       // Dikey rip: raftan tavana kadar - 30cm sabit uzunluk
-      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : baseY;
+      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
       const ripHeight = 300; // 30cm sabit ceiling rip uzunluğu
       
       // Ön ve arka ripler için farklı çaplar kullan
@@ -705,6 +731,9 @@ export const handleCeilingMount = async ({
         // Back bar YES ve tek raf seçili değilse öndeki ripi öne al
         if (backBars && !selectedBackShelvesForBars.includes(0)) {
           ripZPos += 15; // 15 birim öne al
+        } else if (backBars && selectedBackShelvesForBars.includes(0)) {
+          // Back bar YES ve raf seçili - modeller ile tutarlı
+          ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
         }
       }
       
@@ -816,7 +845,7 @@ export const handleCeilingMount = async ({
 
   allTopCornerPositions.forEach((pos) => {
           // Dikey rip: en üst raftan tavana kadar - 30cm sabit uzunluk
-      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : baseY;
+      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
       const ripHeight = 300; // 30cm sabit ceiling rip uzunluğu
       
       // Ön ve arka ripler için farklı çaplar kullan
@@ -836,6 +865,9 @@ export const handleCeilingMount = async ({
       // Back bar YES ve en üst raf seçili değilse öndeki ripi öne al
       if (backBars && !selectedBackShelvesForBars.includes(0)) {
         ripZPos += 15; // 15 birim öne al
+      } else if (backBars && selectedBackShelvesForBars.includes(0)) {
+        // Back bar YES ve raf seçili - modeller ile tutarlı
+        ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
       }
     }
     
@@ -884,7 +916,7 @@ export const handleCeilingMount = async ({
     // Type16E modeli için farklı rotasyon, eski model için eskisi
     if (type16EGeometry) {
       // Type16E modelini dik durdurmak için 90 derece rotasyon
-      ceilingConnector.rotation.x = Math.PI / 2;
+      ceilingConnector.rotation.x = Math.PI / 2; 
       // 180 derece döndür
       ceilingConnector.rotation.y = Math.PI;
     } else {

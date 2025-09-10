@@ -9,7 +9,8 @@ export const handleCeilingToCounterMount = async ({
   shelfSpacing = 250,
   shelfSpacings = [250],
   barCount,
-  baySpacing = 0, // Bayslar arası default boşluk 0mm (birleşik)
+  baySpacing = 0,
+  baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
   userHeight,
   userWidth,
@@ -211,14 +212,30 @@ export const handleCeilingToCounterMount = async ({
     if (barCount === 1) {
       positions.push(0);
     } else {
-      if (baySpacing === 0) {
+      // Check if we have individual bay spacings
+      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
+      
+      if (hasIndividualSpacings) {
+        // Use individual bay spacings
+        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        positions.push(startX); // First bay position
+        
+        let currentX = startX;
+        for (let i = 1; i < barCount; i++) {
+          currentX += effectiveWidth + baySpacings[i - 1];
+          positions.push(currentX);
+        }
+      } else if (baySpacing === 0) {
         // Eski mantık: Bayslar birleşik
         const startX = -(barCount - 1) * effectiveWidth / 2;
         for (let i = 0; i < barCount; i++) {
           positions.push(startX + i * effectiveWidth);
         }
       } else {
-        // Yeni mantık: Bayslar arası boşluk
+        // Yeni mantık: Bayslar arası boşluk (uniform spacing)
         const totalSpacing = (barCount - 1) * baySpacing;
         const totalWidth = (barCount * effectiveWidth) + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
@@ -444,13 +461,13 @@ export const handleCeilingToCounterMount = async ({
             zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32); // Çap 18'den 14'e küçültüldü
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
-              currentHeight + model13Height / 2 -20,
-              (zStart + zEnd) / 2 + 15 // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı
+              currentHeight + model13Height / 2 - 12, // 5 birim yukarıya kaldırıldı (-20'den -15'e)
+              (zStart + zEnd) / 2 +28 // 20 birim öne taşındı (15'ten -5'e)
             );
             scene.add(horizontalRip);
           }
@@ -478,13 +495,13 @@ export const handleCeilingToCounterMount = async ({
             zEnd += model13Depth + 3;
 
             const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
-            const horizontalRipGeometry = new THREE.CylinderGeometry(18, 18, length, 32);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(14, 14, length, 32);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 - 57 // Öndeki crossbar pozisyonu - 5 birim daha öne
+              currentHeight + model13Height / 2 - 15 ,
+              (zStart + zEnd) / 2 - 45 // Öndeki crossbar pozisyonu - 20 birim daha öne taşındı (57+20=77)
             );
             scene.add(horizontalRip);
           }

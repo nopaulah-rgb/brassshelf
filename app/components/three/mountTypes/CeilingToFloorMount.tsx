@@ -9,7 +9,8 @@ export const handleCeilingToFloorMount = async ({
   shelfSpacing = 250,
   shelfSpacings = [250],
   barCount,
-  baySpacing = 0, // Bayslar arası default boşluk 0mm (birleşik)
+  baySpacing = 0,
+  baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
   userHeight,
   userWidth,
@@ -193,14 +194,30 @@ export const handleCeilingToFloorMount = async ({
     if (barCount === 1) {
       positions.push(0);
     } else {
-      if (baySpacing === 0) {
+      // Check if we have individual bay spacings
+      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
+      
+      if (hasIndividualSpacings) {
+        // Use individual bay spacings
+        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
+        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const startX = -totalWidth / 2 + effectiveWidth / 2;
+        
+        positions.push(startX); // First bay position
+        
+        let currentX = startX;
+        for (let i = 1; i < barCount; i++) {
+          currentX += effectiveWidth + baySpacings[i - 1];
+          positions.push(currentX);
+        }
+      } else if (baySpacing === 0) {
         // Eski mantık: Bayslar birleşik
         const startX = -(barCount - 1) * effectiveWidth / 2;
         for (let i = 0; i < barCount; i++) {
           positions.push(startX + i * effectiveWidth);
         }
       } else {
-        // Yeni mantık: Bayslar arası boşluk
+        // Yeni mantık: Bayslar arası boşluk (uniform spacing)
         const totalSpacing = (barCount - 1) * baySpacing;
         const totalWidth = (barCount * effectiveWidth) + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
@@ -434,8 +451,8 @@ export const handleCeilingToFloorMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
-              currentHeight + model13Height / 2 -20,
-              (zStart + zEnd) / 2 + 25 // Horizontal ripi 5 birim daha arkaya kaydırıldı (15 -> 10)
+              currentHeight + model13Height / 2 - 12, // Front horizontal Y pozisyonu -12'ye güncellendi
+              (zStart + zEnd) / 2 + 28 // Front horizontal Z pozisyonu +28'e güncellendi
             );
             scene.add(horizontalRip);
           }
@@ -469,8 +486,8 @@ export const handleCeilingToFloorMount = async ({
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 20,
-              (zStart + zEnd) / 2 -50// Öndeki crossbar pozisyonu - 5 birim daha öne
+              currentHeight + model13Height / 2 - 15, // Back horizontal Y pozisyonu -15'e güncellendi
+              (zStart + zEnd) / 2 - 45 // Back horizontal Z pozisyonu -45'e güncellendi
             );
             scene.add(horizontalRip);
           }

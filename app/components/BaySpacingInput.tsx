@@ -18,7 +18,8 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   unit: parentUnit
 }) => {
   const [unit, setUnit] = useState<Unit>('mm');
-  const [firstBaySpacing, setFirstBaySpacing] = useState<number>(0);
+  const [individualSpacings, setIndividualSpacings] = useState<number[]>([]);
+  const [displayValues, setDisplayValues] = useState<string[]>([]);
 
   // Convert parent unit to mm for calculations
   const totalWidthMm = parentUnit === 'inch' ? totalWidth * 25.4 : totalWidth;
@@ -26,100 +27,94 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   // Constants for calculations (2" protrusion on each side = 4" total = 101.6mm)
   const protrusionsMm = 2 * 25.4 * 2; // 2 inches on each side converted to mm
 
-  // Calculate remaining bays and their spacing
-  const calculateBaySpacings = useCallback((firstSpacingMm: number) => {
-    if (barCount <= 1) return [];
-    
-    const spaceBetweenBays = barCount - 1; // Number of gaps between bays
-    if (spaceBetweenBays <= 0) return [];
-    
-    // Available space for bay spacings = total width - protrusions - first bay spacing
-    const availableSpace = totalWidthMm - protrusionsMm - firstSpacingMm;
-    const remainingBays = spaceBetweenBays - 1; // Excluding the first bay
-    
-    if (remainingBays <= 0) {
-      return [firstSpacingMm];
+  // Helper functions for unit conversion
+  const convertToMm = (value: number, fromUnit: Unit): number => {
+    if (fromUnit === 'inch') {
+      return Math.round(value * 25.4);
     }
-    
-    // Distribute remaining space equally among remaining bays
-    const remainingSpacingPerBay = Math.max(0, availableSpace / remainingBays);
-    
-    const spacings = [firstSpacingMm];
-    for (let i = 0; i < remainingBays; i++) {
-      spacings.push(remainingSpacingPerBay);
-    }
-    
-    return spacings;
-  }, [barCount, totalWidthMm, protrusionsMm]);
+    return Math.round(value);
+  };
 
-  // Initialize first bay spacing from existing baySpacings
-  useEffect(() => {
-    if (baySpacings.length > 0) {
-      setFirstBaySpacing(baySpacings[0]);
+  const convertFromMm = (value: number, toUnit: Unit): number => {
+    if (toUnit === 'inch') {
+      return Math.round((value / 25.4) * 100) / 100;
     }
-  }, [baySpacings]);
+    return value;
+  };
 
-  // Update display value based on unit changes
+  // Calculate number of bay spacings needed
+  const numberOfBaySpacings = Math.max(0, barCount - 1);
+
+  // Initialize individual spacings when barCount changes
   useEffect(() => {
-    // Don't auto-update if user hasn't set a value yet
-    if (firstBaySpacing === 0) return;
-    
-    const newSpacings = calculateBaySpacings(firstBaySpacing);
-    onBaySpacingsChange(newSpacings);
-  }, [firstBaySpacing, calculateBaySpacings, onBaySpacingsChange]);
+    if (numberOfBaySpacings > 0) {
+      // If we have existing baySpacings, use them
+      if (baySpacings.length === numberOfBaySpacings) {
+        setIndividualSpacings([...baySpacings]);
+        const initialDisplayValues = baySpacings.map(spacing => 
+          convertFromMm(spacing, unit).toString()
+        );
+        setDisplayValues(initialDisplayValues);
+      } else {
+        // Initialize with default values (e.g., 100mm or ~4 inches)
+        const defaultSpacingMm = 100;
+        const initialSpacings = Array(numberOfBaySpacings).fill(defaultSpacingMm);
+        setIndividualSpacings(initialSpacings);
+        const initialDisplayValues = initialSpacings.map(spacing => 
+          convertFromMm(spacing, unit).toString()
+        );
+        setDisplayValues(initialDisplayValues);
+        onBaySpacingsChange([...initialSpacings]);
+      }
+    } else {
+      setIndividualSpacings([]);
+      setDisplayValues([]);
+      onBaySpacingsChange([]);
+    }
+  }, [numberOfBaySpacings, unit]); // Remove baySpacings from dependencies to prevent loops
+
+  // Update parent when individual spacings change
+  useEffect(() => {
+    if (individualSpacings.length > 0 && individualSpacings.length === numberOfBaySpacings) {
+      onBaySpacingsChange([...individualSpacings]);
+    }
+  }, [individualSpacings, onBaySpacingsChange, numberOfBaySpacings]);
 
   const handleUnitChange = (newUnit: Unit) => {
     if (newUnit === unit) return;
     
-    if (newUnit === 'inch') {
-      // mm to inch
-      const inchValue = Math.round((firstBaySpacing / 25.4) * 100) / 100;
-      setFirstBaySpacing(inchValue * 25.4); // Keep internal state in mm
-    } else {
-      // inch to mm - firstBaySpacing is already in mm internally
-      // No conversion needed for internal state
-    }
-    
     setUnit(newUnit);
+    // Update display values for new unit
+    const newDisplayValues = individualSpacings.map(spacing => 
+      convertFromMm(spacing, newUnit).toString()
+    );
+    setDisplayValues(newDisplayValues);
   };
 
-  const handleFirstBayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= 0) {
-      let valueInMm = value;
-      
-      // Convert to mm if input is in inches
-      if (unit === 'inch') {
-        valueInMm = value * 25.4;
-      }
-      
-      setFirstBaySpacing(valueInMm);
+  const handleSpacingChange = (index: number, value: string) => {
+    // Update display values immediately for better UX
+    const newDisplayValues = [...displayValues];
+    newDisplayValues[index] = value;
+    setDisplayValues(newDisplayValues);
+    
+    // Only validate and update internal state for valid numbers
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      const spacingInMm = convertToMm(numValue, unit);
+      const newSpacings = [...individualSpacings];
+      newSpacings[index] = spacingInMm;
+      setIndividualSpacings(newSpacings);
     }
-  };
-
-  const getDisplayValue = (valueInMm: number) => {
-    if (unit === 'inch') {
-      return Math.round((valueInMm / 25.4) * 100) / 100;
-    }
-    return Math.round(valueInMm);
-  };
-
-  const getMaxValue = () => {
-    const maxAvailableSpace = totalWidthMm - protrusionsMm;
-    if (unit === 'inch') {
-      return Math.round((maxAvailableSpace / 25.4) * 100) / 100;
-    }
-    return Math.round(maxAvailableSpace);
   };
 
   const getStepValue = () => {
     return unit === 'inch' ? 0.1 : 1;
   };
 
-  // Calculate remaining space for display
-  const remainingSpace = Math.max(0, totalWidthMm - protrusionsMm - firstBaySpacing);
-  const remainingBays = Math.max(0, barCount - 2); // Excluding first bay and protrusions
-  const spacingPerRemainingBay = remainingBays > 0 ? remainingSpace / remainingBays : 0;
+  // Calculate total spacing used and remaining space
+  const totalSpacingUsed = individualSpacings.reduce((sum, spacing) => sum + spacing, 0);
+  const availableSpace = totalWidthMm - protrusionsMm;
+  const remainingSpace = Math.max(0, availableSpace - totalSpacingUsed);
 
   // Don't show if only one bay
   if (barCount <= 1) {
@@ -128,7 +123,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
 
   return (
     <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Bay Spacing Calculator</h3>
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Bay Spacing</h3>
       
       {/* Unit Selector */}
       <div className="flex items-center gap-3 mb-4">
@@ -154,87 +149,79 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
         </button>
       </div>
 
-      {/* First Bay Spacing Input */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          First Bay Spacing
-        </label>
-        <div className="flex items-center gap-4">
-          <input
-            type="number"
-            value={getDisplayValue(firstBaySpacing)}
-            onChange={handleFirstBayChange}
-            min="0"
-            max={getMaxValue()}
-            step={getStepValue()}
-            className="w-32 px-4 py-3 border border-gray-300 bg-white text-gray-800 font-medium focus:outline-none focus:border-black transition-colors"
-            placeholder="Enter spacing"
-          />
-          <span className="text-slate-700 text-sm font-medium">{unit}</span>
-        </div>
+      {/* Individual Bay Spacing Inputs */}
+      <div className="space-y-3 mb-4">
+        {Array.from({ length: numberOfBaySpacings }, (_, index) => (
+          <div key={index} className="flex items-center gap-3">
+            <label className="text-sm font-medium text-slate-700 w-24">
+              Bay {index + 1}:
+            </label>
+            <input
+              type="number"
+              value={displayValues[index] || ''}
+              onChange={(e) => handleSpacingChange(index, e.target.value)}
+              min="0"
+              step={getStepValue()}
+              className="flex-1 py-2 px-3 border border-gray-300 bg-white text-gray-800 font-medium focus:outline-none focus:border-black transition-colors"
+              placeholder={unit === 'inch' ? "4" : "100"}
+            />
+            <span className="text-sm text-slate-600 w-12">{unit}</span>
+          </div>
+        ))}
       </div>
 
-      {/* Calculation Summary */}
+      {/* Spacing Summary */}
       <div className="bg-white p-4 border border-gray-300">
-        <h4 className="text-sm font-semibold text-slate-900 mb-3">Spacing Breakdown</h4>
+        <h4 className="text-sm font-semibold text-slate-900 mb-3">Spacing Summary</h4>
         
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-slate-600">Total Width:</span>
-            <span className="font-medium">{getDisplayValue(totalWidthMm)}{unit}</span>
+            <span className="font-medium">{convertFromMm(totalWidthMm, unit)}{unit}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-slate-600">Side Protrusions (2" each):</span>
-            <span className="font-medium">-{getDisplayValue(protrusionsMm)}{unit}</span>
+            <span className="font-medium">-{convertFromMm(protrusionsMm, unit)}{unit}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-slate-600">First Bay Spacing:</span>
-            <span className="font-medium">-{getDisplayValue(firstBaySpacing)}{unit}</span>
+            <span className="text-slate-600">Available Space:</span>
+            <span className="font-medium">{convertFromMm(availableSpace, unit)}{unit}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-slate-600">Total Spacing Used:</span>
+            <span className="font-medium">-{convertFromMm(totalSpacingUsed, unit)}{unit}</span>
           </div>
           
           <hr className="border-slate-200" />
           
           <div className="flex justify-between">
             <span className="text-slate-600">Remaining Space:</span>
-            <span className="font-medium">{getDisplayValue(remainingSpace)}{unit}</span>
+            <span className={`font-medium ${remainingSpace < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {convertFromMm(remainingSpace, unit)}{unit}
+            </span>
           </div>
-          
-          {remainingBays > 0 && (
-            <div className="flex justify-between">
-              <span className="text-slate-600">Per Remaining Bay ({remainingBays}):</span>
-              <span className="font-medium text-green-600">{getDisplayValue(spacingPerRemainingBay)}{unit}</span>
-            </div>
-          )}
         </div>
-
-        {/* Individual Bay Spacings Display */}
-        {baySpacings.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-gray-300">
-            <h5 className="text-xs font-semibold text-slate-700 mb-2">All Bay Spacings:</h5>
-            <div className="flex flex-wrap gap-2">
-              {baySpacings.map((spacing, index) => (
-                <span 
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium"
-                >
-                  Bay {index + 1}: {getDisplayValue(spacing)}{unit}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Warning if spacing is too small */}
-      {spacingPerRemainingBay < (unit === 'inch' ? 1 : 25.4) && remainingBays > 0 && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200">
-          <p className="text-yellow-800 text-sm">
-            ⚠️ Warning: Remaining bay spacing is very small. Consider reducing the first bay spacing or total width.
+      {/* Warning if total spacing exceeds available space */}
+      {remainingSpace < 0 && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200">
+          <p className="text-red-800 text-sm">
+            ⚠️ Warning: Total bay spacing exceeds available space. Please reduce spacing values.
           </p>
         </div>
       )}
+
+      {/* Help Text */}
+      <div className="mt-4 bg-white p-4 border border-gray-300">
+        <p className="text-sm text-slate-600 leading-relaxed">
+          <span className="font-medium">Note:</span> Each bay can have different spacing for custom layouts.
+          Adjust individual bay spacings to fit your design requirements.
+        </p>
+      </div>
     </div>
   );
 };

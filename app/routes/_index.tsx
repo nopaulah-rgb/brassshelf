@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
+import BackVerticalSelector from "~/components/BackVerticalSelector";
 
 // Components
 import ShelfSelector from "~/components/ShelfSelector";
@@ -63,6 +64,9 @@ export default function Index() {
   
   // Wall connection point selection
   const [wallConnectionPoint, setWallConnectionPoint] = useState<string[]>(['all']);
+  
+  // Back vertical connection selection
+  const [backVertical, setBackVertical] = useState<boolean>(true);
 
   // Validation function to check if all values are within valid ranges
   const areValuesValid = () => {
@@ -305,6 +309,13 @@ export default function Index() {
                   mountType={mountType}
                   shelfQuantity={shelfQuantity}
                 />
+
+                <BackVerticalSelector 
+                  key={`back-vertical-${mountType}`}
+                  mountType={mountType}
+                  backVertical={backVertical}
+                  onChange={setBackVertical}
+                />
                 
                 {/* Spacing Mode Toggle */}
                 <div className="bg-white p-6 border border-gray-300">
@@ -443,6 +454,7 @@ export default function Index() {
                       wallConnectionPoint={wallConnectionPoint}
                       selectedShelvesForBars={selectedShelvesForBars}
                       selectedBackShelvesForBars={selectedShelvesForBackBars}
+                      backVertical={backVertical}
                     />
                   ) : (
                     <div className="w-full h-[500px] flex items-center justify-center p-8 bg-gray-50">
