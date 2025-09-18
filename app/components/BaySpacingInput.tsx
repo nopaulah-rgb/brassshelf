@@ -59,8 +59,8 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
         );
         setInputValues(initialInputValues);
       } else {
-        // Initialize with default values (e.g., 100mm or ~4 inches)
-        const defaultSpacingMm = 100;
+        // Initialize with default values (0mm for connected bays by default)
+        const defaultSpacingMm = 0;
         const initialSpacings = Array(numberOfBaySpacings).fill(defaultSpacingMm);
         setIndividualSpacings(initialSpacings);
         const initialInputValues = initialSpacings.map(spacing => 
