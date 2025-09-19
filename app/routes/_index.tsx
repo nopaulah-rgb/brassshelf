@@ -440,7 +440,7 @@ export default function Index() {
                       shelfSpacings={useIndividualSpacing && shelfSpacings.length > 0 ? shelfSpacings : undefined}
                       mountType={mountType}
                       barCount={barCount}
-                      baySpacing={baySpacings.length > 0 ? baySpacings[0] : baySpacing} // Use first bay spacing or legacy value
+                      baySpacing={baySpacings.length > 0 ? (baySpacings.every(spacing => spacing === 0) ? 0 : baySpacings[0]) : baySpacing} // Connected if all spacings are 0
                       baySpacings={baySpacings}
                       showCrossbars={frontBars || backBars}
                       userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight}
@@ -533,7 +533,7 @@ export default function Index() {
         totalDepth={totalDepth}
         shelfQuantity={shelfQuantity}
         barCount={barCount}
-        baySpacingMm={baySpacings.length > 0 ? baySpacings[0] : baySpacing}
+        baySpacingMm={baySpacings.length > 0 ? (baySpacings.every(spacing => spacing === 0) ? 0 : baySpacings[0]) : baySpacing}
         baySpacingsMm={baySpacings}
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}

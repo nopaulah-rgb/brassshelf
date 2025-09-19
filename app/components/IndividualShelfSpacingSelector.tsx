@@ -36,6 +36,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
   const [individualSpacings, setIndividualSpacings] = useState<number[]>([defaultSpacing]);
   const [displayValues, setDisplayValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
+  const [inputValues, setInputValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
 
   // Initialize spacings when shelf quantity changes
   useEffect(() => {
@@ -47,11 +48,13 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
         convertFromMm(spacing, unit).toFixed(1)
       );
       setDisplayValues(initialDisplayValues);
+      // Initialize input values for decimal input handling
+      setInputValues(initialDisplayValues);
       // Yeni shelf quantity için parent'a bildir
       console.log('Initializing spacings:', { shelfQuantity, initialSpacings });
       onSpacingChange([...initialSpacings]);
     }
-  }, [shelfQuantity, defaultSpacing, unit]); // Remove onSpacingChange from dependencies to prevent unnecessary re-renders
+  }, [shelfQuantity, defaultSpacing, unit, onSpacingChange]); // Include onSpacingChange in dependencies
 
   // Call onSpacingChange when individualSpacings changes (but not during initial setup)
   useEffect(() => {
@@ -68,35 +71,44 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       convertFromMm(spacing, newUnit).toFixed(1)
     );
     setDisplayValues(newDisplayValues);
+    setInputValues(newDisplayValues);
   };
 
   // Handle individual spacing change
   const handleSpacingChange = (index: number, value: string) => {
     console.log('handleSpacingChange called:', { index, value, currentDisplayValues: displayValues });
     
-    // Update display values immediately for better UX
-    const newDisplayValues = [...displayValues];
-    newDisplayValues[index] = value;
-    setDisplayValues(newDisplayValues);
-    
-    // Only validate and update internal state for valid numbers
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue > 0) {
-      // Clear any previous validation errors for this index
-      if (invalidIndex === index) {
-        setInvalidIndex(-1);
-        setIsValidationOpen(false);
+    // Allow decimal input with up to 3 decimal places
+    if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
+      // Update input values immediately for better UX
+      const newInputValues = [...inputValues];
+      newInputValues[index] = value;
+      setInputValues(newInputValues);
+      
+      // Update display values
+      const newDisplayValues = [...displayValues];
+      newDisplayValues[index] = value;
+      setDisplayValues(newDisplayValues);
+      
+      // Only validate and update internal state for valid numbers
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue > 0) {
+        // Clear any previous validation errors for this index
+        if (invalidIndex === index) {
+          setInvalidIndex(-1);
+          setIsValidationOpen(false);
+        }
+        
+        const spacingInMm = convertToMm(numValue, unit);
+        const newSpacings = [...individualSpacings];
+        newSpacings[index] = spacingInMm;
+        setIndividualSpacings(newSpacings);
+        
+        console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
+      } else if (value === '') {
+        // Allow empty values for better UX
+        console.log('Empty value entered for index:', index);
       }
-      
-      const spacingInMm = convertToMm(numValue, unit);
-      const newSpacings = [...individualSpacings];
-      newSpacings[index] = spacingInMm;
-      setIndividualSpacings(newSpacings);
-      
-      console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
-    } else if (value === '') {
-      // Allow empty values for better UX
-      console.log('Empty value entered for index:', index);
     }
   };
 
@@ -104,18 +116,24 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const handleBlur = (index: number, value: string) => {
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue > 0) {
-      const valueInInches = unit === 'inch' ? numValue : numValue / 2.54;
+      const valueInInches = unit === 'inch' ? numValue : numValue / 25.4;
       const minInches = 6;
       const maxInches = 70;
       
       if (valueInInches < minInches || valueInInches > maxInches) {
-        setValidationMessage(`Shelf spacing must be between 6" and 70". Current value: ${valueInInches.toFixed(1)}"`);
+        const currentValue = unit === 'inch' ? `${numValue}"` : `${Math.round(numValue)}mm (${valueInInches.toFixed(1)}")`;
+        setValidationMessage(`Shelf ${index + 1} spacing must be between 6" and 70". Current value: ${currentValue}`);
         setInvalidIndex(index);
         setIsValidationOpen(true);
       }
     } else if (value !== '' && (isNaN(numValue) || numValue <= 0)) {
       // Show validation error for invalid non-empty values
-      setValidationMessage(`Please enter a valid positive number for shelf ${index + 1}`);
+      setValidationMessage(`Shelf ${index + 1}: Please enter a valid positive number (e.g., ${unit === 'inch' ? '12.5' : '305'})`);
+      setInvalidIndex(index);
+      setIsValidationOpen(true);
+    } else if (value === '') {
+      // Show validation error for empty values
+      setValidationMessage(`Shelf ${index + 1}: Please enter a spacing value`);
       setInvalidIndex(index);
       setIsValidationOpen(true);
     }
@@ -173,20 +191,17 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
               Shelf {index + 1}:
             </label>
             <input
-              type="number"
-              value={displayValues[index] || ''}
+              type="text"
+              value={inputValues[index] || ''}
               onChange={(e) => handleSpacingChange(index, e.target.value)}
               onBlur={(e) => handleBlur(index, e.target.value)}
-              min={unit === 'inch' ? "6" : "152"}
-              max={unit === 'inch' ? "70" : "1778"}
-              step={unit === 'inch' ? "0.5" : "1"}
               className={`flex-1 py-2 px-3 border text-sm font-medium transition-colors
                        focus:outline-none focus:border-black ${
                          invalidIndex === index 
                            ? 'border-red-300 bg-red-50 text-red-700' 
                            : 'border-gray-300 bg-white text-gray-800'
                        }`}
-              placeholder={unit === 'inch' ? "12" : "305"}
+              placeholder={unit === 'inch' ? "12.5" : "305"}
             />
             <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
@@ -194,9 +209,11 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       </div>
 
       {/* Help Text */}
-      <div className="mt-4 bg-white p-4 border border-gray-300">
+      <div className="mt-4 bg-blue-50 p-4 border border-blue-200">
         <p className="text-sm text-slate-600 leading-relaxed">
           <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-70 inch' : '152-1778 mm'}
+          <br />
+          <span className="font-medium">Decimal input:</span> You can enter decimal values (e.g., {unit === 'inch' ? '12.375' : '305.5'}) with up to 3 decimal places
           <br />
           <span className="font-medium">Note:</span> Each shelf can have different spacing for custom layouts
         </p>

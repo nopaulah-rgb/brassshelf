@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface DimensionInputsProps {
   height: number;
@@ -32,6 +32,20 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
 }) => {
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
   const [validationMessage, setValidationMessage] = useState<string>('');
+  
+  // Local input states for handling decimal input
+  const [heightInput, setHeightInput] = useState<string>('');
+  const [widthInput, setWidthInput] = useState<string>('');
+  const [shelfDepthInput, setShelfDepthInput] = useState<string>('');
+  const [totalDepthInput, setTotalDepthInput] = useState<string>('');
+
+  // Update local states when props change (e.g., unit conversion)
+  useEffect(() => {
+    setHeightInput(unit === 'mm' ? Math.round(height).toString() : height.toString());
+    setWidthInput(unit === 'mm' ? Math.round(width).toString() : width.toString());
+    setShelfDepthInput(unit === 'mm' ? Math.round(shelfDepth).toString() : shelfDepth.toString());
+    setTotalDepthInput(unit === 'mm' ? Math.round(totalDepth).toString() : totalDepth.toString());
+  }, [height, width, shelfDepth, totalDepth, unit]);
   const convertValue = (value: number, fromUnit: 'inch' | 'mm', toUnit: 'inch' | 'mm'): number => {
     if (fromUnit === toUnit) return value;
     if (fromUnit === 'inch' && toUnit === 'mm') {
@@ -57,7 +71,8 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
     const value = e.target.value;
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
-      const nextValue = parseFloat(value) || 0;
+      setWidthInput(value);
+      const nextValue = value === '' ? 0 : parseFloat(value);
       onWidthChange(nextValue);
     }
   };
@@ -66,7 +81,8 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
     const value = e.target.value;
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
-      const nextValue = parseFloat(value) || 0;
+      setShelfDepthInput(value);
+      const nextValue = value === '' ? 0 : parseFloat(value);
       onShelfDepthChange(nextValue);
     }
   };
@@ -75,7 +91,8 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
     const value = e.target.value;
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
-      const nextValue = parseFloat(value) || 0;
+      setHeightInput(value);
+      const nextValue = value === '' ? 0 : parseFloat(value);
       onHeightChange(nextValue);
     }
   };
@@ -84,7 +101,8 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
     const value = e.target.value;
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
-      const nextValue = parseFloat(value) || 0;
+      setTotalDepthInput(value);
+      const nextValue = value === '' ? 0 : parseFloat(value);
       onTotalDepthChange(nextValue);
     }
   };
@@ -142,7 +160,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
           <input
             type="text"
-            value={unit === 'mm' ? Math.round(height) : height}
+            value={heightInput}
             onChange={handleHeightInputChange}
             step={unit === 'inch' ? "0.001" : "1"}
             className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
@@ -158,7 +176,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           <label className="block text-sm font-medium text-slate-700 mb-2">Width</label>
           <input
             type="text"
-            value={unit === 'mm' ? Math.round(width) : width}
+            value={widthInput}
             onChange={handleWidthInputChange}
             onBlur={handleWidthBlur}
             step={unit === 'inch' ? "0.001" : "1"}
@@ -207,7 +225,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           </label>
           <input
             type="text"
-            value={unit === 'mm' ? Math.round(shelfDepth) : shelfDepth}
+            value={shelfDepthInput}
             onChange={handleShelfDepthInputChange}
             onBlur={handleShelfDepthBlur}
             disabled={selectedDepthType !== 'shelf'}
@@ -242,7 +260,7 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
           </label>
           <input
             type="text"
-            value={unit === 'mm' ? Math.round(totalDepth) : totalDepth}
+            value={totalDepthInput}
             onChange={handleTotalDepthInputChange}
             disabled={selectedDepthType !== 'total'}
             step={unit === 'inch' ? "0.001" : "1"}
