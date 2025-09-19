@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Brass &amp; Co - Custom Shelving</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --primary-color: #ec9513;
+            --secondary-color: #f4f3f0;
+            --text-primary: #181511;
+            --text-secondary: #897961;
+            --border-color: #e6e1db;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .form-input {
+            @apply w-full rounded-md border-[var(--border-color)] bg-white p-3 text-base text-[var(--text-primary)] transition-colors duration-300 focus:border-[var(--primary-color)] focus:ring-1 focus:ring-[var(--primary-color)];
+        }
+        .radio-label {
+            @apply flex cursor-pointer items-center justify-center rounded-md border border-[var(--border-color)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--primary-color)];
+        }
+        .radio-label.active {
+            @apply border-2 border-[var(--primary-color)] bg-[var(--secondary-color)] px-3.5 py-1.5;
+        }
+        .btn {
+            @apply flex h-11 w-full cursor-pointer items-center justify-center overflow-hidden rounded-md px-6 text-sm font-bold leading-normal tracking-wide transition-all duration-300;
+        }
+        .btn-primary {
+            @apply bg-[var(--primary-color)] text-[var(--text-primary)] hover:bg-opacity-90;
+        }
+        .btn-secondary {
+            @apply bg-[var(--secondary-color)] text-[var(--text-primary)] hover:bg-[var(--border-color)];
+        }
+        .toggle-switch {
+            @apply relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-offset-2;
+        }
+        .toggle-switch-knob {
+            @apply pointer-events-none inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out;
+        }
+        .toggle-switch.on {
+            @apply bg-[var(--primary-color)];
+        }
+        .toggle-switch.on .toggle-switch-knob {
+            @apply translate-x-5;
+        }
+        details[open]>summary .chevron {
+            transform: rotate(180deg);
+        }
+        .tooltip {
+            @apply invisible absolute z-10 -mt-16 w-64 rounded-md bg-[var(--text-primary)] p-3 text-sm text-white opacity-0 shadow-lg transition-all duration-300;
+        }
+        .tooltip-container:hover .tooltip {
+            @apply visible opacity-100;
+        }
+        .tooltip::after {
+            content: "";
+            @apply absolute left-1/2 top-full -ml-2 h-0 w-0 border-x-8 border-t-8 border-solid border-x-transparent border-t-[var(--text-primary)];
+        }
+    </style>
+</head>
+<body class="bg-white text-[var(--text-primary)]">
+<div class="group/design-root">
+<header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-white/80 backdrop-blur-lg">
+<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+<a class="flex items-center gap-3" href="#">
+<svg class="h-6 w-6 text-[var(--text-primary)]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fill="currentColor" fill-rule="evenodd"></path>
+<path clip-rule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+<h1 class="text-xl font-bold tracking-tight">Brass &amp; Co</h1>
+</a>
+<nav class="hidden items-center gap-8 md:flex">
+<a class="text-sm font-medium hover:text-[var(--primary-color)]" href="#">Shop</a>
+<a class="text-sm font-medium hover:text-[var(--primary-color)]" href="#">New</a>
+<a class="text-sm font-medium hover:text-[var(--primary-color)]" href="#">Sale</a>
+<a class="text-sm font-medium hover:text-[var(--primary-color)]" href="#">About</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="hidden rounded-md bg-[var(--secondary-color)] p-2.5 text-[var(--text-primary)] hover:bg-[var(--border-color)] sm:block">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+</svg>
+</button>
+<button class="hidden rounded-md bg-[var(--secondary-color)] p-2.5 text-[var(--text-primary)] hover:bg-[var(--border-color)] sm:block">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+</svg>
+</button>
+<button class="rounded-md bg-[var(--secondary-color)] p-2.5 text-[var(--text-primary)] hover:bg-[var(--border-color)]">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path>
+</svg>
+</button>
+<button class="rounded-md p-2.5 text-[var(--text-primary)] hover:bg-[var(--border-color)] md:hidden">
+<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<line x1="4" x2="20" y1="12" y2="12"></line>
+<line x1="4" x2="20" y1="6" y2="6"></line>
+<line x1="4" x2="20" y1="18" y2="18"></line>
+</svg>
+</button>
+</div>
+</div>
+</header>
+<main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-[1fr,2fr] lg:gap-16">
+<div class="lg:max-h-[calc(100vh-81px)] lg:overflow-y-auto lg:py-8 lg:pr-8">
+<div class="space-y-8">
+<div class="space-y-4">
+<h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Configure your shelving unit</h2>
+<p class="text-lg text-[var(--text-secondary)]">Customize every detail to fit your space and style perfectly.</p>
+</div>
+<div class="space-y-1" id="configurator-steps">
+<div class="step completed-step" data-step="1">
+<details>
+<summary class="flex cursor-pointer list-none items-center justify-between py-4 text-lg font-bold">
+<div class="flex items-center gap-4">
+<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-[var(--primary-color)] bg-[var(--primary-color)] text-sm font-bold text-white">
+<span class="hidden">1</span>
+<svg class="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<span class="step-title">Mounting Type</span>
+</div>
+<svg class="chevron h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m19.5 8.25-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</summary>
+<div class="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
+<div class="grid grid-cols-2 gap-4 pt-4 sm:grid-cols-3">
+<label class="radio-label active"><input checked="" class="sr-only" name="mounting-type" type="radio" value="ceiling"/>Ceiling</label>
+<label class="radio-label"><input class="sr-only" name="mounting-type" type="radio" value="wall"/>Wall</label>
+<label class="radio-label"><input class="sr-only" name="mounting-type" type="radio" value="floor"/>Floor</label>
+<label class="radio-label"><input class="sr-only" name="mounting-type" type="radio" value="counter"/>Counter</label>
+<label class="radio-label"><input class="sr-only" name="mounting-type" type="radio" value="freestanding"/>Freestanding</label>
+</div>
+</div>
+</details>
+</div>
+<div class="step active-step" data-step="2">
+<details open="">
+<summary class="flex cursor-pointer list-none items-center justify-between py-4 text-lg font-bold">
+<div class="flex items-center gap-4">
+<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-[var(--primary-color)] bg-[var(--primary-color)] text-sm font-bold text-white">
+<span>2</span>
+<svg class="hidden h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<span class="step-title">Dimensions</span>
+</div>
+<svg class="chevron h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m19.5 8.25-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</summary>
+<div class="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
+<div class="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
+<div><label class="mb-2 block text-sm font-medium" for="height">Height (in)</label><input class="form-input" id="height" placeholder="e.g., 72" type="number"/></div>
+<div><label class="mb-2 block text-sm font-medium" for="width">Width (in)</label><input class="form-input" id="width" placeholder="e.g., 36" type="number"/></div>
+<div>
+<div class="mb-2 flex items-center gap-2">
+<label class="block text-sm font-medium" for="shelf-depth">Shelf Depth (in)</label>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">This is the depth of the shelf surface itself.</div>
+</div>
+</div>
+<input class="form-input" id="shelf-depth" placeholder="e.g., 12" type="number"/>
+</div>
+<div>
+<div class="mb-2 flex items-center gap-2">
+<label class="block text-sm font-medium" for="total-depth">Total Depth (in)</label>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">The full depth of the unit including mounting hardware.</div>
+</div>
+</div>
+<input class="form-input" id="total-depth" placeholder="e.g., 13.5" type="number"/>
+</div>
+</div>
+</div>
+</details>
+</div>
+<div class="step" data-step="3">
+<details>
+<summary class="flex cursor-pointer list-none items-center justify-between py-4 text-lg font-bold text-gray-500">
+<div class="flex items-center gap-4">
+<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-sm font-bold text-gray-500">
+<span>3</span>
+<svg class="hidden h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<span class="step-title">Shelf Layout</span>
+</div>
+<svg class="chevron h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m19.5 8.25-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</summary>
+<div class="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
+<div class="space-y-6 pt-4">
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+<div><label class="mb-2 block text-sm font-medium" for="shelves">Number of Shelves</label><input class="form-input" id="shelves" placeholder="e.g., 5" type="number"/></div>
+<div>
+<div class="mb-2 flex items-center gap-2">
+<label class="block text-sm font-medium" for="bays">Number of Bays</label>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">Bays are the vertical sections of the shelving unit.</div>
+</div>
+</div>
+<input class="form-input" id="bays" placeholder="e.g., 2" type="number"/>
+</div>
+</div>
+<div>
+<label class="mb-2 block text-sm font-medium">Shelf Spacing Mode</label>
+<div class="flex gap-4">
+<label class="radio-label active"><input checked="" class="sr-only" name="spacing-mode" type="radio" value="equal"/>Equal</label>
+<label class="radio-label"><input class="sr-only" name="spacing-mode" type="radio" value="individual"/>Individual</label>
+</div>
+</div>
+<div>
+<div class="mb-2 flex items-center gap-2">
+<label class="block text-sm font-medium" for="spacing">Shelf Spacing (Rib Length in)</label>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">The "rib" is the vertical pipe between two shelves. Choose "Equal" for uniform spacing, or "Individual" to specify each spacing from top to bottom (e.g., 12, 14, 16).</div>
+</div>
+</div>
+<input class="form-input" disabled="" id="spacing" placeholder="e.g., 14" type="number"/>
+</div>
+</div>
+</div>
+</details>
+</div>
+<div class="step" data-step="4">
+<details>
+<summary class="flex cursor-pointer list-none items-center justify-between py-4 text-lg font-bold text-gray-500">
+<div class="flex items-center gap-4">
+<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-sm font-bold text-gray-500">
+<span>4</span>
+<svg class="hidden h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<span class="step-title">Pipe &amp; Crossbar</span>
+</div>
+<svg class="chevron h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m19.5 8.25-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</summary>
+<div class="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
+<div class="space-y-6 pt-4">
+<div>
+<label class="mb-2 block text-sm font-medium">Pipe Diameter</label>
+<div class="flex flex-wrap gap-4">
+<label class="radio-label active"><input checked="" class="sr-only" name="pipe-diameter" type="radio" value="0.5"/>0.5"</label>
+<label class="radio-label"><input class="sr-only" name="pipe-diameter" type="radio" value="0.75"/>0.75"</label>
+<label class="radio-label"><input class="sr-only" name="pipe-diameter" type="radio" value="1"/>1"</label>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium">Front Horizontal Bars</span>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">Also known as crossbars, these add stability and a design element.</div>
+</div>
+</div>
+<button aria-checked="true" class="toggle-switch on" id="front-bars-toggle" role="switch" type="button"><span class="toggle-switch-knob"></span></button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium">Back Horizontal Bars</span>
+<div class="tooltip-container relative flex items-center">
+<svg class="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<div class="tooltip">Also known as crossbars, these add stability and a design element.</div>
+</div>
+</div>
+<button aria-checked="true" class="toggle-switch on" id="back-bars-toggle" role="switch" type="button"><span class="toggle-switch-knob"></span></button>
+</div>
+</div>
+</div>
+</details>
+</div>
+<div class="step" data-step="5">
+<details>
+<summary class="flex cursor-pointer list-none items-center justify-between py-4 text-lg font-bold text-gray-500">
+<div class="flex items-center gap-4">
+<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-sm font-bold text-gray-500">
+<span>5</span>
+<svg class="hidden h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<span class="step-title">Finish &amp; Summary</span>
+</div>
+<svg class="chevron h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m19.5 8.25-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</summary>
+<div class="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
+<div class="space-y-6 pt-4">
+<div>
+<label class="mb-2 block text-sm font-medium">Material</label>
+<div class="flex flex-wrap gap-4">
+<label class="radio-label active"><input checked="" class="sr-only" name="material" type="radio" value="brass"/>Brass</label>
+<label class="radio-label"><input class="sr-only" name="material" type="radio" value="stainless-steel"/>Stainless Steel</label>
+</div>
+</div>
+<div>
+<label class="mb-2 block text-sm font-medium">Finish</label>
+<div class="flex flex-wrap gap-4">
+<label class="radio-label active"><input checked="" class="sr-only" name="finish" type="radio" value="polished"/>Polished</label>
+<label class="radio-label"><input class="sr-only" name="finish" type="radio" value="brushed"/>Brushed</label>
+</div>
+</div>
+</div>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+<div class="sticky top-[81px] h-[calc(100vh-81px)] py-8">
+<div class="relative h-full w-full overflow-hidden rounded-lg bg-[var(--secondary-color)]">
+<img alt="Customizable brass shelving unit" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxY5NrnpTGGr8_5SVcNsQlL7ggnGAr-4Nct3A_4U-7OPhLwFXIPIUOJgOn31jrYXHDFB25LNM0vy2potUF3dIbRKjTRYDOd5ERzrpOKywtE7_N2dpZon3_WI-jpHICYEsUZ4MDXs_V24baAJRu2zkjhcehm3fY_owZEk-Kd-rJPQep-Kd1_fhxQ7oKD9f6_mvpUCMx6-Noc_NGnaKwK6F6qRnCZ2yUc_hVw83eQCb9Jd0v0jIKLi6E4oizsMpZqsYLKryxnkwSwew"/>
+<button class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/40 p-4 text-white backdrop-blur-sm transition-transform hover:scale-110">
+<svg fill="currentColor" height="32px" viewBox="0 0 256 256" width="32px" xmlns="http://www.w3.org/2000/svg">
+<path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2,.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2,.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path>
+</svg>
+</button>
+<div class="absolute right-4 top-4 z-10 flex items-center space-x-1 rounded-md border border-[var(--border-color)] bg-white/50 p-1 backdrop-blur-sm">
+<button class="flex h-10 w-10 items-center justify-center rounded bg-white/70 text-[var(--text-primary)] transition-colors hover:bg-white">
+<span class="material-symbols-outlined !text-xl">fit_screen</span>
+</button>
+<div class="h-6 w-px bg-[var(--border-color)]"></div>
+<button class="group flex h-10 w-10 items-center justify-center rounded text-[var(--text-primary)] transition-colors hover:bg-white/70">
+<span class="material-symbols-outlined !text-2xl">rotate_left</span>
+</button>
+<button class="group flex h-10 w-10 items-center justify-center rounded text-[var(--text-primary)] transition-colors hover:bg-white/70">
+<span class="material-symbols-outlined !text-2xl">rotate_right</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent p-6">
+<div class="flex items-end justify-between gap-6">
+<div class="flex-grow">
+<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+<button class="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20">
+<span class="material-symbols-outlined mr-2 !text-base">save</span> Save
+                                        </button>
+<button class="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20">
+<span class="material-symbols-outlined mr-2 !text-base">folder_open</span> Load
+                                        </button>
+<button class="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20">
+<span class="material-symbols-outlined mr-2 !text-base">ios_share</span> Export
+                                        </button>
+<button class="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20">
+<span class="material-symbols-outlined mr-2 !text-base">restart_alt</span> Reset
+                                        </button>
+</div>
+</div>
+<div class="w-full max-w-xs shrink-0 space-y-3">
+<div class="flex items-center justify-between rounded-lg border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
+<p class="text-base font-medium">Estimated Price:</p>
+<span class="text-xl font-bold text-white">$2,499</span>
+</div>
+<button class="btn btn-primary w-full">Add to Cart</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = document.querySelectorAll('.step');
+            const detailsElements = document.querySelectorAll('details');
+            detailsElements.forEach((details, index) => {
+                const stepElement = details.closest('.step');
+                const summary = details.querySelector('summary');
+                const stepIndicator = summary.querySelector('.flex.h-8.w-8');
+                const stepNumber = stepIndicator.querySelector('span');
+                const checkmark = stepIndicator.querySelector('.checkmark');
+                const stepTitle = summary.querySelector('.step-title');
+                details.addEventListener('toggle', (event) => {
+                    if (details.open) {
+                        // Close other steps
+                        detailsElements.forEach((otherDetails, otherIndex) => {
+                            if (index !== otherIndex) {
+                                otherDetails.open = false;
+                            }
+                        });
+                        // Update current step to active
+                        steps.forEach(s => s.classList.remove('active-step'));
+                        stepElement.classList.add('active-step');
+                        // Mark previous steps as complete
+                        for (let i = 0; i < index; i++) {
+                            const prevStep = steps[i];
+                            const prevIndicator = prevStep.querySelector('.flex.h-8.w-8');
+                            const prevStepNumber = prevIndicator.querySelector('span');
+                            const prevCheckmark = prevIndicator.querySelector('.checkmark');
+                            prevStep.classList.add('completed-step');
+                            prevIndicator.classList.remove('border-gray-300', 'text-gray-500');
+                            prevIndicator.classList.add('border-[var(--primary-color)]', 'bg-[var(--primary-color)]', 'text-white');
+                            prevStepNumber.classList.add('hidden');
+                            prevCheckmark.classList.remove('hidden');
+                        }
+                        // Update current step styles
+                        summary.classList.remove('text-gray-500');
+                        stepIndicator.classList.remove('border-gray-300', 'bg-white', 'text-gray-500');
+                        stepIndicator.classList.add('border-[var(--primary-color)]', 'bg-[var(--primary-color)]', 'text-white');
+                        stepNumber.classList.remove('text-gray-500');
+                        stepNumber.classList.add('text-white');
+                        stepTitle.classList.remove('text-gray-500');
+                    } else {
+                        // Revert to non-active styles if closed (unless it's completed)
+                        if (!stepElement.classList.contains('completed-step')) {
+                            summary.classList.add('text-gray-500');
+                            stepIndicator.classList.add('border-gray-300', 'bg-white', 'text-gray-500');
+                            stepIndicator.classList.remove('border-[var(--primary-color)]', 'bg-[var(--primary-color)]', 'text-white');
+                            stepNumber.classList.add('text-gray-500');
+                            stepNumber.classList.remove('text-white');
+                            stepTitle.classList.add('text-gray-500');
+                        }
+                    }
+                });
+            });
+            // Radio button logic
+            const radioLabels = document.querySelectorAll('.radio-label');
+            radioLabels.forEach(label => {
+                label.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'INPUT') return;
+                    const input = label.querySelector('input[type="radio"]');
+                    const name = input.getAttribute('name');
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                        radio.parentElement.classList.remove('active');
+                    });
+                    label.classList.add('active');
+                    input.checked = true;
+                    // Special logic for spacing mode
+                    if (name === 'spacing-mode') {
+                        const spacingInput = document.getElementById('spacing');
+                        if (input.value === 'individual') {
+                            spacingInput.disabled = false;
+                            spacingInput.placeholder = 'e.g., 12, 14, 16';
+                        } else {
+                            spacingInput.disabled = true;
+                            spacingInput.placeholder = 'e.g., 14';
+                        }
+                    }
+                });
+            });
+            // Toggle switch logic
+            const toggleSwitches = document.querySelectorAll('.toggle-switch');
+            toggleSwitches.forEach(button => {
+                button.addEventListener('click', () => {
+                    const currentState = button.getAttribute('aria-checked') === 'true';
+                    button.setAttribute('aria-checked', !currentState);
+                    button.classList.toggle('on');
+                });
+            });
+        });
+    </script>
+</body></html>
