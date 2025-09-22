@@ -385,7 +385,8 @@ export default function Index() {
                               markStepCompleted(1);
                               setCurrentStep(2);
                             }} 
-                            onMountTypeChange={resetSelections} 
+                            onMountTypeChange={resetSelections}
+                            initialMountType={mountType}
                           />
                         </div>
                       </div>
