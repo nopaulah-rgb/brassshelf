@@ -210,13 +210,14 @@ export const handleWallToCounterMount = async ({
 
   const counterHeight = 400; // Counter height in mm
   
-  // userHeight = ünitenin TOPLAM yüksekliği (counter'dan itibaren)
-  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
-  const totalHeight = userHeight || 1195; // Ünitenin toplam yüksekliği (mm)
+  // ALT MOUNT: userHeight düzeltme hesaplaması
+  // Formül: En Üst Raf Pozisyonu = Reference Point ± Clearance
+  // Wall To Counter Mount için: topShelf = userHeight - 2" (kullanıcı boyundan 2" aşağı)
   const bottomClearance = 50.8; // 2" alt boşluk (mm)
+  const totalHeight = userHeight || 1195; // Kullanıcı yüksekliği (mm)
   
-  // En üst rafın pozisyonu: counter + totalHeight - bottomClearance
-  const topShelfY = counterHeight + totalHeight - bottomClearance;
+  // En üst rafın pozisyonu: userHeight - 2" (bottomClearance)
+  const topShelfY = totalHeight - bottomClearance;
   const adjustedBaseY = topShelfY;
 
   // Calculate pipe radius based on pipeDiameter

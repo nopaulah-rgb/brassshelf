@@ -239,12 +239,12 @@ export const handleCeilingToCounterToWallMount = async ({
   const fixedCounterY = 200; // Counter position is FIXED like in ceiling-to-counter mount
   const counterTopY = fixedCounterY + 200; // Counter'ın üst yüzeyi (merkez + yarı yükseklik)
   
-  // userHeight = ünitenin TOPLAM yüksekliği (ceiling'den aşağı doğru)
-  // Üst boşluk: 2" = 50.8mm, en üst raftan başlayarak aşağı doğru rafları yerleştir
-  const totalHeight = userHeight || shelfSpacing; // Ünitenin toplam yüksekliği (mm)
+  // ÜST MOUNT: userHeight düzeltme hesaplaması  
+  // Formül: En Üst Raf Pozisyonu = Reference Point ± Clearance
+  // Ceiling To Counter To Wall Mount için: topShelf = ceiling - 2" (tavanın 2" altında)
   const topClearance = 50.8; // 2" üst boşluk (mm)
   
-  // En üst rafın pozisyonu: ceiling - topClearance
+  // En üst rafın pozisyonu: ceiling - 2" (topClearance)
   const topShelfY = baseCeilingY - topClearance;
   const adjustedBaseY = topShelfY; // İlk raf pozisyonu
 

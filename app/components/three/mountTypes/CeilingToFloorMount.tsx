@@ -175,14 +175,14 @@ export const handleCeilingToFloorMount = async ({
   }
 
   const floorHeight = 0; // Floor height in mm
-  // Ceiling mount için shelf sistemini yukarı çıkar ki ripler ceiling connectorlara ulaşsın
-  const baseCeilingY = roomHeight || 1500;
-  // userHeight = ünitenin TOPLAM yüksekliği (ceiling'den aşağı doğru)
-  // Üst boşluk: 2" = 50.8mm, en üst raftan başlayarak aşağı doğru rafları yerleştir
-  const totalHeight = userHeight || shelfSpacing; // Ünitenin toplam yüksekliği (mm)
+  
+  // ÜST MOUNT: userHeight düzeltme hesaplaması  
+  // Formül: En Üst Raf Pozisyonu = Reference Point ± Clearance
+  // Ceiling To Floor Mount için: topShelf = ceiling - 2" (tavanın 2" altında)
+  const baseCeilingY = roomHeight || 1500; // Tavan yüksekliği (mm)
   const topClearance = 50.8; // 2" üst boşluk (mm)
   
-  // En üst rafın pozisyonu: ceiling - topClearance
+  // En üst rafın pozisyonu: ceiling - 2" (topClearance)
   const topShelfY = baseCeilingY - topClearance;
   const baseY = topShelfY; // Ceiling'den topClearance kadar aşağı
   // shelfSpacing now comes from props

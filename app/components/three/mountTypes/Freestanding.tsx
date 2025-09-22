@@ -182,12 +182,13 @@ export const handleFreestandingMount = async ({
 
   const floorHeight = 0 + dynamicFloorY; // respect dynamic floor offset
   
-  // userHeight = ünitenin TOPLAM yüksekliği (floor'dan itibaren)
-  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
-  const totalHeight = userHeight || 500; // Ünitenin toplam yüksekliği (mm)
+  // ALT MOUNT: userHeight düzeltme hesaplaması
+  // Formül: En Üst Raf Pozisyonu = Reference Point ± Clearance
+  // Freestanding Mount için: topShelf = userHeight - 2" (kullanıcı boyundan 2" aşağı)
   const bottomClearance = 50.8; // 2" alt boşluk (mm)
+  const totalHeight = userHeight || 500; // Kullanıcı yüksekliği (mm)
   
-  // En üst rafın pozisyonu: floor + totalHeight - bottomClearance
+  // En üst rafın pozisyonu: floor + userHeight - 2" (bottomClearance)
   const topShelfY = floorHeight + totalHeight - bottomClearance;
   const adjustedBaseY = topShelfY;
 
