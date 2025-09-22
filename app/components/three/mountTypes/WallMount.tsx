@@ -192,13 +192,14 @@ export const handleWallMount = async ({
     }
   }
 
-  // Ceiling'den başlayacak şekilde üst seviyeyi belirle
-  void userHeight; // artık kullanılmıyor
-  const ceilingClearance = 200; // mm
-  const modelHeightForOffset = model13Height > 0 ? model13Height : 120; // yedek değer
-  const baseY = (roomHeight || 1500) - modelHeightForOffset - ceilingClearance;
-  // Üst raf sabit: ek raflar aşağıya doğru eklensin
-  const adjustedBaseY = baseY;
+  // userHeight = ünitenin TOPLAM yüksekliği
+  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || 1195; // Ünitenin toplam yüksekliği (mm)
+  const bottomClearance = 50.8; // 2" alt boşluk (mm)
+  
+  // En üst rafın pozisyonu: totalHeight - bottomClearance
+  const topShelfY = totalHeight - bottomClearance;
+  const adjustedBaseY = topShelfY;
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12;

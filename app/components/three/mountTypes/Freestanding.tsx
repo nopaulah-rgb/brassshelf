@@ -181,9 +181,15 @@ export const handleFreestandingMount = async ({
   }
 
   const floorHeight = 0 + dynamicFloorY; // respect dynamic floor offset
-  // Lower default height. Grow with number of shelves by stacking downward from top.
-  const baseYUser = userHeight ?? 500; // default lower than previous
-  const adjustedBaseY = shelfQuantity > 1 ? baseYUser + (shelfQuantity - 1) * shelfSpacing : baseYUser;
+  
+  // userHeight = ünitenin TOPLAM yüksekliği (floor'dan itibaren)
+  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || 500; // Ünitenin toplam yüksekliği (mm)
+  const bottomClearance = 50.8; // 2" alt boşluk (mm)
+  
+  // En üst rafın pozisyonu: floor + totalHeight - bottomClearance
+  const topShelfY = floorHeight + totalHeight - bottomClearance;
+  const adjustedBaseY = topShelfY;
 
   const pipeRadius = pipeDiameter === '1' ? 16 : 12;
 

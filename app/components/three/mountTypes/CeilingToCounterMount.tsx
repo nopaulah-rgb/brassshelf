@@ -170,9 +170,14 @@ export const handleCeilingToCounterMount = async ({
 
   // Ceiling mount için sabit tavan seviyesi
   const baseCeilingY = roomHeight || 1500;
-  const baseY = baseCeilingY - shelfSpacing; // İlk shelf pozisyonu (tavan'dan shelfSpacing kadar aşağı)
-  // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
-  void userHeight;
+  // userHeight = ünitenin TOPLAM yüksekliği (ceiling'den aşağı doğru)
+  // Üst boşluk: 2" = 50.8mm, en üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || shelfSpacing; // Ünitenin toplam yüksekliği (mm)
+  const topClearance = 50.8; // 2" üst boşluk (mm)
+  
+  // En üst rafın pozisyonu: ceiling - topClearance
+  const topShelfY = baseCeilingY - topClearance;
+  const baseY = topShelfY; // İlk shelf pozisyonu
   // dynamicFloorY artık kullanılmıyor - ceiling to counter'da sistem sabit
   void dynamicFloorY;
   // shelfSpacing now comes from props

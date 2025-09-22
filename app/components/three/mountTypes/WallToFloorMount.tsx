@@ -225,11 +225,14 @@ export const handleWallToFloorMount = async ({
     }
   }
 
-  const baseY = userHeight || 1195;
-  // shelfSpacing now comes from props
+  // userHeight = ünitenin TOPLAM yüksekliği (floor'dan itibaren)
+  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || 1195; // Ünitenin toplam yüksekliği (mm)
+  const bottomClearance = 50.8; // 2" alt boşluk (mm)
   
-  // Adjust baseY when there are multiple shelves so that the first shelf stays at the same position
-  const adjustedBaseY = shelfQuantity > 1 ? baseY + (shelfQuantity - 1) * shelfSpacing : baseY;
+  // En üst rafın pozisyonu: floor'dan totalHeight - bottomClearance
+  const topShelfY = totalHeight - bottomClearance;
+  const adjustedBaseY = topShelfY;
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)

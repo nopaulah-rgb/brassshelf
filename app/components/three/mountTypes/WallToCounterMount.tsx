@@ -209,18 +209,15 @@ export const handleWallToCounterMount = async ({
   }
 
   const counterHeight = 400; // Counter height in mm
-  // Wall mount için shelf sistemini duvara göre konumlandır  
-  // Wall to counter için baseY hesaplama - ceiling'den başla ve tavandan biraz aşağıda başlat
-  // Model yüksekliğini ve küçük bir güvenlik payını düşerek tavana yapışmayı engelle
-  const ceilingClearance = 200; // mm - Daha aşağıda başlaması için artırıldı
-  const modelHeightForOffset = model13Height > 0 ? model13Height : 120; // yedek değer
-  const baseY = (roomHeight || 1500) - modelHeightForOffset - ceilingClearance;
   
-  // Üst seviye sabit kalsın; ek raflar aşağı doğru eklensin
-  const adjustedBaseY = baseY;
+  // userHeight = ünitenin TOPLAM yüksekliği (counter'dan itibaren)
+  // Alt boşluk: 2" = 50.8mm, üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || 1195; // Ünitenin toplam yüksekliği (mm)
+  const bottomClearance = 50.8; // 2" alt boşluk (mm)
   
-  // userHeight artık kullanılmıyor - wall position'a göre hesaplanıyor
-  void userHeight;
+  // En üst rafın pozisyonu: counter + totalHeight - bottomClearance
+  const topShelfY = counterHeight + totalHeight - bottomClearance;
+  const adjustedBaseY = topShelfY;
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)

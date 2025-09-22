@@ -245,10 +245,14 @@ export const handleCeilingToWallMount = async ({
     firstSpacing = shelfSpacing; // Fallback
   }
   
-  const baseY = baseCeilingY - firstSpacing; // İlk shelf pozisyonu (tavan'dan firstSpacing kadar aşağı)
-  const adjustedBaseY = baseY; // İlk raf pozisyonu - artık doğru spacing ile
-  // userHeight artık kullanılmıyor - ceiling position'a göre hesaplanıyor
-  void userHeight;
+  // userHeight = ünitenin TOPLAM yüksekliği (ceiling'den aşağı doğru)
+  // Üst boşluk: 2" = 50.8mm, en üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || firstSpacing; // Ünitenin toplam yüksekliği (mm)
+  const topClearance = 50.8; // 2" üst boşluk (mm)
+  
+  // En üst rafın pozisyonu: ceiling - topClearance
+  const topShelfY = baseCeilingY - topClearance;
+  const adjustedBaseY = topShelfY; // İlk raf pozisyonu
   
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12; // Çapı artırdık (12.5->16, 8->12)

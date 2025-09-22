@@ -12,6 +12,7 @@ export const handleCeilingToCounterToWallMount = async ({
   baySpacing = 0,
   baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
+  userHeight,
   userWidth,
   useTopShelf = false,
   roomGeometry,
@@ -238,9 +239,14 @@ export const handleCeilingToCounterToWallMount = async ({
   const fixedCounterY = 200; // Counter position is FIXED like in ceiling-to-counter mount
   const counterTopY = fixedCounterY + 200; // Counter'ın üst yüzeyi (merkez + yarı yükseklik)
   
-  // İlk shelf pozisyonu - CeilingToCounter gibi sabit
-  const baseY = baseCeilingY - shelfSpacing; // İlk shelf pozisyonu (tavan'dan shelfSpacing kadar aşağı)
-  const adjustedBaseY = baseY; // İlk raf her zaman aynı pozisyonda kalmalı
+  // userHeight = ünitenin TOPLAM yüksekliği (ceiling'den aşağı doğru)
+  // Üst boşluk: 2" = 50.8mm, en üst raftan başlayarak aşağı doğru rafları yerleştir
+  const totalHeight = userHeight || shelfSpacing; // Ünitenin toplam yüksekliği (mm)
+  const topClearance = 50.8; // 2" üst boşluk (mm)
+  
+  // En üst rafın pozisyonu: ceiling - topClearance
+  const topShelfY = baseCeilingY - topClearance;
+  const adjustedBaseY = topShelfY; // İlk raf pozisyonu
 
   // Calculate pipe radius based on pipeDiameter
   const pipeRadius = pipeDiameter === '1' ? 16 : 12;

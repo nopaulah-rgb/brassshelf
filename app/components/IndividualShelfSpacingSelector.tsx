@@ -145,6 +145,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     setInvalidIndex(-1);
   };
 
+
   // Auto-close validation after 5 seconds
   useEffect(() => {
     if (isValidationOpen) {
