@@ -141,6 +141,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleHeightInputChange}
             placeholder={unit === 'inch' ? "e.g., 72" : "e.g., 1830"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">
+              Enter measurement in decimal inches (e.g., 42.625)
+            </p>
+          )}
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium" htmlFor="width">Width ({unit})</label>
@@ -153,6 +158,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onBlur={handleWidthBlur}
             placeholder={unit === 'inch' ? "e.g., 36" : "e.g., 914"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">
+              Enter measurement in decimal inches (e.g., 42.625)
+            </p>
+          )}
         </div>
         <div>
           <div className="mb-2 flex items-center gap-2">
@@ -175,6 +185,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onBlur={handleShelfDepthBlur}
             placeholder={unit === 'inch' ? "e.g., 12" : "e.g., 305"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">
+              Enter measurement in decimal inches (e.g., 42.625)
+            </p>
+          )}
         </div>
         <div>
           <div className="mb-2 flex items-center gap-2">
@@ -196,6 +211,11 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleTotalDepthInputChange}
             placeholder={unit === 'inch' ? "e.g., 13.5" : "e.g., 343"}
           />
+          {unit === 'inch' && (
+            <p className="text-xs text-slate-500 mt-1">
+              Enter measurement in decimal inches (e.g., 42.625)
+            </p>
+          )}
         </div>
       </div>
 

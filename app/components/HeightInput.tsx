@@ -39,16 +39,21 @@ const HeightInput: React.FC<HeightInputProps> = ({
           : "Counter to Top Height (inches)"}
         :
       </label>
-      <input
-        id="heightInput"
-        type="number"
-        min="0"
-        step="0.1"
-        value={inchValue}
-        onChange={handleChange}
-        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Enter height in inches"
-      />
+      <div>
+        <input
+          id="heightInput"
+          type="number"
+          min="0"
+          step="0.1"
+          value={inchValue}
+          onChange={handleChange}
+          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter height in inches"
+        />
+        <p className="text-xs text-slate-500 mt-1">
+          Enter measurement in decimal inches (e.g., 42.625)
+        </p>
+      </div>
     </div>
   );
 };

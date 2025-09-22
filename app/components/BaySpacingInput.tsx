@@ -215,18 +215,25 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
             <label className="text-sm font-medium text-slate-700 w-24">
               Bay {index + 1}:
             </label>
-            <input
-              type="text"
-              value={inputValues[index] || ''}
-              onChange={(e) => handleSpacingChange(index, e.target.value)}
-              onBlur={(e) => handleBlur(index, e.target.value)}
-              className={`flex-1 py-2 px-3 border font-medium focus:outline-none focus:border-black transition-colors ${
-                invalidIndex === index 
-                  ? 'border-red-300 bg-red-50 text-red-700' 
-                  : 'border-gray-300 bg-white text-gray-800'
-              }`}
-              placeholder={unit === 'inch' ? "4.5" : "100"}
-            />
+            <div className="flex-1">
+              <input
+                type="text"
+                value={inputValues[index] || ''}
+                onChange={(e) => handleSpacingChange(index, e.target.value)}
+                onBlur={(e) => handleBlur(index, e.target.value)}
+                className={`w-full py-2 px-3 border font-medium focus:outline-none focus:border-black transition-colors ${
+                  invalidIndex === index 
+                    ? 'border-red-300 bg-red-50 text-red-700' 
+                    : 'border-gray-300 bg-white text-gray-800'
+                }`}
+                placeholder={unit === 'inch' ? "4.5" : "100"}
+              />
+              {unit === 'inch' && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Enter measurement in decimal inches (e.g., 42.625)
+                </p>
+              )}
+            </div>
             <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
         ))}
