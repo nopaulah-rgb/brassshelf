@@ -11,7 +11,7 @@ export const handleCeilingMount = async ({
   baySpacing = 0,
   baySpacings = [], // Bayslar arası default boşluk 0mm (birleşik)
   showCrossbars,
-  userHeight,
+  userHeight, // eslint-disable-line @typescript-eslint/no-unused-vars
   userWidth,
   shelfGeometry,
   shelfMaterial,
@@ -335,22 +335,24 @@ export const handleCeilingMount = async ({
         const connectorMesh = new THREE.Mesh(geometryToUse, materialToUse);
         connectorMesh.scale.set(1.5, 1.5, 1.5);
 
-        // Model tipine göre rotasyonlar
+        // Model tipine göre rotasyonlar - sadece ilgili pozisyon için kontrol et
         const hasHorizontalBarForThisShelf = 
-          (frontBars && selectedShelvesForBars.includes(i)) || 
-          (backBars && selectedBackShelvesForBars.includes(i));
+          (isFrente && backBars && selectedBackShelvesForBars.includes(i)) ||   // Öndeki model, back bar var ve seçili
+          (isBacke && frontBars && selectedShelvesForBars.includes(i));         // Arkadaki model, front bar var ve seçili
           
         if (hasHorizontalBarForThisShelf) {
-          // Bu raf için horizontal bar var durumunda
+          // Bu raf için horizontal bar var durumunda - modeli Z ekseni etrafında döndür (dünya gibi kendi ekseni etrafında)
           if (model13Geometry) {
-            // Model13 için rotasyonlar
+            // Model13 için rotasyonlar - Z ekseni etrafında 90 derece döndür
+            connectorMesh.rotation.z = Math.PI / 2; // Z ekseni etrafında 90 derece döndür
             if (isFrente) {
               connectorMesh.rotation.y = 0; // Ön taraf - merkeze bakmalı
             } else if (isBacke) {
               connectorMesh.rotation.y = Math.PI; // Arka taraf - merkeze bakmalı (180 derece döndür)
             }
           } else {
-            // Eski model1 rotasyonları
+            // Eski model1 rotasyonları - Z ekseni etrafında döndür
+            connectorMesh.rotation.z = Math.PI / 2; // Z ekseni etrafında 90 derece döndür
             if (isFrente) {
               connectorMesh.rotation.y = Math.PI + Math.PI / 2;
             } else {
@@ -358,7 +360,7 @@ export const handleCeilingMount = async ({
             }
           }
         } else {
-          // Bu raf için horizontal bar yok - Type16A kullan
+          // Bu raf için horizontal bar yok - normal rotasyon (eski haline dön)
           if (type16AGeometry) {
             if (isBacke) {
               connectorMesh.rotation.y = Math.PI; // Arkadaki Type16A'yı 180 derece çevir
@@ -366,7 +368,12 @@ export const handleCeilingMount = async ({
               connectorMesh.rotation.y = 0; // Öndeki Type16A standart rotasyon
             }
           } else if (model13Geometry) {
-            connectorMesh.rotation.y = 0; // Model13 fallback
+            // Model13 için eski rotasyon (horizontal bar olmayan durumda - front no olduğundaki gibi)
+            if (isFrente) {
+              connectorMesh.rotation.y = Math.PI + Math.PI / 2; // Öndeki Model13 eski rotasyonu
+            } else {
+              connectorMesh.rotation.y = Math.PI / 2; // Arkadaki Model13 eski rotasyonu
+            }
           } else {
             connectorMesh.rotation.y = Math.PI + Math.PI / 2; // Eski model1 rotasyonu
           }
@@ -449,6 +456,10 @@ export const handleCeilingMount = async ({
         if (isBacke) {
           // Sadece arkadaki ripler için pozisyon ayarla
           ripZPos += 5; // Base offset
+          // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
+          if (frontBars) {
+            ripZPos -= 20; // 10 birim geriye hareket ettir (tavan modelleriyle hizalamak için)
+          }
           if (frontBars && selectedShelvesForBars.includes(i)) {
             // Front bar açık ve bu raf seçili - arkadaki model Model13
             ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
@@ -467,8 +478,13 @@ export const handleCeilingMount = async ({
           }
         }
         
-        // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa 3 birim öne kaydır
-        const verticalRipZAdjustment = frontBars ? 3 : (backBars ? -3 : 0);
+        // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
+        let verticalRipZAdjustment = 0;
+        if (frontBars) {
+          verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
+        } else if (backBars && pos.z === shelfBoundingBox.min.z + 5) {
+          verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
+        }
         
         // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat
         verticalRip.position.set(
@@ -504,10 +520,12 @@ export const handleCeilingMount = async ({
             const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
+            // Back bar açık olduğunda horizontal bar'ı 5 birim geriye hareket ettir
+            const frontBarZAdjustment = backBars ? -35 : 0;
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
               currentHeight + model13Height / 2 -15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 + 15 // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı
+              (zStart + zEnd) / 2 + 35 + frontBarZAdjustment // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı + back bar açıksa 5 birim geriye
             );
             scene.add(horizontalRip);
           }
@@ -551,10 +569,12 @@ export const handleCeilingMount = async ({
             const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
+            // Back bar açık olduğunda horizontal bar'ı 5 birim geriye hareket ettir
+            const backBarZAdjustment = backBars ? -35 : 0;
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 - 40 // Öndeki crossbar pozisyonu - 5 birim ileriye çekildi
+              (zStart + zEnd) / 2 - 40 + backBarZAdjustment // Öndeki crossbar pozisyonu - back bar açıksa 5 birim geriye
             );
             scene.add(horizontalRip);
           }
@@ -740,6 +760,10 @@ export const handleCeilingMount = async ({
       if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
+        // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
+        if (frontBars) {
+          ripZPos -= 20; // 10 birim geriye hareket ettir (tavan modelleriyle hizalamak için)
+        }
         if (frontBars && selectedShelvesForBars.includes(0)) {
           // Front bar açık ve tek raf seçili - arkadaki model Model13
           ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
@@ -763,8 +787,13 @@ export const handleCeilingMount = async ({
       const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
       verticalRip.geometry = updatedRipGeometry;
       
-      // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa 3 birim öne kaydır
-      const verticalRipZAdjustment = frontBars ? 3 : (backBars ? -3 : 0);
+      // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
+      let verticalRipZAdjustment = 0;
+      if (frontBars) {
+        verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
+      } else if (backBars && pos.z === shelfBoundingBox.min.z + 5) {
+        verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
+      }
       
       verticalRip.position.set(
         pos.x,
@@ -794,8 +823,13 @@ export const handleCeilingMount = async ({
       
       // Type16E modeli için pozisyon ayarı - tek shelf durumunda asıl tavan seviyesinde
       const singleConnectorCeilingY = shelfQuantity === 1 ? baseCeilingY : topShelfHeight + shelfSpacing;
-      // Front bar açıksa ceiling connector'ları 3 birim arkaya, back bar açıksa 3 birim öne kaydır
-      const connectorZAdjustment = frontBars ? 3 : (backBars ? -3 : 0);
+      // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
+      let connectorZAdjustment = 0;
+      if (frontBars) {
+        connectorZAdjustment = 3; // Front bar mantığı korunuyor
+      } else if (backBars && pos.z === shelfBoundingBox.min.z + 5) {
+        connectorZAdjustment = 25; // Back bar açık ve öndeki pozisyon - dikey riplerle aynı
+      }
       ceilingConnector.position.set(pos.x, singleConnectorCeilingY, ripZPos + connectorZAdjustment);
       scene.add(ceilingConnector);
     });
@@ -874,6 +908,10 @@ export const handleCeilingMount = async ({
           if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
+        // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
+        if (frontBars) {
+          ripZPos -= 20; // 10 birim geriye hareket ettir (tavan modelleriyle hizalamak için)
+        }
         if (frontBars && selectedShelvesForBars.includes(0)) {
           // Front bar açık ve en üst raf (index 0) seçili - arkadaki model Model13
           ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
@@ -897,8 +935,13 @@ export const handleCeilingMount = async ({
     const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
     verticalRip.geometry = updatedRipGeometry;
     
-    // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa 3 birim öne kaydır
-    const verticalRipZAdjustment = frontBars ? 3 : (backBars ? -3 : 0);
+    // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
+    let verticalRipZAdjustment = 0;
+    if (frontBars) {
+      verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
+    } else if (backBars && pos.z === shelfBoundingBox.min.z + 5) {
+      verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
+    }
     
     verticalRip.position.set(
       pos.x,
@@ -928,8 +971,13 @@ export const handleCeilingMount = async ({
     
     // Type16E modeli için pozisyon ayarı - çoklu shelf durumunda
     const multiConnectorCeilingY = topShelfHeight + shelfSpacing;
-    // Front bar açıksa ceiling connector'ları 3 birim arkaya, back bar açıksa 3 birim öne kaydır
-    const connectorZAdjustment = frontBars ? 3 : (backBars ? -3 : 0);
+    // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
+    let connectorZAdjustment = 0;
+    if (frontBars) {
+      connectorZAdjustment = 3; // Front bar mantığı korunuyor
+    } else if (backBars && pos.z === shelfBoundingBox.min.z + 5) {
+      connectorZAdjustment = 25; // Back bar açık ve öndeki pozisyon - dikey riplerle aynı
+    }
     ceilingConnector.position.set(pos.x, multiConnectorCeilingY, ripZPos + connectorZAdjustment);
     scene.add(ceilingConnector);
   });
