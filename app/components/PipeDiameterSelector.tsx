@@ -17,14 +17,31 @@ const PipeDiameterSelector: React.FC<PipeDiameterSelectorProps> = ({
   }, [pipeDiameter, onChange]);
 
   return (
-    <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Pipe Diameter</h3>
-      <div className="flex items-center gap-4">
-        <div className="w-5 h-5 bg-black"></div>
-        <div>
-          <span className="text-gray-900 font-medium">5/8" (16mm)</span>
-          <p className="text-gray-600 text-sm mt-1">Standard brass tube diameter</p>
-        </div>
+    <div>
+      <label className="mb-2 block text-sm font-medium">Pipe Diameter</label>
+      <div className="flex flex-wrap gap-4">
+        <label className={`radio-label ${pipeDiameter === '5/8' ? 'active' : ''}`}>
+          <input
+            className="sr-only"
+            name="pipe-diameter"
+            type="radio"
+            value="5/8"
+            checked={pipeDiameter === '5/8'}
+            onChange={() => onChange('5/8')}
+          />
+          5/8"
+        </label>
+        <label className={`radio-label ${pipeDiameter === '1' ? 'active' : ''}`}>
+          <input
+            className="sr-only"
+            name="pipe-diameter"
+            type="radio"
+            value="1"
+            checked={pipeDiameter === '1'}
+            onChange={() => onChange('1')}
+          />
+          1"
+        </label>
       </div>
     </div>
   );

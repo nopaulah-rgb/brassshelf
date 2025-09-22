@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reference Design Styles */
+:root {
+  --primary-color: #ec9513;
+  --secondary-color: #f4f3f0;
+  --text-primary: #181511;
+  --text-secondary: #897961;
+  --border-color: #e6e1db;
+}
+
 @layer base {
   h1 {
     @apply font-normal tracking-[0.6px] text-brand-text;
@@ -26,5 +35,63 @@
 @layer components {
   .btn-cta {
     @apply inline-flex items-center justify-center bg-brand-cta text-brand-ctaText tracking-[1px] font-normal px-[30px] py-0 rounded-none border border-brand-ctaText;
+  }
+  
+  /* Reference Design Components */
+  .form-input {
+    @apply w-full rounded-md border-[var(--border-color)] bg-white p-3 text-base text-[var(--text-primary)] transition-colors duration-300 focus:border-[var(--primary-color)] focus:ring-1 focus:ring-[var(--primary-color)];
+  }
+  
+  .radio-label {
+    @apply flex cursor-pointer items-center justify-center rounded-md border border-[var(--border-color)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--primary-color)];
+  }
+  
+  .radio-label.active {
+    @apply border-2 border-[var(--primary-color)] bg-[var(--secondary-color)] px-3.5 py-1.5;
+  }
+  
+  .btn {
+    @apply flex h-11 w-full cursor-pointer items-center justify-center overflow-hidden rounded-md px-6 text-sm font-bold leading-normal tracking-wide transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-[var(--primary-color)] text-[var(--text-primary)] hover:bg-opacity-90;
+  }
+  
+  .btn-secondary {
+    @apply bg-[var(--secondary-color)] text-[var(--text-primary)] hover:bg-[var(--border-color)];
+  }
+  
+  .toggle-switch {
+    @apply relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-offset-2;
+  }
+  
+  .toggle-switch-knob {
+    @apply pointer-events-none inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out;
+  }
+  
+  .toggle-switch.on {
+    @apply bg-[var(--primary-color)];
+  }
+  
+  .toggle-switch.on .toggle-switch-knob {
+    @apply translate-x-5;
+  }
+  
+  details[open]>summary .chevron {
+    transform: rotate(180deg);
+  }
+  
+  .tooltip {
+    @apply invisible absolute z-10 -mt-16 w-64 rounded-md bg-[var(--text-primary)] p-3 text-sm text-white opacity-0 shadow-lg transition-all duration-300;
+  }
+  
+  .tooltip-container:hover .tooltip {
+    @apply visible opacity-100;
+  }
+  
+  .tooltip::after {
+    content: "";
+    @apply absolute left-1/2 top-full -ml-2 h-0 w-0 border-x-8 border-t-8 border-solid border-x-transparent border-t-[var(--text-primary)];
   }
 }

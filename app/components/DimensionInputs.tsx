@@ -128,162 +128,74 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 border border-gray-300 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-slate-900">Dimensions</h3>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleUnitToggle}
-            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              unit === 'inch' 
-                ? 'bg-black text-white' 
-                : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-            }`}
-          >
-            inch
-          </button>
-          <button
-            onClick={handleUnitToggle}
-            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              unit === 'mm' 
-                ? 'bg-black text-white' 
-                : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-            }`}
-          >
-            mm
-          </button>
-        </div>
-      </div>
+    <div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Height</label>
+          <label className="mb-2 block text-sm font-medium" htmlFor="height">Height ({unit})</label>
           <input
+            className="form-input"
+            id="height"
             type="text"
             value={heightInput}
             onChange={handleHeightInputChange}
-            step={unit === 'inch' ? "0.001" : "1"}
-            className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 42.625)" : "Height in mm"}
+            placeholder={unit === 'inch' ? "e.g., 72" : "e.g., 1830"}
           />
-          {unit === 'inch' ? (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 42.625)</p>
-          ) : (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in whole millimeters</p>
-          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Width</label>
+          <label className="mb-2 block text-sm font-medium" htmlFor="width">Width ({unit})</label>
           <input
+            className="form-input"
+            id="width"
             type="text"
             value={widthInput}
             onChange={handleWidthInputChange}
             onBlur={handleWidthBlur}
-            step={unit === 'inch' ? "0.001" : "1"}
-            className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-black transition-colors"
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 36.125)" : "Width in mm"}
+            placeholder={unit === 'inch' ? "e.g., 36" : "e.g., 914"}
           />
-          {unit === 'inch' ? (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in decimal inches (e.g., 36.125)</p>
-          ) : (
-            <p className="text-xs text-slate-500 mt-1">Enter measurement in whole millimeters</p>
-          )}
         </div>
-        {/* Depth Type Selection */}
-        <div className="col-span-3">
-          <div className="flex gap-4 mb-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="depthType"
-                value="shelf"
-                checked={selectedDepthType === 'shelf'}
-                onChange={(e) => onDepthTypeChange(e.target.value as 'shelf' | 'total')}
-                className="mr-2 text-slate-600 focus:ring-slate-500"
-              />
-              <span className="text-sm font-medium text-slate-700">Shelf Depth</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="depthType"
-                value="total"
-                checked={selectedDepthType === 'total'}
-                onChange={(e) => onDepthTypeChange(e.target.value as 'shelf' | 'total')}
-                className="mr-2 text-slate-600 focus:ring-slate-500"
-              />
-              <span className="text-sm font-medium text-slate-700">Total Depth</span>
-            </label>
-          </div>
-        </div>
-        
         <div>
-          <label className={`block text-sm font-medium mb-2 ${
-            selectedDepthType === 'shelf' ? 'text-slate-700' : 'text-slate-400'
-          }`}>
-            Shelf Depth
-          </label>
+          <div className="mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium" htmlFor="shelf-depth">Shelf Depth ({unit})</label>
+            <div className="tooltip-container relative flex items-center">
+              <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" x2="12" y1="16" y2="12"></line>
+                <line x1="12" x2="12.01" y1="8" y2="8"></line>
+              </svg>
+              <div className="tooltip">This is the depth of the shelf surface itself.</div>
+            </div>
+          </div>
           <input
+            className="form-input"
+            id="shelf-depth"
             type="text"
             value={shelfDepthInput}
             onChange={handleShelfDepthInputChange}
             onBlur={handleShelfDepthBlur}
-            disabled={selectedDepthType !== 'shelf'}
-            step={unit === 'inch' ? "0.001" : "1"}
-            className={`w-full px-4 py-3 border focus:outline-none focus:border-black transition-colors ${
-              selectedDepthType === 'shelf'
-                ? 'border-gray-300 bg-white text-gray-800'
-                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Shelf Depth in mm"}
+            placeholder={unit === 'inch' ? "e.g., 12" : "e.g., 305"}
           />
-          {unit === 'inch' ? (
-            <p className={`text-xs mt-1 ${
-              selectedDepthType === 'shelf' ? 'text-slate-500' : 'text-slate-300'
-            }`}>
-              Enter measurement in decimal inches (e.g., 12.375)
-            </p>
-          ) : (
-            <p className={`text-xs mt-1 ${
-              selectedDepthType === 'shelf' ? 'text-slate-500' : 'text-slate-300'
-            }`}>
-              Enter measurement in whole millimeters
-            </p>
-          )}
         </div>
-        
         <div>
-          <label className={`block text-sm font-medium mb-2 ${
-            selectedDepthType === 'total' ? 'text-slate-700' : 'text-slate-400'
-          }`}>
-            Total Depth
-          </label>
+          <div className="mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium" htmlFor="total-depth">Total Depth ({unit})</label>
+            <div className="tooltip-container relative flex items-center">
+              <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" x2="12" y1="16" y2="12"></line>
+                <line x1="12" x2="12.01" y1="8" y2="8"></line>
+              </svg>
+              <div className="tooltip">The full depth of the unit including mounting hardware.</div>
+            </div>
+          </div>
           <input
+            className="form-input"
+            id="total-depth"
             type="text"
             value={totalDepthInput}
             onChange={handleTotalDepthInputChange}
-            disabled={selectedDepthType !== 'total'}
-            step={unit === 'inch' ? "0.001" : "1"}
-            className={`w-full px-4 py-3 border focus:outline-none focus:border-black transition-colors ${
-              selectedDepthType === 'total'
-                ? 'border-gray-300 bg-white text-gray-800'
-                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-            placeholder={unit === 'inch' ? "Enter measurement in decimal inches (e.g., 12.375)" : "Total Depth in mm"}
+            placeholder={unit === 'inch' ? "e.g., 13.5" : "e.g., 343"}
           />
-          {unit === 'inch' ? (
-            <p className={`text-xs mt-1 ${
-              selectedDepthType === 'total' ? 'text-slate-500' : 'text-slate-300'
-            }`}>
-              Enter measurement in decimal inches (e.g., 12.375)
-            </p>
-          ) : (
-            <p className={`text-xs mt-1 ${
-              selectedDepthType === 'total' ? 'text-slate-500' : 'text-slate-300'
-            }`}>
-              Enter measurement in whole millimeters
-            </p>
-          )}
         </div>
       </div>
 

@@ -86,24 +86,32 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
   const hideBackBars = !!mountType && mountType.toLowerCase().includes('wall');
 
   return (
-    <div className="bg-white p-6 border border-gray-300 space-y-6">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Crossbar Options</h3>
-      
+    <div>
       <div className="space-y-6">
         {/* Front Horizontal Bars */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Front Horizontal Bars</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Front Horizontal Bars</span>
+              <div className="tooltip-container relative flex items-center">
+                <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" x2="12" y1="16" y2="12"></line>
+                  <line x1="12" x2="12.01" y1="8" y2="8"></line>
+                </svg>
+                <div className="tooltip">Also known as crossbars, these add stability and a design element.</div>
+              </div>
+            </div>
             <button
+              aria-checked={frontBars}
+              className={`toggle-switch ${frontBars ? 'on' : ''}`}
+              id="front-bars-toggle"
+              role="switch"
+              type="button"
               onClick={() => handleFrontBarsChange(!frontBars)}
               disabled={isUpdating}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                frontBars 
-                  ? 'bg-black text-white' 
-                  : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-              }`}
             >
-              {frontBars ? 'Enabled' : 'Disabled'}
+              <span className="toggle-switch-knob"></span>
             </button>
           </div>
           
@@ -134,17 +142,27 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
         {!hideBackBars && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-slate-700 font-medium">Back Horizontal Bars</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Back Horizontal Bars</span>
+                <div className="tooltip-container relative flex items-center">
+                  <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="16" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="8" y2="8"></line>
+                  </svg>
+                  <div className="tooltip">Also known as crossbars, these add stability and a design element.</div>
+                </div>
+              </div>
               <button
+                aria-checked={backBars}
+                className={`toggle-switch ${backBars ? 'on' : ''}`}
+                id="back-bars-toggle"
+                role="switch"
+                type="button"
                 onClick={() => handleBackBarsChange(!backBars)}
                 disabled={isUpdating}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  backBars 
-                    ? 'bg-black text-white' 
-                    : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-                }`}
               >
-                {backBars ? 'Enabled' : 'Disabled'}
+                <span className="toggle-switch-knob"></span>
               </button>
             </div>
             

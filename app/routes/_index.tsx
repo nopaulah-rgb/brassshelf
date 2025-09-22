@@ -535,11 +535,7 @@ export default function Index() {
                           <div>
                             <label className="mb-2 block text-sm font-medium">Shelf Spacing Mode</label>
                             <div className="flex gap-4">
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                        !useIndividualSpacing
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${!useIndividualSpacing ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="spacing-mode" 
@@ -550,11 +546,7 @@ export default function Index() {
                                 />
                       Equal Spacing
                               </label>
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                        useIndividualSpacing
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${useIndividualSpacing ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="spacing-mode" 
@@ -734,11 +726,7 @@ export default function Index() {
                           <div>
                             <label className="mb-2 block text-sm font-medium">Material</label>
                             <div className="flex flex-wrap gap-4">
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                                material === 'brass' 
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${material === 'brass' ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="material" 
@@ -752,11 +740,7 @@ export default function Index() {
                                 />
                                 Brass
                               </label>
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                                material === 'stainless-steel' 
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${material === 'stainless-steel' ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="material" 
@@ -770,16 +754,12 @@ export default function Index() {
                                 />
                                 Stainless Steel
                               </label>
-                </div>
-              </div>
+                            </div>
+                          </div>
                           <div>
                             <label className="mb-2 block text-sm font-medium">Finish</label>
                             <div className="flex flex-wrap gap-4">
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                                finish === 'polished' 
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${finish === 'polished' ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="finish" 
@@ -793,11 +773,7 @@ export default function Index() {
                                 />
                                 Polished
                               </label>
-                              <label className={`radio-label flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-all duration-200 hover:border-[#ec9513] ${
-                                finish === 'brushed' 
-                                  ? 'active border-2 border-[#ec9513] bg-[#f4f3f0] px-3.5 py-1.5'
-                                  : 'border-[#e6e1db] text-[#181511]'
-                              }`}>
+                              <label className={`radio-label ${finish === 'brushed' ? 'active' : ''}`}>
                                 <input 
                                   className="sr-only" 
                                   name="finish" 
@@ -869,6 +845,12 @@ export default function Index() {
                       selectedShelvesForBars={selectedShelvesForBars}
                       selectedBackShelvesForBars={selectedShelvesForBackBars}
                       backVertical={backVertical}
+                      price={price}
+                      onSave={() => {/* Save functionality */}}
+                      onLoad={() => {/* Load functionality */}}
+                      onExport={handleExport}
+                      onReset={() => {/* Reset functionality */}}
+                      onAddToCart={handleAddToCart}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center p-8">
@@ -884,35 +866,7 @@ export default function Index() {
                     </div>
                   )}
                   
-                  {/* Control Buttons Overlay */}
-                  <div className="absolute right-4 top-4 z-10 flex items-center space-x-1 rounded-md border border-[#e6e1db] bg-white/50 p-1 backdrop-blur-sm">
-                    <button className="flex h-10 w-10 items-center justify-center rounded bg-white/70 text-[#181511] transition-colors hover:bg-white">
-                      <span className="material-symbols-outlined !text-xl">fit_screen</span>
-                    </button>
-                    <div className="h-6 w-px bg-[#e6e1db]"></div>
-                    <button className="group flex h-10 w-10 items-center justify-center rounded text-[#181511] transition-colors hover:bg-white/70">
-                      <span className="material-symbols-outlined !text-2xl">rotate_left</span>
-                    </button>
-                    <button className="group flex h-10 w-10 items-center justify-center rounded text-[#181511] transition-colors hover:bg-white/70">
-                      <span className="material-symbols-outlined !text-2xl">rotate_right</span>
-                    </button>
-                </div>
-
-                  {/* Show Dimensions Button */}
-                  <div className="absolute bottom-4 left-4 z-10">
-                    <button 
-                      onClick={async () => {
-                        if (viewerRef.current) {
-                          const imgs = await viewerRef.current.captureViews();
-                          setShots(imgs);
-                        }
-                        setIsDimensionsOpen(true);
-                      }}
-                      className="bg-white/90 backdrop-blur-sm text-[#181511] font-medium py-2 px-4 rounded-md hover:bg-white transition-colors border border-[#e6e1db]"
-                    >
-                      Show Dimensions & Views
-                    </button>
-                  </div>
+              
                 </>
               ) : (
                 <div className="flex h-full items-center justify-center">
@@ -924,12 +878,6 @@ export default function Index() {
               )}
             </div>
 
-            {/* Price and Actions */}
-            <PriceAndActions
-              price={price}
-              onExport={handleExport}
-              onAddToCart={handleAddToCart}
-            />
           </div>
         </div>
       </main>

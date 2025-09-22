@@ -135,34 +135,31 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
   };
 
   return (
-    <div className="bg-white p-6 border border-gray-300">
+    <div>
       <h3 className="text-lg font-medium text-slate-900 mb-4">Mount Type</h3>
       <p className="text-sm text-slate-600 mb-4">Select one or more mounting options</p>
       
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {mountTypes.map((type) => {
           const isSelected = selectedMounts.includes(type.id);
           const isDisabledState = isDisabled(type.id);
           
           return (
-            <button
+            <label
               key={type.id}
-              onClick={() => handleToggle(type.id)}
-              disabled={isDisabledState}
-              className={`px-4 py-3 text-sm font-medium transition-colors duration-200
-                       focus:outline-none
-                       ${isDisabledState 
-                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
-                         : isSelected 
-                           ? 'bg-black text-white'
-                           : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-                       }`}
+              className={`radio-label ${isSelected ? 'active' : ''} ${isDisabledState ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <div className="flex items-center justify-center gap-2">
-                {/* <span className="text-base">{type.icon}</span> */}
-                <span>{type.name}</span>
-              </div>
-            </button>
+              <input
+                type="radio"
+                className="sr-only"
+                name="mounting-type"
+                value={type.id}
+                checked={isSelected}
+                disabled={isDisabledState}
+                onChange={() => handleToggle(type.id)}
+              />
+              {type.name}
+            </label>
           );
         })}
       </div>
@@ -172,12 +169,6 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
           Floor and Counter cannot be selected simultaneously
         </p>
       )}
-      
-      {/* <div className="mt-4 p-3 bg-blue-50 border border-blue-200">
-        <p className="text-xs text-blue-700">
-          <strong>Selected:</strong> {convertToOriginalMountType(selectedMounts)}
-        </p>
-      </div> */}
     </div>
   );
 };

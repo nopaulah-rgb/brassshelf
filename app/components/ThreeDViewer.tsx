@@ -44,6 +44,12 @@ interface ThreeDViewerProps {
   selectedShelvesForBars?: number[];
   selectedBackShelvesForBars?: number[];
   backVertical?: boolean;
+  price?: number;
+  onSave?: () => void;
+  onLoad?: () => void;
+  onExport?: () => void;
+  onReset?: () => void;
+  onAddToCart?: () => void;
 }
 
 const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({ 
@@ -68,6 +74,12 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   selectedShelvesForBars = [],
   selectedBackShelvesForBars = [],
   backVertical = true,
+  price = 2499,
+  onSave,
+  onLoad,
+  onExport,
+  onReset,
+  onAddToCart,
 }, ref): JSX.Element => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -99,152 +111,6 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     verticalBarsAtBack
   });
 
-  // Control functions
-  const handleZoomIn = () => {
-    if (cameraRef.current && controlsRef.current) {
-      const camera = cameraRef.current;
-      const controls = controlsRef.current;
-      
-      // Calculate new position closer to target
-      const direction = new THREE.Vector3();
-      direction.subVectors(camera.position, controls.target);
-      const distance = direction.length();
-      const newDistance = Math.max(controls.minDistance, distance * 0.8);
-      
-      direction.normalize();
-      camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
-      controls.update();
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (cameraRef.current && controlsRef.current) {
-      const camera = cameraRef.current;
-      const controls = controlsRef.current;
-      
-      // Calculate new position farther from target
-      const direction = new THREE.Vector3();
-      direction.subVectors(camera.position, controls.target);
-      const distance = direction.length();
-      const newDistance = Math.min(controls.maxDistance, distance * 1.2);
-      
-      direction.normalize();
-      camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance));
-      controls.update();
-    }
-  };
-
-  const handleRotateLeft = () => {
-    if (cameraRef.current && controlsRef.current) {
-      const camera = cameraRef.current;
-      const controls = controlsRef.current;
-      const angle = Math.PI / 8; // 22.5 degrees
-      
-      // Rotate around the target (Y axis)
-      const offset = new THREE.Vector3();
-      offset.copy(camera.position).sub(controls.target);
-      
-      // Apply rotation
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const x = offset.x;
-      const z = offset.z;
-      
-      offset.x = x * cos + z * sin;
-      offset.z = -x * sin + z * cos;
-      
-      camera.position.copy(controls.target).add(offset);
-      camera.lookAt(controls.target);
-      controls.update();
-    }
-  };
-
-  const handleRotateRight = () => {
-    if (cameraRef.current && controlsRef.current) {
-      const camera = cameraRef.current;
-      const controls = controlsRef.current;
-      const angle = -Math.PI / 8; // -22.5 degrees
-      
-      // Rotate around the target (Y axis)
-      const offset = new THREE.Vector3();
-      offset.copy(camera.position).sub(controls.target);
-      
-      // Apply rotation
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const x = offset.x;
-      const z = offset.z;
-      
-      offset.x = x * cos + z * sin;
-      offset.z = -x * sin + z * cos;
-      
-      camera.position.copy(controls.target).add(offset);
-      camera.lookAt(controls.target);
-      controls.update();
-    }
-  };
-
-  const handleFitToScreen = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Calculate dynamic room dimensions (same logic as in useEffect)
-      const heightInInches = userHeight ? userHeight / 25.4 : 47;
-      
-      // Base room dimensions
-      let roomWidth = 2000;
-      let roomDepth = 1200;
-      let roomHeight = 1500;
-      
-      // Adjust room width dynamically based on barCount
-      if (barCount > 1) {
-        const additionalWidth = (barCount - 1) * 950;
-        roomWidth = Math.max(2000, roomWidth + additionalWidth);
-      }
-      
-      // Calculate dynamic room height based on shelf quantity and spacing
-      const baseRoomHeight = 1500;
-      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
-      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
-      roomHeight = baseRoomHeight + heightExtension;
-      
-      // Adjust room size for taller shelf systems
-      if (heightInInches > 60) {
-        const scaleFactor = Math.max(1.2, heightInInches / 50);
-        roomWidth = Math.max(roomWidth, roomWidth * scaleFactor);
-        roomDepth = Math.max(1200, roomDepth * scaleFactor);
-        roomHeight = Math.max(roomHeight, userHeight! + 400);
-      }
-      
-      // Calculate dynamic floor position
-      const dynamicFloorY = -heightExtension;
-      
-      // Calculate camera distance based on room dimensions to ensure entire room is visible
-      const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
-      const shelfHeightFactor = (userHeight || 1194) / 1000;
-      const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
-      const bayCountFactor = Math.max(1, barCount / 2);
-      const roomHeightFactor = roomHeight / 1500;
-      
-      // Use room diagonal as base for camera distance to ensure full room visibility
-      const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
-      const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
-      
-      // Position camera to show entire room
-      const cameraX = 0; // Center on x-axis
-      const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
-      const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
-      
-      cameraRef.current.position.set(cameraX, cameraY, cameraZ);
-      
-      // Calculate room center for camera target
-      const roomCenterX = 0;
-      const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
-      const roomCenterZ = -roomDepth / 2; // Center of the room depth
-      
-      cameraRef.current.lookAt(roomCenterX, roomCenterY, roomCenterZ);
-      controlsRef.current.target.set(roomCenterX, roomCenterY, roomCenterZ);
-      controlsRef.current.update();
-    }
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -359,91 +225,115 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
       envMapIntensity: 0.8,
     });
 
-    // Setup lighting - Güçlü ışıklandırma GLB modeller için
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Artırdım
+    // Balanced lighting setup for natural appearance
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Reduced ambient for more natural look
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2); // Artırdım
-    mainLight.position.set(500, 1000, 500);
+    // Main key light - softer intensity for natural illumination
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2); // Reduced intensity
+    mainLight.position.set(800, 1200, 800); // Positioned for optimal brass illumination
     mainLight.castShadow = true;
+    // Enhanced shadow settings for better quality
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.camera.near = 0.5;
+    mainLight.shadow.camera.far = 4000;
+    mainLight.shadow.camera.left = -2000;
+    mainLight.shadow.camera.right = 2000;
+    mainLight.shadow.camera.top = 2000;
+    mainLight.shadow.camera.bottom = -2000;
     scene.add(mainLight);
 
-    // Ek ışık kaynaklarını ekle
-    const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    frontLight.position.set(0, 800, 1000);
-    scene.add(frontLight);
+    // Front fill light - reduced for subtler glass illumination
+    // const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    // frontLight.position.set(0, 600, 1200); // Softer front lighting
+    // scene.add(frontLight);
 
-    const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    sideLight.position.set(-800, 600, 0);
-    scene.add(sideLight);
+    // Side light for brass frame definition - reduced intensity
+    // const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    // sideLight.position.set(-1000, 800, 200); // Gentler brass highlights
+    // scene.add(sideLight);
+    
+    // Subtle rim light for depth without overpowering
+    // const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    // rimLight.position.set(-600, 600, -800); // Behind and to the side
+    // scene.add(rimLight);
+    
+    // Enhanced front view lighting for realistic brass appearance
+    // const frontBrassLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    // frontBrassLight.position.set(0, 600, 1000); // Stronger front-facing light
+    // frontBrassLight.castShadow = false; // No shadow to avoid conflicts
+    // scene.add(frontBrassLight);
+    
+    // const rightBrassLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    // rightBrassLight.position.set(800, 500, 600); // Right side for brass definition
+    // scene.add(rightBrassLight);
+    
+    // Add dramatic top-down light for front view brass highlights
+    // const topFrontLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    // topFrontLight.position.set(0, 1200, 500); // Top-down angled toward front
+    // scene.add(topFrontLight);
+    
+    // Add subtle left side light for balance
+    // const leftBrassLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    // leftBrassLight.position.set(-600, 400, 600); // Left side illumination
+    // scene.add(leftBrassLight);
 
     // Calculate dynamic floor position based on shelf system height
     const dynamicFloorY = -heightExtension; // Floor moves down as room extends
     
-    // Add room elements with dynamic positioning
+    // Create room elements but don't add them to scene (keep references for technical drawings)
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, dynamicFloorY, -roomDepth / 2);
+    floor.visible = false; // Make floor invisible
     
-    // Hide floor for ceiling to counter mount type since counter acts as floor
+    // Keep floor reference but don't add to scene for clean background
     if (mountType !== "ceiling to counter") {
-      scene.add(floor);
       floorMeshRef.current = floor;
     } else {
-      floorMeshRef.current = null; // No floor reference for ceiling to counter
+      floorMeshRef.current = null;
     }
 
     const backWall = new THREE.Mesh(roomGeometry.backWall, wallMaterial);
     backWall.position.set(0, roomHeight / 2, -roomDepth);
-    scene.add(backWall);
+    backWall.visible = false; // Make back wall invisible
     backWallMeshRef.current = backWall;
 
     const ceiling = new THREE.Mesh(roomGeometry.ceiling, whiteRoomMaterial);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.set(0, roomHeight, -roomDepth / 2);
-    scene.add(ceiling);
+    ceiling.visible = false; // Make ceiling invisible
     ceilingMeshRef.current = ceiling;
 
-    // Adjust wall lights for dynamic room size
-    const wallLight1 = new THREE.SpotLight(0xffffff, 0.3);
-    wallLight1.position.set(-roomWidth / 2, roomHeight, -roomDepth * 0.75);
-    wallLight1.target.position.set(0, roomHeight / 2, -roomDepth);
-    wallLight1.angle = Math.PI / 3;
-    wallLight1.penumbra = 1;
-    scene.add(wallLight1);
-    scene.add(wallLight1.target);
+    // Remove wall lights since we don't have visible walls
+    // Keep lighting focused on the shelving unit only
 
-    const wallLight2 = new THREE.SpotLight(0xffffff, 0.3);
-    wallLight2.position.set(roomWidth / 2, roomHeight, -roomDepth * 0.75);
-    wallLight2.target.position.set(0, roomHeight / 2, -roomDepth);
-    wallLight2.angle = Math.PI / 3;
-    wallLight2.penumbra = 1;
-    scene.add(wallLight2);
-    scene.add(wallLight2.target);
-
-    // Set initial camera position for perfect centering with dynamic room height
-    // Adjust distance based on shelf quantity, bay count, and room height for optimal framing
-    const shelfHeightFactor = (userHeight || 1194) / 1000; // Height scaling factor
-    const shelfQuantityFactor = Math.max(1, shelfQuantity / 3); // More shelves = further back
-    const bayCountFactor = Math.max(1, barCount / 2); // More bays = further back
-    const roomHeightFactor = roomHeight / 1500; // Dynamic room height factor
+    // Set initial camera position using room-based logic for optimal room view
+    // Calculate camera distance based on room dimensions to ensure entire room is visible
+    const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
+    const shelfHeightFactor = (userHeight || 1194) / 1000;
+    const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
+    const bayCountFactor = Math.max(1, barCount / 2);
+    const roomHeightFactor = roomHeight / 1500;
     
-    const baseCameraDistance = 1500 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
-    const cameraDistance = Math.max(1800, Math.min(baseCameraDistance, 4500)); // Increased max distance for taller rooms
+    // Use room diagonal as base for camera distance to ensure full room visibility
+    const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
+    const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
     
-    // Position camera for optimal centered view - adjust Y based on dynamic room height and floor position
-    const cameraX = 0; // Center camera on x-axis for perfect alignment
-    const cameraY = Math.max((userHeight || 1194) * 0.6, roomHeight * 0.4) + Math.abs(dynamicFloorY); // Above the shelf system center, adjusted for room height and floor position
-    const cameraZ = cameraDistance * 0.8; // Forward position for good perspective
+    // Position camera to show entire room
+    const cameraX = 0; // Center on x-axis
+    const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
+    const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
     
     camera.position.set(cameraX, cameraY, cameraZ);
     
-    // Calculate perfect center based on actual shelf dimensions, quantity and room height
-    const shelfSystemCenterX = 0; // Shelves are centered at x=0
-    const shelfSystemCenterY = Math.min((userHeight || 1194) / 2, roomHeight * 0.3) + Math.abs(dynamicFloorY); // Half of actual shelf height, but adjust for room height and floor position
-    const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+    // Calculate room center for camera target
+    const roomCenterX = 0;
+    const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
+    const roomCenterZ = -roomDepth / 2; // Center of the room depth
     
-    camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+    camera.lookAt(roomCenterX, roomCenterY, roomCenterZ);
 
     // Renderer setup with container size
     const renderer = new THREE.WebGLRenderer({ 
@@ -454,7 +344,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     rendererRef.current = renderer;
     renderer.setSize(containerWidth, containerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Better quality on high DPI
-    renderer.setClearColor(0xf5f5f5, 1);
+    renderer.setClearColor(0x000000, 1);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
@@ -473,19 +363,19 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     // Reasonable zoom limits for better usability
     controls.minDistance = 300;
     controls.maxDistance = 5000;
-    // Angle restrictions - prevent going behind the shelf
-    controls.maxPolarAngle = Math.PI * 0.8; // Daha fazla dikey hareket
-    controls.minPolarAngle = 0.1; // Can't go too low
-    controls.maxAzimuthAngle = Math.PI / 2; // Daha fazla yatay hareket
-    controls.minAzimuthAngle = -Math.PI / 2; // Daha fazla yatay hareket
+    // Angle restrictions - prevent vertical rotation but allow horizontal
+    controls.maxPolarAngle = Math.PI / 2; // Lock vertical angle to prevent up/down rotation
+    controls.minPolarAngle = Math.PI / 2; // Lock vertical angle to prevent up/down rotation
+    controls.maxAzimuthAngle = Math.PI / 2; // Allow unlimited horizontal rotation
+    controls.minAzimuthAngle = -Math.PI / 2; // Allow unlimited horizontal rotation
     controls.enableZoom = true;
-    controls.enablePan = true; // Pan'i tekrar açtık - kullanıcı isterse kaydırabilsin
-    controls.enableRotate = true;
+    controls.enablePan = false; // Disable panning to prevent dragging
+    controls.enableRotate = true; // Enable rotation (horizontal only due to polar angle restrictions)
     controls.autoRotate = false;
-    // Center target on the shelf system - same as camera lookAt
-    controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+    // Center target on the room center - same as camera lookAt
+    controls.target.set(roomCenterX, roomCenterY, roomCenterZ);
     controls.update();
-    targetRef.current.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+    targetRef.current.set(roomCenterX, roomCenterY, roomCenterZ);
 
     // Remove scroll-based camera updates - 3D viewer now has independent controls
 
@@ -507,32 +397,61 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
 
       const isMobile = window.innerWidth < 768;
       
-      // Recalculate optimal camera position for centered view after resize
+      // Recalculate room dimensions for resize (same logic as initial setup)
+      let resizeRoomWidth = 2000;
+      let resizeRoomDepth = 1200;
+      let resizeRoomHeight = 1500;
+      
+      // Adjust room width dynamically based on barCount
+      if (barCount > 1) {
+        const additionalWidth = (barCount - 1) * 950;
+        resizeRoomWidth = Math.max(2000, resizeRoomWidth + additionalWidth);
+      }
+      
+      // Calculate dynamic room height based on shelf quantity and spacing
+      const baseRoomHeight = 1500;
+      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
+      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
+      resizeRoomHeight = baseRoomHeight + heightExtension;
+      
+      // Adjust room size for taller shelf systems
+      const heightInInches = userHeight ? userHeight / 25.4 : 47;
+      if (heightInInches > 60) {
+        const scaleFactor = Math.max(1.2, heightInInches / 50);
+        resizeRoomWidth = Math.max(resizeRoomWidth, resizeRoomWidth * scaleFactor);
+        resizeRoomDepth = Math.max(1200, resizeRoomDepth * scaleFactor);
+        resizeRoomHeight = Math.max(resizeRoomHeight, userHeight! + 400);
+      }
+      
+      // Calculate dynamic floor position
+      const resizeDynamicFloorY = -heightExtension;
+      
+      // Calculate camera distance using room-based logic
+      const resizeRoomDiagonal = Math.sqrt(resizeRoomWidth * resizeRoomWidth + resizeRoomDepth * resizeRoomDepth + resizeRoomHeight * resizeRoomHeight);
       const currentShelfHeightFactor = (userHeight || 1194) / 1000;
       const currentShelfQuantityFactor = Math.max(1, shelfQuantity / 3);
       const currentBayCountFactor = Math.max(1, barCount / 2);
+      const currentRoomHeightFactor = resizeRoomHeight / 1500;
       
-      // Redefine center points for resize
-      const shelfSystemCenterX = 0;
-      const shelfSystemCenterY = (userHeight || 1194) / 2;
-      const shelfSystemCenterZ = -900; // Shelf'in gerçek Z pozisyonu
+      const resizeBaseCameraDistance = resizeRoomDiagonal * 0.8 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor * currentRoomHeightFactor;
+      const resizeCameraDistance = Math.max(2000, Math.min(resizeBaseCameraDistance, isMobile ? 5000 : 6000));
       
-      const responsiveDistance = isMobile ? 
-        1800 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor :
-        1500 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor;
+      // Position camera to show entire room
+      const resizeCameraX = 0;
+      const resizeCameraY = Math.max((userHeight || 1194) * 0.7, resizeRoomHeight * 0.5) + Math.abs(resizeDynamicFloorY);
+      const resizeCameraZ = resizeCameraDistance * 0.9;
       
-      const finalDistance = Math.max(1800, Math.min(responsiveDistance, isMobile ? 4000 : 3500));
+      // Update camera position
+      camera.position.set(resizeCameraX, resizeCameraY, resizeCameraZ);
       
-      // Update camera position maintaining centered view
-      camera.position.set(
-        0, // X position centered for perfect alignment
-        (userHeight || 1194) * 0.6, // Y position above center
-        finalDistance * 0.8 // Z position for perspective
-      );
+      // Calculate room center for camera target
+      const resizeRoomCenterX = 0;
+      const resizeRoomCenterY = resizeRoomHeight / 2 + Math.abs(resizeDynamicFloorY);
+      const resizeRoomCenterZ = -resizeRoomDepth / 2;
       
-      // Maintain centered target
-      camera.lookAt(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
-      controls.target.set(shelfSystemCenterX, shelfSystemCenterY, shelfSystemCenterZ);
+      // Maintain room-centered target
+      camera.lookAt(resizeRoomCenterX, resizeRoomCenterY, resizeRoomCenterZ);
+      controls.target.set(resizeRoomCenterX, resizeRoomCenterY, resizeRoomCenterZ);
       controls.update();
     };
 
@@ -623,30 +542,43 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
       }),
     ])
       .then(([model1Geometry, model2Geometry, model11Geometry, model12Geometry, shelfGeometry, ripGeometry]) => {
-        // Gerçekçi cam malzemesi oluştur
+        // Natural glass material with subtle appearance
         const materialShelf = new THREE.MeshPhysicalMaterial({
-          color: 0xccddff, // Daha mavi cam rengi
+          color: 0xf8f8f8, // Slightly off-white for more natural glass look
           metalness: 0.0,
-          roughness: 0.0,
+          roughness: 0.1, // Slightly more roughness for softer appearance
           transparent: true,
-          opacity: 0.2,
-          transmission: 1.0, // Tam geçirgenlik
-          thickness: 0.5,
-          ior: 1.5, // Cam kırılma indeksi
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.0,
+          opacity: 0.4, // Reduced opacity for more subtle glass
+          transmission: 0.8, // Higher transmission for more glass-like transparency
+          thickness: 0.5, // Reduced thickness for lighter appearance
+          ior: 1.52, // Standard glass refraction index
+          clearcoat: 0.8, // Slightly reduced clearcoat
+          clearcoatRoughness: 0.05, // Tiny bit of roughness on clearcoat
           side: THREE.DoubleSide,
+          // Reduced environment map intensity for subtler reflections
+          envMapIntensity: 0.6,
         });
 
-        // Metal material - always polished brass
-        const metalColor = 0xf7ef8a; // Brass
-        const metalRoughness = 0.2; // Polished
-        const metalMetalness = 0.8; // Polished
+        // Ultra-realistic brass material optimized for all viewing angles
+        const metalColor = 0xCD7F32; // True brass color (bronze-gold)
+        const metalRoughness = 0.05; // Very polished surface for maximum light interaction
+        const metalMetalness = 0.98; // Nearly pure metallic properties
         
-        const materialGold = new THREE.MeshStandardMaterial({
+        const materialGold = new THREE.MeshPhysicalMaterial({
           color: metalColor,
           metalness: metalMetalness,
           roughness: metalRoughness,
+          // Enhanced properties for realistic brass from all angles
+          emissive: 0x442211, // Warmer emissive for authentic brass glow
+          emissiveIntensity: 0.12, // Increased internal glow for front view
+          envMapIntensity: 2.2, // Very strong environment reflections
+          // Additional physical properties for realism
+          clearcoat: 0.3, // Subtle clear coat for surface depth
+          clearcoatRoughness: 0.1, // Slight roughness on clear coat
+          reflectivity: 0.9, // High reflectivity for metallic shine
+          // Add subtle surface variations for authentic metal look
+          transparent: false,
+          side: THREE.DoubleSide,
         });
 
         const shelfBoundingBox = new THREE.Box3().setFromObject(
@@ -855,8 +787,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         handleMountType().then(() => {
           if (!isMounted) return;
           
-          // Call handleFitToScreen to center the view initially
-          handleFitToScreen();
+          // Camera is already positioned correctly above
           
           // Animation loop
           const animate = () => {
@@ -994,6 +925,120 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     }
   }));
 
+  // Control functions for top-right icons
+  const handleFitScreen = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Use the same room-based logic as initial view for consistency
+      // Calculate dynamic room dimensions (same logic as initial setup)
+      const heightInInches = userHeight ? userHeight / 25.4 : 47;
+      
+      // Base room dimensions
+      let roomWidth = 2000;
+      let roomDepth = 1200;
+      let roomHeight = 1500;
+      
+      // Adjust room width dynamically based on barCount
+      if (barCount > 1) {
+        const additionalWidth = (barCount - 1) * 950;
+        roomWidth = Math.max(2000, roomWidth + additionalWidth);
+      }
+      
+      // Calculate dynamic room height based on shelf quantity and spacing
+      const baseRoomHeight = 1500;
+      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
+      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
+      roomHeight = baseRoomHeight + heightExtension;
+      
+      // Adjust room size for taller shelf systems
+      if (heightInInches > 60) {
+        const scaleFactor = Math.max(1.2, heightInInches / 50);
+        roomWidth = Math.max(roomWidth, roomWidth * scaleFactor);
+        roomDepth = Math.max(1200, roomDepth * scaleFactor);
+        roomHeight = Math.max(roomHeight, userHeight! + 400);
+      }
+      
+      // Calculate dynamic floor position
+      const dynamicFloorY = -heightExtension;
+      
+      // Calculate camera distance based on room dimensions to ensure entire room is visible
+      const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
+      const shelfHeightFactor = (userHeight || 1194) / 1000;
+      const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
+      const bayCountFactor = Math.max(1, barCount / 2);
+      const roomHeightFactor = roomHeight / 1500;
+      
+      // Use room diagonal as base for camera distance to ensure full room visibility
+      const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
+      const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
+      
+      // Position camera to show entire room
+      const cameraX = 0; // Center on x-axis
+      const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
+      const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
+      
+      cameraRef.current.position.set(cameraX, cameraY, cameraZ);
+      
+      // Calculate room center for camera target
+      const roomCenterX = 0;
+      const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
+      const roomCenterZ = -roomDepth / 2; // Center of the room depth
+      
+      cameraRef.current.lookAt(roomCenterX, roomCenterY, roomCenterZ);
+      controlsRef.current.target.set(roomCenterX, roomCenterY, roomCenterZ);
+      controlsRef.current.update();
+    }
+  };
+
+  const handleRotateLeft = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const angle = Math.PI / 8; // 22.5 degrees
+      
+      // Rotate around the target (Y axis)
+      const offset = new THREE.Vector3();
+      offset.copy(camera.position).sub(controls.target);
+      
+      // Apply rotation
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const x = offset.x;
+      const z = offset.z;
+      
+      offset.x = x * cos + z * sin;
+      offset.z = -x * sin + z * cos;
+      
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+      controls.update();
+    }
+  };
+
+  const handleRotateRight = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const angle = -Math.PI / 8; // -22.5 degrees
+      
+      // Rotate around the target (Y axis)
+      const offset = new THREE.Vector3();
+      offset.copy(camera.position).sub(controls.target);
+      
+      // Apply rotation
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const x = offset.x;
+      const z = offset.z;
+      
+      offset.x = x * cos + z * sin;
+      offset.z = -x * sin + z * cos;
+      
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+      controls.update();
+    }
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mountRef} style={{ 
@@ -1003,101 +1048,72 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         overflow: "hidden"
       }} />
       
-      {/* Control Buttons */}
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        zIndex: 1000
-      }}>
-        <button
-          onClick={handleFitToScreen}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#000',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}
-          title="Üniteyi Sığdır"
+      {/* Top Right Control Icons - Matching Reference Design */}
+      <div className="absolute right-4 top-4 z-10 flex items-center space-x-1 rounded-md border border-[var(--border-color)] bg-white/50 p-1 backdrop-blur-sm">
+        <button 
+          onClick={handleFitScreen}
+          className="flex h-10 w-10 items-center justify-center rounded bg-white/70 text-[var(--text-primary)] transition-colors hover:bg-white"
         >
-          Sığdır
+          <span className="material-symbols-outlined !text-xl">fit_screen</span>
         </button>
-        
-        <div style={{ display: 'flex', gap: '0px' }}>
-          <button
-            onClick={handleZoomIn}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0px',
-              cursor: 'pointer',
-              fontSize: '18px',
-              fontWeight: 'bold'
-            }}
-            title="Yakınlaştır"
-          >
-            +
-          </button>
-          <button
-            onClick={handleZoomOut}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0px',
-              cursor: 'pointer',
-              fontSize: '18px',
-              fontWeight: 'bold'
-            }}
-            title="Uzaklaştır"
-          >
-            −
-          </button>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '0px' }}>
-          <button
-            onClick={handleRotateLeft}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-            title="Sola Döndür"
-          >
-            ←
-          </button>
-          <button
-            onClick={handleRotateRight}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-            title="Sağa Döndür"
-          >
-            →
-          </button>
+        <div className="h-6 w-px bg-[var(--border-color)]"></div>
+        <button 
+          onClick={handleRotateLeft}
+          className="group flex h-10 w-10 items-center justify-center rounded text-[var(--text-primary)] transition-colors hover:bg-white/70"
+        >
+          <span className="material-symbols-outlined !text-2xl">rotate_left</span>
+        </button>
+        <button 
+          onClick={handleRotateRight}
+          className="group flex h-10 w-10 items-center justify-center rounded text-[var(--text-primary)] transition-colors hover:bg-white/70"
+        >
+          <span className="material-symbols-outlined !text-2xl">rotate_right</span>
+        </button>
+      </div>
+      
+      {/* Bottom Control Panel - Matching Reference Design */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent p-6">
+        <div className="flex items-end justify-between gap-6">
+          <div className="flex-grow">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <button
+                onClick={onSave}
+                className="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20"
+              >
+                <span className="material-symbols-outlined mr-2 !text-base">save</span> Save
+              </button>
+              <button
+                onClick={onLoad}
+                className="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20"
+              >
+                <span className="material-symbols-outlined mr-2 !text-base">folder_open</span> Load
+              </button>
+              <button
+                onClick={onExport}
+                className="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20"
+              >
+                <span className="material-symbols-outlined mr-2 !text-base">ios_share</span> Export
+              </button>
+              <button
+                onClick={onReset}
+                className="btn border border-white/20 bg-white/10 !text-white backdrop-blur-md hover:bg-white/20"
+              >
+                <span className="material-symbols-outlined mr-2 !text-base">restart_alt</span> Reset
+              </button>
+            </div>
+          </div>
+          <div className="w-full max-w-xs shrink-0 space-y-3">
+            <div className="flex items-center justify-between rounded-lg border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
+              <p className="text-base font-medium">Estimated Price:</p>
+              <span className="text-xl font-bold text-white">${price}</span>
+            </div>
+            <button
+              onClick={onAddToCart}
+              className="btn btn-primary w-full"
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
       </div>
     </div>
