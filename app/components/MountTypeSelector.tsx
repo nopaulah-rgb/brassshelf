@@ -203,37 +203,6 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
         })}
       </div>
       
-      {/* Quick select dropdown for common combinations */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <label htmlFor="preset-select" className="block text-sm font-medium text-slate-700 mb-2">
-          Or select a preset combination:
-        </label>
-        <select 
-          id="preset-select" 
-          className="w-full p-2 border border-gray-200 rounded-lg focus:border-[#ec9513] focus:ring-1 focus:ring-[#ec9513]"
-          value={convertToMountType(selectedMounts)}
-          onChange={(e) => {
-            const newMountType = e.target.value;
-            const newSelections = convertFromMountType(newMountType);
-            setSelectedMounts(newSelections);
-            onSelect(newMountType);
-            if (onMountTypeChange) onMountTypeChange(newMountType);
-          }}
-        >
-          <option value="ceiling">Ceiling Only</option>
-          <option value="wall">Wall Only</option>
-          <option value="freestanding">Freestanding Only</option>
-          <option value="ceiling to wall">Ceiling to Wall</option>
-          <option value="ceiling to floor">Ceiling to Floor</option>
-          <option value="ceiling to counter">Ceiling to Counter</option>
-          <option value="wall to counter">Wall to Counter</option>
-          <option value="wall to floor">Wall to Floor</option>
-          <option value="ceiling & counter & wall">Ceiling + Counter + Wall</option>
-          <option value="ceiling & floor & wall">Ceiling + Floor + Wall</option>
-          <option value="freestanding to wall">Freestanding to Wall</option>
-        </select>
-      </div>
-      
       {/* Constraint warnings */}
       {selectedMounts.includes('freestanding') && (
         <p className="text-xs text-blue-600 mt-2 text-center">
