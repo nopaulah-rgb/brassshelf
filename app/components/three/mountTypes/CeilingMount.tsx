@@ -28,6 +28,10 @@ export const handleCeilingMount = async ({
   selectedShelvesForBars = [],
   selectedBackShelvesForBars = [],
 }: MountTypeProps) => {
+  // Ortak ölçü sabiti: 2 inch = 50.8 mm
+  const TWO_INCH = 50.8;
+  const ONE_INCH = 25.4;
+  // 1.5 inch = 38.1 mm (bilgi amaçlı)
   // showCrossbars artık kullanılmıyor - frontBars ve backBars ile değiştirildi
   void showCrossbars;
   // Model 13 GLB dosyasını yükle
@@ -147,6 +151,10 @@ export const handleCeilingMount = async ({
         console.log('Type16A geometry ve material bulundu:', child.geometry, type16AMaterial);
       }
     });
+
+    if (type16AGeometry) {
+      (type16AGeometry as THREE.BufferGeometry).computeBoundingBox();
+    }
   } catch (error) {
     console.error('Type16A v2.glb yüklenemedi:', error);
   }
@@ -383,11 +391,11 @@ export const handleCeilingMount = async ({
         let zPos = pos.z + zOffset + 5;
         
                  if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
-           // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
-           zPos += model13Depth +20; // 5 birim geriye hareket ettirildi (3'ten -2'ye)
-         } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
-           // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
-           zPos -= model13Depth +28; // 5 birim daha geriye hareket ettirildi (23'ten 28'e)
+          // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
+          zPos += model13Depth +20; // Eski konum korunur (ileri/geri hareket yok)
+        } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
+          // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
+          zPos -= model13Depth +28; // Eski konum korunur (ileri/geri hareket yok)
         } else {
           // Type16A pozisyonu (bu raf için horizontal bar yok)
           if (type16AGeometry) {
@@ -400,9 +408,9 @@ export const handleCeilingMount = async ({
               }
             }
             if (isBacke) {
-              // Front bar YES ve raf seçili değilse arkadaki Type16A pozisyonu
-              if (frontBars && !selectedShelvesForBars.includes(i)) {
-                zPos += model13Depth - 118; // 20 birim daha arkaya alındı
+              // Front bar YES olduğunda arkadaki modelleri 5 birim geriye it
+              if (frontBars) {
+                zPos += model13Depth - 140; // 5 birim daha geriye (108'den 113'e)
               } else {
                 zPos += model13Depth - 108; // Type16A arkadaki normal pozisyon
               }
@@ -428,7 +436,11 @@ export const handleCeilingMount = async ({
         const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
         
         // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafe + model yüksekliği
-        const ripLength = nextSpacingToUse + model13Height + 10; // Model yüksekliğini de dahil et ve biraz boşluk bırak
+        let ripLength = nextSpacingToUse + model13Height + 10; // Model yüksekliğini de dahil et ve biraz boşluk bırak
+        // En alttaki dikey rip: 1 inç aşağı uzatma
+        if (i === shelfQuantity - 2) {
+          ripLength += ONE_INCH;
+        }
         
         // Ön ve arka ripler için farklı çaplar kullan
         const isFrente = pos.z === shelfBoundingBox.min.z + 5;
@@ -451,6 +463,10 @@ export const handleCeilingMount = async ({
             // Back bar YES ve raf seçili - modeller ile tutarlı
             ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
           }
+          // Hem front hem back açıksa öndeki dikey rip 5 birim geriye gitsin
+          if (frontBars && backBars) {
+            ripZPos -= -20; // 5 birim geriye
+          }
         }
         
         if (isBacke) {
@@ -459,6 +475,10 @@ export const handleCeilingMount = async ({
           // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
           if (frontBars) {
             ripZPos -= 20; // 10 birim geriye hareket ettir (tavan modelleriyle hizalamak için)
+          }
+          // Hem front hem back açıksa arkadaki dikey rip 5 birim geriye gitsin
+          if (frontBars && backBars) {
+            ripZPos -= 10; // 5 birim geriye
           }
           if (frontBars && selectedShelvesForBars.includes(i)) {
             // Front bar açık ve bu raf seçili - arkadaki model Model13
@@ -486,10 +506,10 @@ export const handleCeilingMount = async ({
           verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
         }
         
-        // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat
+        // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat (ekstra aşağı uzatma yok)
         verticalRip.position.set(
           pos.x,
-          currentHeight - ripLength / 2, // Mevcut model altından başla
+          currentHeight - ripLength / 2,
           ripZPos + verticalRipZAdjustment
         );
         scene.add(verticalRip);
@@ -516,16 +536,16 @@ export const handleCeilingMount = async ({
             zStart -= model13Depth - 10; // 20 birim öne yaklaştırıldı
             zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
 
-            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH); // Her iki tarafta net 2" uzama (toplam +101.6mm)
             const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
-            // Back bar açık olduğunda horizontal bar'ı 5 birim geriye hareket ettir
-            const frontBarZAdjustment = backBars ? -35 : 0;
+            // Aynı shelf'te hem front hem back açık olduğunda sadece front horizontal'ı 5 birim öne al
+            const frontBothBarsAdjustment = (frontBars && backBars) ? -25 : 0; // Sadece hem front hem back açık olduğunda 5 birim öne
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
               currentHeight + model13Height / 2 -15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 + 35 + frontBarZAdjustment // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı + back bar açıksa 5 birim geriye
+              (zStart + zEnd) / 2 + 62 + frontBothBarsAdjustment // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı + hem front hem back açıksa front 5 birim öne
             );
             scene.add(horizontalRip);
           }
@@ -565,7 +585,7 @@ export const handleCeilingMount = async ({
               }
             }
 
-            const length = Math.abs(end.x - start.x) + 80; // Ripi 30 birim uzat
+            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH); // Her iki tarafta net 2" uzama (toplam +101.6mm)
             const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
@@ -683,6 +703,7 @@ export const handleCeilingMount = async ({
       }
     });
   }
+
 
   // En alt raftan aşağı uzayan dikey ripler kaldırıldı
   // (Kullanıcı isteği üzerine)

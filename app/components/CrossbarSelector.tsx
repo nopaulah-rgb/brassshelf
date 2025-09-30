@@ -33,6 +33,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
     if (selectedShelves.includes(shelfIndex)) {
       onSelectedShelvesChange(selectedShelves.filter(index => index !== shelfIndex));
     } else {
+      // When selecting a shelf for front bars, remove it from back bars if it exists
+      if (selectedBackShelves.includes(shelfIndex)) {
+        onSelectedBackShelvesChange(selectedBackShelves.filter(index => index !== shelfIndex));
+      }
       onSelectedShelvesChange([...selectedShelves, shelfIndex]);
     }
     // Reset updating state after a short delay
@@ -44,6 +48,10 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
     if (selectedBackShelves.includes(shelfIndex)) {
       onSelectedBackShelvesChange(selectedBackShelves.filter(index => index !== shelfIndex));
     } else {
+      // When selecting a shelf for back bars, remove it from front bars if it exists
+      if (selectedShelves.includes(shelfIndex)) {
+        onSelectedShelvesChange(selectedShelves.filter(index => index !== shelfIndex));
+      }
       onSelectedBackShelvesChange([...selectedBackShelves, shelfIndex]);
     }
     // Reset updating state after a short delay
@@ -127,8 +135,11 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
                     className={`w-10 h-10 text-sm font-medium transition-colors border ${
                                selectedShelves.includes(index)
                                  ? 'bg-black text-white border-black'
+                                 : selectedBackShelves.includes(index)
+                                 ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
                                  : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
                              }`}
+                    title={selectedBackShelves.includes(index) ? 'This shelf is selected for back bars' : ''}
                   >
                     {index + 1}
                   </button>
@@ -178,8 +189,11 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
                       className={`w-10 h-10 text-sm font-medium transition-colors border ${
                                  selectedBackShelves.includes(index)
                                    ? 'bg-black text-white border-black'
+                                   : selectedShelves.includes(index)
+                                   ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
                                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
                                }`}
+                      title={selectedShelves.includes(index) ? 'This shelf is selected for front bars' : ''}
                     >
                       {index + 1}
                     </button>
