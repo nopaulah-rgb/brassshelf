@@ -157,7 +157,6 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
 
   return (
     <div>
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Mount Type</h3>
       <p className="text-sm text-slate-600 mb-4">Select one or more mounting options</p>
       
       {/* Current selection display */}
@@ -166,7 +165,7 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
         <div className="text-lg font-bold text-slate-900">{getCurrentMountTypeDisplay()}</div>
       </div>
       
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {mountTypes.map((type) => {
           const isSelected = selectedMounts.includes(type.id);
           const isDisabledState = isDisabled(type.id);
@@ -174,14 +173,7 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
           return (
             <label
               key={type.id}
-              className={`
-                border rounded-lg p-3 cursor-pointer transition-all duration-200 text-center
-                ${isSelected 
-                  ? 'border-2 border-[#ec9513] bg-[#f4f3f0] text-[#ec9513]' 
-                  : 'border border-gray-200 hover:border-[#ec9513] text-slate-900'
-                }
-                ${isDisabledState ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
+              className={`radio-label ${isSelected ? 'active' : ''} ${isDisabledState ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <input
                 type="checkbox"
@@ -192,12 +184,7 @@ const MountTypeSelector: React.FC<MountTypeSelectorProps> = ({ onSelect, onMount
                 disabled={isDisabledState}
                 onChange={() => !isDisabledState && handleToggle(type.id)}
               />
-              <div className="font-medium text-sm">{type.name}</div>
-              {isSelected && (
-                <div className="mt-1">
-                  <div className="w-2 h-2 bg-[#ec9513] rounded-full mx-auto"></div>
-                </div>
-              )}
+              {type.name}
             </label>
           );
         })}

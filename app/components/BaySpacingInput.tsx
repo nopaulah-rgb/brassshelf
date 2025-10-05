@@ -17,7 +17,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   totalWidth,
   unit: parentUnit
 }) => {
-  const [unit, setUnit] = useState<Unit>('mm');
+  const unit = parentUnit; // Use unit from parent
   const [individualSpacings, setIndividualSpacings] = useState<number[]>([]);
   const [inputValues, setInputValues] = useState<string[]>([]);
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
@@ -83,16 +83,14 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
     }
   }, [individualSpacings, onBaySpacingsChange, numberOfBaySpacings]);
 
-  const handleUnitChange = (newUnit: Unit) => {
-    if (newUnit === unit) return;
-    
-    setUnit(newUnit);
-    // Update input values for new unit
+  // Update input values when unit changes from parent
+  useEffect(() => {
     const newInputValues = individualSpacings.map(spacing => 
-      convertFromMm(spacing, newUnit).toFixed(1)
+      convertFromMm(spacing, unit).toFixed(1)
     );
     setInputValues(newInputValues);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit]);
 
   const handleSpacingChange = (index: number, value: string) => {
     console.log('handleSpacingChange called:', { index, value, currentInputValues: inputValues });
@@ -182,31 +180,7 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
 
   return (
     <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Bay Spacing</h3>
-      
-      {/* Unit Selector */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={() => handleUnitChange('mm')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            unit === 'mm' 
-              ? 'bg-black text-white' 
-              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-          }`}
-        >
-          mm
-        </button>
-        <button
-          onClick={() => handleUnitChange('inch')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            unit === 'inch' 
-              ? 'bg-black text-white' 
-              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-          }`}
-        >
-          inch
-        </button>
-      </div>
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Bay Spacing ({unit})</h3>
 
       {/* Individual Bay Spacing Inputs */}
       <div className="space-y-3 mb-4">
@@ -221,23 +195,25 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
                 value={inputValues[index] || ''}
                 onChange={(e) => handleSpacingChange(index, e.target.value)}
                 onBlur={(e) => handleBlur(index, e.target.value)}
-                className={`w-full py-2 px-3 border font-medium focus:outline-none focus:border-black transition-colors ${
+                className={`form-input ${
                   invalidIndex === index 
                     ? 'border-red-300 bg-red-50 text-red-700' 
-                    : 'border-gray-300 bg-white text-gray-800'
+                    : ''
                 }`}
                 placeholder={unit === 'inch' ? "4.5" : "100"}
               />
-              {unit === 'inch' && (
-                <p className="text-xs text-slate-500 mt-1">
-                  Enter measurement in decimal inches (e.g., 42.625)
-                </p>
-              )}
             </div>
             <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
         ))}
       </div>
+
+      {/* Helper text for all inputs */}
+      <p className="text-xs text-slate-500 mt-2 mb-4">
+        {unit === 'inch' 
+          ? 'Enter measurements in decimal inches (e.g., 42.625)' 
+          : 'Enter measurements in whole millimeters (e.g., 1083)'}
+      </p>
 
       {/* Spacing Summary */}
       <div className="bg-white p-4 border border-gray-300">

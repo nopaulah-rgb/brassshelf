@@ -22,12 +22,12 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
   shelfDepth,
   totalDepth,
   unit,
-  selectedDepthType,
+  selectedDepthType: _selectedDepthType, // eslint-disable-line @typescript-eslint/no-unused-vars
   onHeightChange,
   onWidthChange,
   onShelfDepthChange,
   onTotalDepthChange,
-  onDepthTypeChange,
+  onDepthTypeChange: _onDepthTypeChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   onUnitChange,
 }) => {
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
@@ -129,6 +129,34 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
 
   return (
     <div>
+      {/* Unit Toggle */}
+      <div className="mb-4">
+        <label className="mb-2 block text-sm font-medium">Unit</label>
+        <div className="flex gap-4">
+          <label className={`radio-label ${unit === 'inch' ? 'active' : ''}`}>
+            <input 
+              className="sr-only" 
+              name="unit" 
+              type="radio" 
+              value="inch" 
+              checked={unit === 'inch'}
+              onChange={handleUnitToggle}
+            />
+            Inch
+          </label>
+          <label className={`radio-label ${unit === 'mm' ? 'active' : ''}`}>
+            <input 
+              className="sr-only" 
+              name="unit" 
+              type="radio" 
+              value="mm" 
+              checked={unit === 'mm'}
+              onChange={handleUnitToggle}
+            />
+            MM
+          </label>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
         <div>
@@ -141,11 +169,6 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleHeightInputChange}
             placeholder={unit === 'inch' ? "e.g., 72" : "e.g., 1830"}
           />
-          {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">
-              Enter measurement in decimal inches (e.g., 42.625)
-            </p>
-          )}
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium" htmlFor="width">Width ({unit})</label>
@@ -158,11 +181,6 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onBlur={handleWidthBlur}
             placeholder={unit === 'inch' ? "e.g., 36" : "e.g., 914"}
           />
-          {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">
-              Enter measurement in decimal inches (e.g., 42.625)
-            </p>
-          )}
         </div>
         <div>
           <div className="mb-2 flex items-center gap-2">
@@ -185,11 +203,6 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onBlur={handleShelfDepthBlur}
             placeholder={unit === 'inch' ? "e.g., 12" : "e.g., 305"}
           />
-          {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">
-              Enter measurement in decimal inches (e.g., 42.625)
-            </p>
-          )}
         </div>
         <div>
           <div className="mb-2 flex items-center gap-2">
@@ -211,13 +224,15 @@ const DimensionInputs: React.FC<DimensionInputsProps> = ({
             onChange={handleTotalDepthInputChange}
             placeholder={unit === 'inch' ? "e.g., 13.5" : "e.g., 343"}
           />
-          {unit === 'inch' && (
-            <p className="text-xs text-slate-500 mt-1">
-              Enter measurement in decimal inches (e.g., 42.625)
-            </p>
-          )}
         </div>
       </div>
+      
+      {/* Helper text for all inputs */}
+      <p className="text-xs text-slate-500 mt-2">
+        {unit === 'inch' 
+          ? 'Enter measurements in decimal inches (e.g., 42.625)' 
+          : 'Enter measurements in whole millimeters (e.g., 1083)'}
+      </p>
 
       {/* Validation Message */}
       {isValidationOpen && (

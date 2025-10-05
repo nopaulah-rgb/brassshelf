@@ -4,12 +4,14 @@ interface IndividualShelfSpacingSelectorProps {
   shelfQuantity: number;
   onSpacingChange: (spacings: number[]) => void;
   defaultSpacing?: number;
+  unit: 'inch' | 'mm';
 }
 
 const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorProps> = ({
   shelfQuantity,
   onSpacingChange,
-  defaultSpacing = 250
+  defaultSpacing = 250,
+  unit
 }) => {
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
   const [validationMessage, setValidationMessage] = useState<string>('');
@@ -31,12 +33,10 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     } else {
       return value; // Already in mm
     }
-  };
-
-  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
+  }
   const [individualSpacings, setIndividualSpacings] = useState<number[]>([defaultSpacing]);
-  const [displayValues, setDisplayValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
-  const [inputValues, setInputValues] = useState<string[]>([convertFromMm(defaultSpacing, 'inch').toFixed(1)]);
+  const [displayValues, setDisplayValues] = useState<string[]>([convertFromMm(defaultSpacing, unit).toFixed(1)]);
+  const [inputValues, setInputValues] = useState<string[]>([convertFromMm(defaultSpacing, unit).toFixed(1)]);
 
   // Initialize spacings when shelf quantity changes
   useEffect(() => {
@@ -63,16 +63,14 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
     }
   }, [individualSpacings, onSpacingChange, shelfQuantity]);
 
-  // Handle unit change
-  const handleUnitChange = (newUnit: 'inch' | 'mm') => {
-    setUnit(newUnit);
-    // Only update display values, don't change the actual spacing values
+  // Update display values when unit changes from parent
+  useEffect(() => {
     const newDisplayValues = individualSpacings.map(spacing => 
-      convertFromMm(spacing, newUnit).toFixed(1)
+      convertFromMm(spacing, unit).toFixed(1)
     );
     setDisplayValues(newDisplayValues);
     setInputValues(newDisplayValues);
-  };
+  }, [unit, individualSpacings]);
 
   // Handle individual spacing change
   const handleSpacingChange = (index: number, value: string) => {
@@ -158,31 +156,7 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
 
   return (
     <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Shelf Spacing</h3>
-      
-      {/* Unit Selector */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={() => handleUnitChange('inch')}
-          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-            unit === 'inch' 
-              ? 'bg-black text-white' 
-              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-          }`}
-        >
-          inch
-        </button>
-        <button
-          onClick={() => handleUnitChange('mm')}
-          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-            unit === 'mm' 
-              ? 'bg-black text-white' 
-              : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'
-          }`}
-        >
-          mm
-        </button>
-      </div>
+      <h3 className="text-lg font-medium text-slate-900 mb-4">Individual Shelf Spacing ({unit})</h3>
 
       {/* Individual Spacing Inputs */}
       <div className="space-y-3">
@@ -197,24 +171,25 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
                 value={inputValues[index] || ''}
                 onChange={(e) => handleSpacingChange(index, e.target.value)}
                 onBlur={(e) => handleBlur(index, e.target.value)}
-                className={`w-full py-2 px-3 border text-sm font-medium transition-colors
-                         focus:outline-none focus:border-black ${
-                           invalidIndex === index 
-                             ? 'border-red-300 bg-red-50 text-red-700' 
-                             : 'border-gray-300 bg-white text-gray-800'
-                         }`}
+                className={`form-input ${
+                  invalidIndex === index 
+                    ? 'border-red-300 bg-red-50 text-red-700' 
+                    : ''
+                }`}
                 placeholder={unit === 'inch' ? "12.5" : "305"}
               />
-              {unit === 'inch' && (
-                <p className="text-xs text-slate-500 mt-1">
-                  Enter measurement in decimal inches (e.g., 42.625)
-                </p>
-              )}
             </div>
             <span className="text-sm text-slate-600 w-12">{unit}</span>
           </div>
         ))}
       </div>
+
+      {/* Helper text for all inputs */}
+      <p className="text-xs text-slate-500 mt-2">
+        {unit === 'inch' 
+          ? 'Enter measurements in decimal inches (e.g., 42.625)' 
+          : 'Enter measurements in whole millimeters (e.g., 1083)'}
+      </p>
 
       {/* Help Text */}
       <div className="mt-4 bg-blue-50 p-4 border border-blue-200">

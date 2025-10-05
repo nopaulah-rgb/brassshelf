@@ -15,7 +15,6 @@ import MountTypeSelector from "~/components/MountTypeSelector";
 import BarSelector from "~/components/BarSelector";
 import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
-import PriceAndActions from "~/components/PriceAndActions";
 import DimensionsModal from "~/components/DimensionsModal";
 import WallConnectionSelector from "~/components/WallConnectionSelector";
 import BaySpacingInput from "~/components/BaySpacingInput";
@@ -46,7 +45,6 @@ export default function Index() {
   const [price] = useState<number>(599);
   const [isDimensionsOpen, setIsDimensionsOpen] = useState<boolean>(false);
   const viewerRef = React.useRef<ThreeDViewerHandle | null>(null);
-  const [shots, setShots] = useState<{front?: string; side?: string; top?: string}>({});
 
   // Material selections
   const [pipeDiameter, setPipeDiameter] = useState<string>('5/8');
@@ -534,7 +532,7 @@ export default function Index() {
                 
                 {/* Spacing Mode Toggle */}
                           <div>
-                            <label className="mb-2 block text-sm font-medium">Shelf Spacing Mode</label>
+                            <div className="mb-2 block text-sm font-medium">Shelf Spacing Mode</div>
                             <div className="flex gap-4">
                               <label className={`radio-label ${!useIndividualSpacing ? 'active' : ''}`}>
                                 <input 
@@ -545,7 +543,7 @@ export default function Index() {
                                   checked={!useIndividualSpacing}
                                   onChange={() => setUseIndividualSpacing(false)}
                                 />
-                      Equal Spacing
+                                Equal
                               </label>
                               <label className={`radio-label ${useIndividualSpacing ? 'active' : ''}`}>
                                 <input 
@@ -556,19 +554,20 @@ export default function Index() {
                                   checked={useIndividualSpacing}
                                   onChange={() => setUseIndividualSpacing(true)}
                                 />
-                      Individual Spacing
+                                Individual
                               </label>
-                  </div>
-                </div>
+                            </div>
+                          </div>
 
-                {/* Conditional Spacing Selector */}
-                {!useIndividualSpacing ? (
+                          {/* Conditional Spacing Selector */}
+                          {!useIndividualSpacing ? (
                             <ShelfSpacingSelector 
                               key={`shelf-spacing-${mountType}`} 
                               onSelect={(spacing) => {
                                 setShelfSpacing(spacing);
                                 markStepCompleted(3);
-                              }} 
+                              }}
+                              unit={unit}
                             />
                 ) : (
                   <IndividualShelfSpacingSelector 
@@ -576,6 +575,7 @@ export default function Index() {
                     shelfQuantity={shelfQuantity}
                     onSpacingChange={handleIndividualSpacingChange}
                     defaultSpacing={shelfSpacing}
+                    unit={unit}
                   />
                 )}
                 
@@ -725,7 +725,7 @@ export default function Index() {
                       <div className="ml-12 border-l-2 border-gray-200 pl-6 pb-6">
                         <div className="space-y-6 pt-4">
                           <div>
-                            <label className="mb-2 block text-sm font-medium">Material</label>
+                            <div className="mb-2 block text-sm font-medium">Material</div>
                             <div className="flex flex-wrap gap-4">
                               <label className={`radio-label ${material === 'brass' ? 'active' : ''}`}>
                                 <input 
@@ -758,7 +758,7 @@ export default function Index() {
                             </div>
                           </div>
                           <div>
-                            <label className="mb-2 block text-sm font-medium">Finish</label>
+                            <div className="mb-2 block text-sm font-medium">Finish</div>
                             <div className="flex flex-wrap gap-4">
                               <label className={`radio-label ${finish === 'polished' ? 'active' : ''}`}>
                                 <input 
@@ -904,9 +904,6 @@ export default function Index() {
         useIndividualSpacing={useIndividualSpacing}
         shelfSpacingMm={!useIndividualSpacing ? shelfSpacing : undefined}
         shelfSpacingsMm={useIndividualSpacing ? shelfSpacings : undefined}
-        frontImg={shots.front}
-        sideImg={shots.side}
-        topImg={shots.top}
       />
     </div>
   );

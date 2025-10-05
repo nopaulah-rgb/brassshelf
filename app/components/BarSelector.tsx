@@ -9,32 +9,28 @@ const BarSelector: React.FC<{ onSelect: (barCount: number) => void }> = ({ onSel
   };
 
   return (
-    <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Number of Bays</h3>
-      <div className="flex gap-3">
-        {[1, 2, 3, 4].map((value) => (
-          <button
-            key={value}
-            onClick={() => handleBarChange(value)}
-            className={`w-14 h-14 border transition-colors
-                     flex items-center justify-center text-lg font-medium ${
-                       selectedBar === value 
-                         ? 'border-black bg-black text-white' 
-                         : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-100'
-                     }`}
-          >
-            {value}
-          </button>
-        ))}
-        <button
-          className="w-14 h-14 border border-gray-300 bg-white 
-                     flex items-center justify-center text-gray-800 hover:bg-gray-100 transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <label className="block text-sm font-medium" htmlFor="bays">Number of Bays</label>
+        <div className="tooltip-container relative flex items-center">
+          <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" x2="12" y1="16" y2="12"></line>
+            <line x1="12" x2="12.01" y1="8" y2="8"></line>
           </svg>
-        </button>
+          <div className="tooltip">Bays are the vertical sections of the shelving unit.</div>
+        </div>
       </div>
+      <input
+        className="form-input"
+        id="bays"
+        type="number"
+        value={selectedBar}
+        onChange={(e) => handleBarChange(Number(e.target.value))}
+        min="1"
+        max="10"
+        placeholder="e.g., 2"
+      />
     </div>
   );
 };

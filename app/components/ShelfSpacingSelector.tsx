@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 
 interface ShelfSpacingSelectorProps {
   onSelect: (spacing: number) => void;
+  unit: 'inch' | 'mm';
 }
 
-const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect }) => {
-  const [spacingValue, setSpacingValue] = useState<number>(12); // Default 12 inch 
-  const [unit, setUnit] = useState<'inch' | 'mm'>('inch');
+const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect, unit }) => {
+  const defaultValue = unit === 'inch' ? 12 : 305; // Default 12 inch or 305mm
+  const [spacingValue, setSpacingValue] = useState<number>(defaultValue);
 
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
@@ -25,25 +26,11 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
     }
   };
 
-  const handleUnitChange = (newUnit: 'inch' | 'mm') => {
-    // Convert current value to the new unit
-    let newValue: number;
-    if (unit === 'inch' && newUnit === 'mm') {
-      // Convert from inches to mm: 12 inch → 305 mm
-      newValue = Math.round(spacingValue * 25.4);
-    } else if (unit === 'mm' && newUnit === 'inch') {
-      // Convert from mm to inches: 305 mm → 12 inch
-      newValue = Math.round((spacingValue / 25.4) * 100) / 100;
-    } else {
-      // Same unit, no conversion needed
-      newValue = spacingValue;
-    }
-    
-    setSpacingValue(newValue);
-    setUnit(newUnit);
-    const spacingInMm = convertToMm(newValue, newUnit);
-    onSelect(spacingInMm);
-  };
+  // Update spacing value when unit changes from parent
+  React.useEffect(() => {
+    const newDefaultValue = unit === 'inch' ? 12 : 305;
+    setSpacingValue(newDefaultValue);
+  }, [unit]);
 
   // Anında güncelleme için unit değişiminde de tetikle
   React.useEffect(() => {
@@ -57,78 +44,43 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect })
   React.useEffect(() => {
     const defaultSpacingInMm = convertToMm(spacingValue, unit);
     onSelect(defaultSpacingInMm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className="bg-white p-6 border border-gray-300">
-      <h3 className="text-lg font-medium text-slate-900 mb-4">Shelf Spacing (Rib Length)</h3>
-      
-      {/* Input and Unit Selection */}
-      <div className="flex gap-3 mb-4">
-        <div className="flex-1">
-          <input
-            type="number"
-            value={unit === 'mm' ? Math.round(spacingValue) : spacingValue}
-            onChange={(e) => {
-              const newValue = Number(e.target.value);
-              handleValueChange(newValue);
-            }}
-            onInput={(e) => {
-              // Anında güncelleme için onInput de kullan
-              const newValue = Number((e.target as HTMLInputElement).value);
-              if (newValue && newValue > 0) {
-                handleValueChange(newValue);
-              }
-            }}
-            min={unit === 'inch' ? "6" : "152"}
-            max={unit === 'inch' ? "20" : "508"}
-            step={unit === 'inch' ? "0.5" : "1"}
-            className="w-full h-[56px] px-4 border border-gray-300 text-gray-800 bg-white focus:outline-none focus:border-black text-center font-medium transition-colors"
-            placeholder={unit === 'inch' ? "12" : "305"}
-          />
-          <p className="text-xs text-slate-500 mt-2 text-center">
-            {unit === 'inch' 
-              ? 'Enter measurement in decimal inches (e.g., 12.5)' 
-              : 'Enter measurement in whole millimeters'
-            }
-          </p>
-        </div>
-        
-        {/* Unit Toggle */}
-        <div className="flex border border-gray-300 h-[56px]">
-          <button
-            onClick={() => handleUnitChange('inch')}
-            className={`px-4 h-full inline-flex items-center justify-center text-sm font-medium transition-colors duration-200 ${
-              unit === 'inch'
-                ? 'bg-black text-white'
-                : 'bg-white text-gray-800 hover:bg-gray-100'
-            }`}
-          >
-            inch
-          </button>
-          <button
-            onClick={() => handleUnitChange('mm')}
-            className={`px-4 h-full inline-flex items-center justify-center text-sm font-medium transition-colors duration-200 ${
-              unit === 'mm'
-                ? 'bg-black text-white'
-                : 'bg-white text-gray-800 hover:bg-gray-100'
-            }`}
-          >
-            mm
-          </button>
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <label className="block text-sm font-medium" htmlFor="spacing">Shelf Spacing (Rib Length {unit})</label>
+        <div className="tooltip-container relative flex items-center">
+          <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" x2="12" y1="16" y2="12"></line>
+            <line x1="12" x2="12.01" y1="8" y2="8"></line>
+          </svg>
+          <div className="tooltip">The &quot;rib&quot; is the vertical pipe between two shelves. Recommended range: {unit === 'inch' ? '6-20 inch' : '152-508 mm'}</div>
         </div>
       </div>
-
-      {/* Help Text */}
-      <div className="bg-white p-4 border border-gray-300">
-        <p className="text-sm text-slate-600 leading-relaxed">
-          <span className="font-medium">Default rib length:</span> {unit === 'inch' ? '12 inch' : '305 mm'}
-          <br />
-          <span className="font-medium">Recommended range:</span> {unit === 'inch' ? '6-20 inch' : '152-508 mm'}
-          <br />
-          <span className="font-medium">Note:</span> This setting determines spacing between shelves and rib length
-        </p>
-      </div>
+      <input
+        type="number"
+        id="spacing"
+        value={spacingValue}
+        onChange={(e) => {
+          const newValue = Number(e.target.value);
+          handleValueChange(newValue);
+        }}
+        onInput={(e) => {
+          // Anında güncelleme için onInput de kullan
+          const newValue = Number((e.target as HTMLInputElement).value);
+          if (newValue && newValue > 0) {
+            handleValueChange(newValue);
+          }
+        }}
+        min={unit === 'inch' ? "6" : "152"}
+        max={unit === 'inch' ? "20" : "508"}
+        step={unit === 'inch' ? "0.5" : "1"}
+        className="form-input"
+        placeholder={unit === 'inch' ? "e.g., 14" : "e.g., 356"}
+      />
     </div>
   );
 };
