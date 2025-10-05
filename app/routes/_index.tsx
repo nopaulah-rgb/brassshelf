@@ -28,9 +28,9 @@ export default function Index() {
   // State for storing user selections
   const [selectedShelf, setSelectedShelf] = useState<string | null>('/models/Glass Shelf v1_B.glb');
   const [shelfQuantity, setShelfQuantity] = useState<number>(1);
-  const [shelfSpacing, setShelfSpacing] = useState<number>(250); // in mm
+  const [shelfSpacing, setShelfSpacing] = useState<number>(305); // in mm (12 inches default)
   const [useIndividualSpacing, setUseIndividualSpacing] = useState<boolean>(false);
-  const [shelfSpacings, setShelfSpacings] = useState<number[]>([250]); // in mm - array for individual spacing
+  const [shelfSpacings, setShelfSpacings] = useState<number[]>([305]); // in mm - array for individual spacing (12 inches default)
   const [mountType, setMountType] = useState<string>("ceiling");
   const [barCount, setBarCount] = useState<number>(1);
   const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik) - legacy
@@ -72,17 +72,38 @@ export default function Index() {
   const [finish, setFinish] = useState<'polished' | 'brushed'>('polished');
 
   // Mark step as completed
-  const markStepCompleted = (step: number) => {
-    if (!completedSteps.includes(step)) {
-      setCompletedSteps(prev => [...prev, step]);
-    }
-  };
+  const markStepCompleted = useCallback((step: number) => {
+    setCompletedSteps(prev => {
+      if (!prev.includes(step)) {
+        return [...prev, step];
+      }
+      return prev;
+    });
+  }, []);
 
   // Callback for individual spacing changes
   const handleIndividualSpacingChange = useCallback((spacings: number[]) => {
     console.log('Shelf spacings updated:', spacings);
     setShelfSpacings(spacings);
   }, []);
+
+  // Callback for shelf spacing changes
+  const handleShelfSpacingChange = useCallback((spacing: number) => {
+    setShelfSpacing(spacing);
+    markStepCompleted(3);
+  }, [markStepCompleted]);
+
+  // Callback for wall connection changes
+  const handleWallConnectionChange = useCallback((points: string[]) => {
+    setWallConnectionPoint(points);
+    markStepCompleted(3);
+  }, [markStepCompleted]);
+
+  // Callback for back vertical changes
+  const handleBackVerticalChange = useCallback((vertical: boolean) => {
+    setBackVertical(vertical);
+    markStepCompleted(3);
+  }, [markStepCompleted]);
 
   // Handle depth type selection change
   const handleDepthTypeChange = (depthType: 'shelf' | 'total') => {
@@ -187,9 +208,9 @@ export default function Index() {
     // Reset shelf quantity to default
     setShelfQuantity(1);
     
-    // Reset spacing to default
-    setShelfSpacing(250);
-    setShelfSpacings([250]);
+    // Reset spacing to default (12 inches = 305mm)
+    setShelfSpacing(305);
+    setShelfSpacings([305]);
     setUseIndividualSpacing(false);
     
     // Reset bar count to default
@@ -354,19 +375,11 @@ export default function Index() {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                          completedSteps.includes(1) 
+                          currentStep === 1
                             ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                            : currentStep === 1
-                              ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                              : 'border-gray-300 bg-white text-gray-500'
+                            : 'border-gray-300 bg-white text-gray-500'
                         }`}>
-                          {completedSteps.includes(1) ? (
-                            <svg className="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="16">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <span>1</span>
-                          )}
+                          <span>1</span>
                         </div>
                         <span className={`step-title ${currentStep === 1 || completedSteps.includes(1) ? '' : 'text-gray-500'}`}>Mounting Type</span>
                       </div>
@@ -381,7 +394,6 @@ export default function Index() {
                             onSelect={(type) => {
                               setMountType(type);
                               markStepCompleted(1);
-                              setCurrentStep(2);
                             }} 
                             onMountTypeChange={resetSelections}
                             initialMountType={mountType}
@@ -412,19 +424,11 @@ export default function Index() {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                          completedSteps.includes(2) 
+                          currentStep === 2
                             ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                            : currentStep === 2
-                              ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                              : 'border-gray-300 bg-white text-gray-500'
+                            : 'border-gray-300 bg-white text-gray-500'
                         }`}>
-                          {completedSteps.includes(2) ? (
-                            <svg className="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="16">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <span>2</span>
-                          )}
+                          <span>2</span>
                         </div>
                         <span className={`step-title ${currentStep === 2 || completedSteps.includes(2) ? '' : 'text-gray-500'}`}>Dimensions</span>
                       </div>
@@ -482,19 +486,11 @@ export default function Index() {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                          completedSteps.includes(3) 
+                          currentStep === 3
                             ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                            : currentStep === 3
-                              ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                              : 'border-gray-300 bg-white text-gray-500'
+                            : 'border-gray-300 bg-white text-gray-500'
                         }`}>
-                          {completedSteps.includes(3) ? (
-                            <svg className="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="16">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <span>3</span>
-                          )}
+                          <span>3</span>
                         </div>
                         <span className={`step-title ${currentStep === 3 || completedSteps.includes(3) ? '' : 'text-gray-500'}`}>Shelf Layout</span>
                       </div>
@@ -563,10 +559,7 @@ export default function Index() {
                           {!useIndividualSpacing ? (
                             <ShelfSpacingSelector 
                               key={`shelf-spacing-${mountType}`} 
-                              onSelect={(spacing) => {
-                                setShelfSpacing(spacing);
-                                markStepCompleted(3);
-                              }}
+                              onSelect={handleShelfSpacingChange}
                               unit={unit}
                             />
                 ) : (
@@ -581,10 +574,7 @@ export default function Index() {
                 
                           <WallConnectionSelector 
                             key={`wall-connection-${mountType}-${shelfQuantity}`}
-                            onSelect={(points) => {
-                              setWallConnectionPoint(points);
-                              markStepCompleted(3);
-                            }}
+                            onSelect={handleWallConnectionChange}
                             mountType={mountType}
                             shelfQuantity={shelfQuantity}
                           />
@@ -593,10 +583,7 @@ export default function Index() {
                             key={`back-vertical-${mountType}`}
                             mountType={mountType}
                             backVertical={backVertical}
-                            onChange={(vertical) => {
-                              setBackVertical(vertical);
-                              markStepCompleted(3);
-                            }}
+                            onChange={handleBackVerticalChange}
                           />
                         </div>
                       </div>
@@ -624,19 +611,11 @@ export default function Index() {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                          completedSteps.includes(4) 
+                          currentStep === 4
                             ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                            : currentStep === 4
-                              ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                              : 'border-gray-300 bg-white text-gray-500'
+                            : 'border-gray-300 bg-white text-gray-500'
                         }`}>
-                          {completedSteps.includes(4) ? (
-                            <svg className="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="16">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <span>4</span>
-                          )}
+                          <span>4</span>
                         </div>
                         <span className={`step-title ${currentStep === 4 || completedSteps.includes(4) ? '' : 'text-gray-500'}`}>Pipe & Crossbar</span>
                       </div>
@@ -701,19 +680,11 @@ export default function Index() {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                          completedSteps.includes(5) 
+                          currentStep === 5
                             ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                            : currentStep === 5
-                              ? 'border-[#ec9513] bg-[#ec9513] text-white'
-                              : 'border-gray-300 bg-white text-gray-500'
+                            : 'border-gray-300 bg-white text-gray-500'
                         }`}>
-                          {completedSteps.includes(5) ? (
-                            <svg className="h-4 w-4 checkmark" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="16">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <span>5</span>
-                          )}
+                          <span>5</span>
                         </div>
                         <span className={`step-title ${currentStep === 5 || completedSteps.includes(5) ? '' : 'text-gray-500'}`}>Finish & Summary</span>
                       </div>

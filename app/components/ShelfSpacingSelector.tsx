@@ -8,6 +8,7 @@ interface ShelfSpacingSelectorProps {
 const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect, unit }) => {
   const defaultValue = unit === 'inch' ? 12 : 305; // Default 12 inch or 305mm
   const [spacingValue, setSpacingValue] = useState<number>(defaultValue);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
@@ -26,26 +27,26 @@ const ShelfSpacingSelector: React.FC<ShelfSpacingSelectorProps> = ({ onSelect, u
     }
   };
 
-  // Update spacing value when unit changes from parent
+  // Initialize on mount only
   React.useEffect(() => {
-    const newDefaultValue = unit === 'inch' ? 12 : 305;
-    setSpacingValue(newDefaultValue);
-  }, [unit]);
-
-  // Anında güncelleme için unit değişiminde de tetikle
-  React.useEffect(() => {
-    if (spacingValue > 0) {
-      const spacingInMm = convertToMm(spacingValue, unit);
-      onSelect(spacingInMm);
+    if (!isInitialized) {
+      const defaultSpacingInMm = convertToMm(defaultValue, unit);
+      onSelect(defaultSpacingInMm);
+      setIsInitialized(true);
     }
-  }, [spacingValue, unit, onSelect]);
-
-  // Auto-select default on mount
-  React.useEffect(() => {
-    const defaultSpacingInMm = convertToMm(spacingValue, unit);
-    onSelect(defaultSpacingInMm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update spacing value when unit changes from parent
+  React.useEffect(() => {
+    if (isInitialized) {
+      const newDefaultValue = unit === 'inch' ? 12 : 305;
+      setSpacingValue(newDefaultValue);
+      const spacingInMm = convertToMm(newDefaultValue, unit);
+      onSelect(spacingInMm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit]);
 
   return (
     <div>

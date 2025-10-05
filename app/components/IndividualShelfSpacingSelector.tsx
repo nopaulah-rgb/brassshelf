@@ -16,6 +16,8 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
   const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false);
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [invalidIndex, setInvalidIndex] = useState<number>(-1);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const prevShelfQuantityRef = React.useRef<number>(shelfQuantity);
 
   // Convert to mm for internal use
   const convertToMm = (value: number, unit: 'inch' | 'mm'): number => {
@@ -40,7 +42,8 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
 
   // Initialize spacings when shelf quantity changes
   useEffect(() => {
-    if (shelfQuantity > 0) {
+    if (shelfQuantity > 0 && (shelfQuantity !== prevShelfQuantityRef.current || !isInitialized)) {
+      prevShelfQuantityRef.current = shelfQuantity;
       const initialSpacings = Array(shelfQuantity).fill(defaultSpacing);
       setIndividualSpacings(initialSpacings);
       // Initialize display values
@@ -53,15 +56,18 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       // Yeni shelf quantity için parent'a bildir
       console.log('Initializing spacings:', { shelfQuantity, initialSpacings });
       onSpacingChange([...initialSpacings]);
+      setIsInitialized(true);
     }
-  }, [shelfQuantity, defaultSpacing, unit, onSpacingChange]); // Include onSpacingChange in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shelfQuantity, defaultSpacing, unit]); // Removed onSpacingChange from dependencies to prevent infinite loops
 
   // Call onSpacingChange when individualSpacings changes (but not during initial setup)
   useEffect(() => {
-    if (individualSpacings.length > 0 && individualSpacings.length === shelfQuantity) {
+    if (isInitialized && individualSpacings.length > 0 && individualSpacings.length === shelfQuantity) {
       onSpacingChange([...individualSpacings]);
     }
-  }, [individualSpacings, onSpacingChange, shelfQuantity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [individualSpacings]); // Removed shelfQuantity and onSpacingChange from dependencies
 
   // Update display values when unit changes from parent
   useEffect(() => {
