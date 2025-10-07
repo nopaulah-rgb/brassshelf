@@ -30,7 +30,6 @@ export const handleCeilingMount = async ({
 }: MountTypeProps) => {
   // Ortak ölçü sabiti: 2 inch = 50.8 mm
   const TWO_INCH = 50.8;
-  const ONE_INCH = 25.4;
   // 1.5 inch = 38.1 mm (bilgi amaçlı)
   // showCrossbars artık kullanılmıyor - frontBars ve backBars ile değiştirildi
   void showCrossbars;
@@ -436,10 +435,10 @@ export const handleCeilingMount = async ({
         const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
         
         // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafe + model yüksekliği
-        let ripLength = nextSpacingToUse + model13Height + 10; // Model yüksekliğini de dahil et ve biraz boşluk bırak
-        // En alttaki dikey rip: 1 inç aşağı uzatma
+        let ripLength = nextSpacingToUse + model13Height; // Model yüksekliğini de dahil et
+        // En alttaki dikey rip: 1 inç aşağı uzatma ve 100 birim kısalt
         if (i === shelfQuantity - 2) {
-          ripLength += ONE_INCH;
+          ripLength += TWO_INCH;
         }
         
         // Ön ve arka ripler için farklı çaplar kullan
@@ -751,9 +750,14 @@ export const handleCeilingMount = async ({
     }
 
     singleShelfCornerPositions.forEach((pos) => {
-      // Dikey rip: raftan tavana kadar - 30cm sabit uzunluk
+      // Dikey rip: raftan tavana kadar - shelf spacing + model yüksekliği + 2 inç aşağı uzatma
       const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
-      const ripHeight = 300; // 30cm sabit ceiling rip uzunluğu
+      let ripHeight = shelfSpacing + model13Height; // Shelf spacing + model yüksekliği
+      
+      // Tek raf durumunda da en alttaki dikey rip: 2 inç aşağı uzatma
+      if (shelfQuantity === 1) {
+        ripHeight += -17; // 17 birim + 2 birim daha kısalt
+      }
       
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === shelfBoundingBox.min.z + 5;
@@ -803,8 +807,8 @@ export const handleCeilingMount = async ({
         }
       }
       
-      // Ceiling rip uzunluğu shelf spacing ile aynı olsun
-      const actualRipHeight = shelfSpacing;
+      // Ceiling rip uzunluğu hesaplanan uzunluk olsun
+      const actualRipHeight = ripHeight;
       const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
       verticalRip.geometry = updatedRipGeometry;
       
@@ -858,7 +862,7 @@ export const handleCeilingMount = async ({
     // Tek raf durumunda aşağı uzayan dikey ripler ekle
     singleShelfCornerPositions.forEach((pos) => {
       // Raftan aşağı uzayan dikey rip - 38mm sabit uzunluk
-      const downwardRipHeight = 50.4; // 38mm sabit aşağı uzatma
+      const downwardRipHeight = 50.4 - 100; // 38mm sabit aşağı uzatma - 100 birim kısalt
       const topShelfHeight = baseCeilingY - shelfSpacing; // Tek rafın pozisyonu
       
       // Ön ve arka ripler için farklı çaplar kullan
@@ -970,9 +974,14 @@ export const handleCeilingMount = async ({
     }
 
   allTopCornerPositions.forEach((pos) => {
-          // Dikey rip: en üst raftan tavana kadar - 30cm sabit uzunluk
+          // Dikey rip: en üst raftan tavana kadar - shelf spacing + model yüksekliği
       const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
-      const ripHeight = 300; // 30cm sabit ceiling rip uzunluğu
+      let ripHeight = shelfSpacing + model13Height; // Shelf spacing + model yüksekliği
+      
+      // Çoklu raf durumunda üst ripleri 2 birim kısalt
+      if (shelfQuantity > 1) {
+        ripHeight -= 18;
+      }
       
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === shelfBoundingBox.min.z + 5;
@@ -1022,8 +1031,8 @@ export const handleCeilingMount = async ({
         }
       }
     
-    // Ceiling rip uzunluğu shelf spacing ile aynı olsun
-    const actualRipHeight = shelfSpacing;
+    // Ceiling rip uzunluğu hesaplanan uzunluk olsun
+    const actualRipHeight = ripHeight;
     const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
     verticalRip.geometry = updatedRipGeometry;
     
