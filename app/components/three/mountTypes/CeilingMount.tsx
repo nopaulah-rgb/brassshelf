@@ -652,7 +652,7 @@ export const handleCeilingMount = async ({
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
             horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
             // Aynı shelf'te hem front hem back açık olduğunda sadece front horizontal'ı 5 birim öne al
-            const frontBothBarsAdjustment = (frontBars && backBars) ? -25 : 0; // Sadece hem front hem back açık olduğunda 5 birim öne
+            const frontBothBarsAdjustment = (frontBars && backBars) ? -25 : -25; // Front bar açık olduğunda 5 birim geriye, hem front hem back açık olduğunda 5 birim öne
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2 ,
               currentHeight + model13Height / 2 -15, // 3 birim yukarı kaldırıldı
