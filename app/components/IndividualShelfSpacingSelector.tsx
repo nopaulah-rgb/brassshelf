@@ -53,8 +53,6 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
       setDisplayValues(initialDisplayValues);
       // Initialize input values for decimal input handling
       setInputValues(initialDisplayValues);
-      // Yeni shelf quantity için parent'a bildir
-      console.log('Initializing spacings:', { shelfQuantity, initialSpacings });
       onSpacingChange([...initialSpacings]);
       setIsInitialized(true);
     }
@@ -80,8 +78,6 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
 
   // Handle individual spacing change
   const handleSpacingChange = (index: number, value: string) => {
-    console.log('handleSpacingChange called:', { index, value, currentDisplayValues: displayValues });
-    
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
       // Update input values immediately for better UX
@@ -107,11 +103,6 @@ const IndividualShelfSpacingSelector: React.FC<IndividualShelfSpacingSelectorPro
         const newSpacings = [...individualSpacings];
         newSpacings[index] = spacingInMm;
         setIndividualSpacings(newSpacings);
-        
-        console.log('Individual spacing changed:', { index, value, spacingInMm, newSpacings });
-      } else if (value === '') {
-        // Allow empty values for better UX
-        console.log('Empty value entered for index:', index);
       }
     }
   };

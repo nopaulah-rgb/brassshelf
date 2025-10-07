@@ -1,9 +1,8 @@
-import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useRef, useEffect, useImperativeHandle, forwardRef, useMemo } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
 
 import {
   handleCeilingMount,
@@ -17,6 +16,11 @@ import {
   handleCeilingFloorWallMount,
   handleFreestandingMount,
 } from "./three/MountTypes";
+import {
+  calculateRoomDimensions,
+  calculateCameraPosition,
+  calculateCameraTarget,
+} from "../utils/roomCalculations";
 
 export interface ThreeDViewerHandle {
   captureViews: () => Promise<{ front: string; side: string; top: string }>;
@@ -91,40 +95,40 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   const ceilingMeshRef = useRef<THREE.Mesh | null>(null);
   const floorMeshRef = useRef<THREE.Mesh | null>(null);
   const backWallMeshRef = useRef<THREE.Mesh | null>(null);
-  
-  console.log('ThreeDViewer props:', {
-    shelfUrl,
-    shelfQuantity,
-    shelfSpacing,
-    shelfSpacings,
-    mountType,
-    barCount,
-    baySpacing,
-    baySpacings,
-    showCrossbars,
-    userHeight,
-    userWidth,
-    shelfDepth,
-    useTopShelf,
-    pipeDiameter,
-    frontBars,
-    verticalBarsAtBack
-  });
 
+  // Memoize room dimensions to prevent recalculation on every render
+  const roomDimensions = useMemo(() => 
+    calculateRoomDimensions(barCount, shelfQuantity, shelfSpacing, userHeight),
+    [barCount, shelfQuantity, shelfSpacing, userHeight]
+  );
+
+  // Memoize camera position calculations
+  const cameraPosition = useMemo(() => 
+    calculateCameraPosition(roomDimensions, userHeight || 1194, shelfQuantity, barCount),
+    [roomDimensions, userHeight, shelfQuantity, barCount]
+  );
+
+  // Memoize camera target
+  const cameraTarget = useMemo(() => 
+    calculateCameraTarget(roomDimensions),
+    [roomDimensions]
+  );
 
   useEffect(() => {
     let isMounted = true;
     
-    if (!mountRef.current) {
+    // Save mountRef.current for cleanup
+    const container = mountRef.current;
+    
+    if (!container) {
       console.error('Mount ref is null');
       return;
     }
 
     // Clear previous content
-    mountRef.current.innerHTML = "";
+    container.innerHTML = "";
 
     // Get container dimensions
-    const container = mountRef.current;
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight || window.innerHeight * 0.6;
 
@@ -141,34 +145,8 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     );
     cameraRef.current = camera;
 
-    // Calculate dynamic room dimensions based on userHeight
-    const heightInInches = userHeight ? userHeight / 25.4 : 47; // Convert mm to inches, default 47"
-    
-    // Base room dimensions
-    let roomWidth = 2000;
-    let roomDepth = 1200;
-    let roomHeight = 1500;
-    
-    // Adjust room width dynamically based on barCount for all mount types
-    if (barCount > 1) {
-      // Each additional shelf needs more width - increase the multiplier for more space
-      const additionalWidth = (barCount - 1) * 950; // Increased from 600mm to 800mm per additional shelf
-      roomWidth = Math.max(2000, roomWidth + additionalWidth);
-    }
-    
-    // Calculate dynamic room height based on shelf quantity and spacing
-    const baseRoomHeight = 1500;
-    const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
-    const heightExtension = Math.max(0, totalShelfSystemHeight - 500); // Extend if system is taller than 500mm
-    roomHeight = baseRoomHeight + heightExtension;
-    
-    // Adjust room size for taller shelf systems (existing logic)
-    if (heightInInches > 60) {
-      const scaleFactor = Math.max(1.2, heightInInches / 50);
-      roomWidth = Math.max(roomWidth, roomWidth * scaleFactor); // Use the already adjusted width
-      roomDepth = Math.max(1200, roomDepth * scaleFactor);
-      roomHeight = Math.max(roomHeight, userHeight! + 400); // Ensure enough space above shelves
-    }
+    // Use memoized room dimensions
+    const { roomWidth, roomDepth, roomHeight, dynamicFloorY } = roomDimensions;
 
     // Room geometry setup with dynamic dimensions
     const roomGeometry = {
@@ -243,44 +221,6 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     mainLight.shadow.camera.top = 2000;
     mainLight.shadow.camera.bottom = -2000;
     scene.add(mainLight);
-
-    // Front fill light - reduced for subtler glass illumination
-    // const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    // frontLight.position.set(0, 600, 1200); // Softer front lighting
-    // scene.add(frontLight);
-
-    // Side light for brass frame definition - reduced intensity
-    // const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    // sideLight.position.set(-1000, 800, 200); // Gentler brass highlights
-    // scene.add(sideLight);
-    
-    // Subtle rim light for depth without overpowering
-    // const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
-    // rimLight.position.set(-600, 600, -800); // Behind and to the side
-    // scene.add(rimLight);
-    
-    // Enhanced front view lighting for realistic brass appearance
-    // const frontBrassLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    // frontBrassLight.position.set(0, 600, 1000); // Stronger front-facing light
-    // frontBrassLight.castShadow = false; // No shadow to avoid conflicts
-    // scene.add(frontBrassLight);
-    
-    // const rightBrassLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    // rightBrassLight.position.set(800, 500, 600); // Right side for brass definition
-    // scene.add(rightBrassLight);
-    
-    // Add dramatic top-down light for front view brass highlights
-    // const topFrontLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    // topFrontLight.position.set(0, 1200, 500); // Top-down angled toward front
-    // scene.add(topFrontLight);
-    
-    // Add subtle left side light for balance
-    // const leftBrassLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    // leftBrassLight.position.set(-600, 400, 600); // Left side illumination
-    // scene.add(leftBrassLight);
-
-    // Calculate dynamic floor position based on shelf system height
-    const dynamicFloorY = -heightExtension; // Floor moves down as room extends
     
     // Create room elements but don't add them to scene (keep references for technical drawings)
     const floor = new THREE.Mesh(roomGeometry.floor, whiteRoomMaterial);
@@ -306,34 +246,9 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     ceiling.visible = false; // Make ceiling invisible
     ceilingMeshRef.current = ceiling;
 
-    // Remove wall lights since we don't have visible walls
-    // Keep lighting focused on the shelving unit only
-
-    // Set initial camera position using room-based logic for optimal room view
-    // Calculate camera distance based on room dimensions to ensure entire room is visible
-    const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
-    const shelfHeightFactor = (userHeight || 1194) / 1000;
-    const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
-    const bayCountFactor = Math.max(1, barCount / 2);
-    const roomHeightFactor = roomHeight / 1500;
-    
-    // Use room diagonal as base for camera distance to ensure full room visibility
-    const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
-    const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
-    
-    // Position camera to show entire room
-    const cameraX = 0; // Center on x-axis
-    const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
-    const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
-    
-    camera.position.set(cameraX, cameraY, cameraZ);
-    
-    // Calculate room center for camera target
-    const roomCenterX = 0;
-    const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
-    const roomCenterZ = -roomDepth / 2; // Center of the room depth
-    
-    camera.lookAt(roomCenterX, roomCenterY, roomCenterZ);
+    // Set initial camera position using memoized calculations
+    camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    camera.lookAt(cameraTarget.x, cameraTarget.y, cameraTarget.z);
 
     // Renderer setup with container size
     const renderer = new THREE.WebGLRenderer({ 
@@ -372,10 +287,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     controls.enablePan = false; // Disable panning to prevent dragging
     controls.enableRotate = true; // Enable rotation (horizontal only due to polar angle restrictions)
     controls.autoRotate = false;
-    // Center target on the room center - same as camera lookAt
-    controls.target.set(roomCenterX, roomCenterY, roomCenterZ);
+    // Center target on the room center using memoized values
+    controls.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls.update();
-    targetRef.current.set(roomCenterX, roomCenterY, roomCenterZ);
+    targetRef.current.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
 
     // Remove scroll-based camera updates - 3D viewer now has independent controls
 
@@ -395,63 +310,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
       renderer.domElement.style.width = '100%';
       renderer.domElement.style.height = '100%';
 
-      const isMobile = window.innerWidth < 768;
-      
-      // Recalculate room dimensions for resize (same logic as initial setup)
-      let resizeRoomWidth = 2000;
-      let resizeRoomDepth = 1200;
-      let resizeRoomHeight = 1500;
-      
-      // Adjust room width dynamically based on barCount
-      if (barCount > 1) {
-        const additionalWidth = (barCount - 1) * 950;
-        resizeRoomWidth = Math.max(2000, resizeRoomWidth + additionalWidth);
-      }
-      
-      // Calculate dynamic room height based on shelf quantity and spacing
-      const baseRoomHeight = 1500;
-      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
-      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
-      resizeRoomHeight = baseRoomHeight + heightExtension;
-      
-      // Adjust room size for taller shelf systems
-      const heightInInches = userHeight ? userHeight / 25.4 : 47;
-      if (heightInInches > 60) {
-        const scaleFactor = Math.max(1.2, heightInInches / 50);
-        resizeRoomWidth = Math.max(resizeRoomWidth, resizeRoomWidth * scaleFactor);
-        resizeRoomDepth = Math.max(1200, resizeRoomDepth * scaleFactor);
-        resizeRoomHeight = Math.max(resizeRoomHeight, userHeight! + 400);
-      }
-      
-      // Calculate dynamic floor position
-      const resizeDynamicFloorY = -heightExtension;
-      
-      // Calculate camera distance using room-based logic
-      const resizeRoomDiagonal = Math.sqrt(resizeRoomWidth * resizeRoomWidth + resizeRoomDepth * resizeRoomDepth + resizeRoomHeight * resizeRoomHeight);
-      const currentShelfHeightFactor = (userHeight || 1194) / 1000;
-      const currentShelfQuantityFactor = Math.max(1, shelfQuantity / 3);
-      const currentBayCountFactor = Math.max(1, barCount / 2);
-      const currentRoomHeightFactor = resizeRoomHeight / 1500;
-      
-      const resizeBaseCameraDistance = resizeRoomDiagonal * 0.8 * currentShelfHeightFactor * currentShelfQuantityFactor * currentBayCountFactor * currentRoomHeightFactor;
-      const resizeCameraDistance = Math.max(2000, Math.min(resizeBaseCameraDistance, isMobile ? 5000 : 6000));
-      
-      // Position camera to show entire room
-      const resizeCameraX = 0;
-      const resizeCameraY = Math.max((userHeight || 1194) * 0.7, resizeRoomHeight * 0.5) + Math.abs(resizeDynamicFloorY);
-      const resizeCameraZ = resizeCameraDistance * 0.9;
-      
-      // Update camera position
-      camera.position.set(resizeCameraX, resizeCameraY, resizeCameraZ);
-      
-      // Calculate room center for camera target
-      const resizeRoomCenterX = 0;
-      const resizeRoomCenterY = resizeRoomHeight / 2 + Math.abs(resizeDynamicFloorY);
-      const resizeRoomCenterZ = -resizeRoomDepth / 2;
-      
-      // Maintain room-centered target
-      camera.lookAt(resizeRoomCenterX, resizeRoomCenterY, resizeRoomCenterZ);
-      controls.target.set(resizeRoomCenterX, resizeRoomCenterY, resizeRoomCenterZ);
+      // Update camera position using memoized calculations
+      camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+      camera.lookAt(cameraTarget.x, cameraTarget.y, cameraTarget.z);
+      controls.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
       controls.update();
     };
 
@@ -740,13 +602,9 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
 
         // Handle different mount types
         const handleMountType = async () => {
-          console.log("Handling mount type:", mountType);
-          console.log("Mount type props:", mountTypeProps);
           switch (mountType) {
             case "ceiling":
-              console.log("Calling handleCeilingMount...");
               await handleCeilingMount(mountTypeProps);
-              console.log("handleCeilingMount completed");
               break;
             case "freestanding":
               await handleFreestandingMount(mountTypeProps);
@@ -846,13 +704,39 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         sceneRef.current = null;
       }
       
-      if (mountRef.current) {
-        mountRef.current.innerHTML = "";
+      // Clear DOM element using saved reference
+      if (container) {
+        container.innerHTML = "";
       }
       
       cameraRef.current = null;
     };
-  }, [shelfUrl, shelfQuantity, shelfSpacing, shelfSpacings, mountType, barCount, baySpacing, showCrossbars, userHeight, userWidth, shelfDepth, useTopShelf, pipeDiameter, frontBars, backBars, verticalBarsAtBack, wallConnectionPoint, selectedShelvesForBars, selectedBackShelvesForBars]);
+  }, [
+    shelfUrl, 
+    shelfQuantity, 
+    shelfSpacing, 
+    shelfSpacings, 
+    mountType, 
+    barCount, 
+    baySpacing,
+    baySpacings,
+    showCrossbars, 
+    userHeight, 
+    userWidth, 
+    shelfDepth, 
+    useTopShelf, 
+    pipeDiameter, 
+    frontBars, 
+    backBars, 
+    verticalBarsAtBack, 
+    wallConnectionPoint, 
+    selectedShelvesForBars, 
+    selectedBackShelvesForBars,
+    backVertical,
+    roomDimensions,
+    cameraPosition,
+    cameraTarget
+  ]);
 
   // Expose screenshot capture API
   useImperativeHandle(ref, () => ({
@@ -928,63 +812,10 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   // Control functions for top-right icons
   const handleFitScreen = () => {
     if (cameraRef.current && controlsRef.current) {
-      // Use the same room-based logic as initial view for consistency
-      // Calculate dynamic room dimensions (same logic as initial setup)
-      const heightInInches = userHeight ? userHeight / 25.4 : 47;
-      
-      // Base room dimensions
-      let roomWidth = 2000;
-      let roomDepth = 1200;
-      let roomHeight = 1500;
-      
-      // Adjust room width dynamically based on barCount
-      if (barCount > 1) {
-        const additionalWidth = (barCount - 1) * 950;
-        roomWidth = Math.max(2000, roomWidth + additionalWidth);
-      }
-      
-      // Calculate dynamic room height based on shelf quantity and spacing
-      const baseRoomHeight = 1500;
-      const totalShelfSystemHeight = shelfQuantity * shelfSpacing;
-      const heightExtension = Math.max(0, totalShelfSystemHeight - 500);
-      roomHeight = baseRoomHeight + heightExtension;
-      
-      // Adjust room size for taller shelf systems
-      if (heightInInches > 60) {
-        const scaleFactor = Math.max(1.2, heightInInches / 50);
-        roomWidth = Math.max(roomWidth, roomWidth * scaleFactor);
-        roomDepth = Math.max(1200, roomDepth * scaleFactor);
-        roomHeight = Math.max(roomHeight, userHeight! + 400);
-      }
-      
-      // Calculate dynamic floor position
-      const dynamicFloorY = -heightExtension;
-      
-      // Calculate camera distance based on room dimensions to ensure entire room is visible
-      const roomDiagonal = Math.sqrt(roomWidth * roomWidth + roomDepth * roomDepth + roomHeight * roomHeight);
-      const shelfHeightFactor = (userHeight || 1194) / 1000;
-      const shelfQuantityFactor = Math.max(1, shelfQuantity / 3);
-      const bayCountFactor = Math.max(1, barCount / 2);
-      const roomHeightFactor = roomHeight / 1500;
-      
-      // Use room diagonal as base for camera distance to ensure full room visibility
-      const baseCameraDistance = roomDiagonal * 0.8 * shelfHeightFactor * shelfQuantityFactor * bayCountFactor * roomHeightFactor;
-      const cameraDistance = Math.max(2000, Math.min(baseCameraDistance, 6000));
-      
-      // Position camera to show entire room
-      const cameraX = 0; // Center on x-axis
-      const cameraY = Math.max((userHeight || 1194) * 0.7, roomHeight * 0.5) + Math.abs(dynamicFloorY);
-      const cameraZ = cameraDistance * 0.9; // Move camera further back to see more of the room
-      
-      cameraRef.current.position.set(cameraX, cameraY, cameraZ);
-      
-      // Calculate room center for camera target
-      const roomCenterX = 0;
-      const roomCenterY = roomHeight / 2 + Math.abs(dynamicFloorY);
-      const roomCenterZ = -roomDepth / 2; // Center of the room depth
-      
-      cameraRef.current.lookAt(roomCenterX, roomCenterY, roomCenterZ);
-      controlsRef.current.target.set(roomCenterX, roomCenterY, roomCenterZ);
+      // Use memoized camera position and target for consistency
+      cameraRef.current.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+      cameraRef.current.lookAt(cameraTarget.x, cameraTarget.y, cameraTarget.z);
+      controlsRef.current.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
       controlsRef.current.update();
     }
   };

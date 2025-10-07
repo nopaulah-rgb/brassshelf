@@ -93,8 +93,6 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
   }, [unit]);
 
   const handleSpacingChange = (index: number, value: string) => {
-    console.log('handleSpacingChange called:', { index, value, currentInputValues: inputValues });
-    
     // Allow decimal input with up to 3 decimal places
     if (value === '' || /^\d*\.?\d{0,3}$/.test(value)) {
       // Update input values immediately for better UX
@@ -115,11 +113,6 @@ const BaySpacingInput: React.FC<BaySpacingInputProps> = ({
         const newSpacings = [...individualSpacings];
         newSpacings[index] = spacingInMm;
         setIndividualSpacings(newSpacings);
-        
-        console.log('Bay spacing changed:', { index, value, spacingInMm, newSpacings });
-      } else if (value === '') {
-        // Allow empty values for better UX
-        console.log('Empty value entered for bay index:', index);
       }
     }
   };

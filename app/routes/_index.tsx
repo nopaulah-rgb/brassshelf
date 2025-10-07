@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
@@ -105,8 +105,8 @@ export default function Index() {
     markStepCompleted(3);
   }, [markStepCompleted]);
 
-  // Handle depth type selection change
-  const handleDepthTypeChange = (depthType: 'shelf' | 'total') => {
+  // Memoize depth type change handler
+  const handleDepthTypeChange = useCallback((depthType: 'shelf' | 'total') => {
     setSelectedDepthType(depthType);
     // When switching depth types, copy the current value to maintain consistency
     if (depthType === 'shelf') {
@@ -114,28 +114,28 @@ export default function Index() {
     } else {
       setTotalDepth(shelfDepth);
     }
-  };
+  }, [totalDepth, shelfDepth]);
 
-  // Handle shelf depth change
-  const handleShelfDepthChange = (value: number) => {
+  // Memoize shelf depth change handler
+  const handleShelfDepthChange = useCallback((value: number) => {
     setShelfDepth(value);
     // If shelf depth is selected, update total depth to match
     if (selectedDepthType === 'shelf') {
       setTotalDepth(value);
     }
-  };
+  }, [selectedDepthType]);
 
-  // Handle total depth change
-  const handleTotalDepthChange = (value: number) => {
+  // Memoize total depth change handler
+  const handleTotalDepthChange = useCallback((value: number) => {
     setTotalDepth(value);
     // If total depth is selected, update shelf depth to match
     if (selectedDepthType === 'total') {
       setShelfDepth(value);
     }
-  };
+  }, [selectedDepthType]);
 
-  // Validation function to check if all values are within valid ranges
-  const areValuesValid = () => {
+  // Memoize validation function to check if all values are within valid ranges
+  const areValuesValid = useMemo(() => {
     // Check width (5-100 inches)
     const widthInInches = unit === 'inch' ? userWidth : Math.round((userWidth / 25.4) * 100) / 100;
     if (widthInInches < 5 || widthInInches > 100) {
@@ -159,10 +159,10 @@ export default function Index() {
     }
 
     return true;
-  };
+  }, [unit, userWidth, shelfDepth, useIndividualSpacing, shelfSpacings]);
 
-  // Get validation message
-  const getValidationMessage = () => {
+  // Memoize validation message
+  const validationMessage = useMemo(() => {
     const widthInInches = unit === 'inch' ? userWidth : userWidth / 25.4;
     const shelfDepthInInches = unit === 'inch' ? shelfDepth : shelfDepth / 25.4;
     
@@ -189,10 +189,10 @@ export default function Index() {
     }
 
     return '';
-  };
+  }, [unit, userWidth, shelfDepth, useIndividualSpacing, shelfSpacings]);
 
-  // Function to reset selections when mount type changes
-  const resetSelections = (newMountType: string) => {
+  // Memoize reset selections function
+  const resetSelections = useCallback((newMountType: string) => {
     // Reset wall connection points to default
     setWallConnectionPoint(['all']);
     
@@ -235,7 +235,7 @@ export default function Index() {
     
     // Reset pipe diameter to default
     setPipeDiameter('5/8');
-  };
+  }, []);
 
   // Determine if all necessary selections have been made
   const isViewerReady = selectedShelf;
@@ -248,8 +248,8 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handler functions
-  const handleExport = () => {
+  // Memoize handler functions
+  const handleExport = useCallback(() => {
     // Get the canvas element from ThreeJS
     const canvas = document.querySelector('canvas');
     if (canvas) {
@@ -268,9 +268,9 @@ export default function Index() {
         }
       }, 'image/png');
     }
-  };
+  }, []);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     // Prepare configuration data
     const configuration = {
       mountType,
@@ -297,7 +297,7 @@ export default function Index() {
     console.log('Adding to cart:', configuration);
     // Here you would typically send this data to your cart/backend
     alert('Configuration added to cart!');
-  };
+  }, [mountType, userHeight, userWidth, shelfDepth, totalDepth, unit, shelfQuantity, barCount, pipeDiameter, material, finish, frontBars, price]);
 
   return (
     <div className="group/design-root">
@@ -793,7 +793,7 @@ export default function Index() {
                 </div>
               ) : isViewerReady ? (
                 <>
-                  {areValuesValid() ? (
+                  {areValuesValid ? (
                     <ThreeDViewer
                       ref={viewerRef}
                       shelfUrl={selectedShelf}
@@ -833,7 +833,7 @@ export default function Index() {
                           </svg>
                         </div>
                         <h3 className="text-lg font-medium text-[#181511] mb-2">Invalid Configuration</h3>
-                        <p className="text-[#897961] text-sm max-w-md mx-auto">{getValidationMessage()}</p>
+                        <p className="text-[#897961] text-sm max-w-md mx-auto">{validationMessage}</p>
                       </div>
                     </div>
                   )}
