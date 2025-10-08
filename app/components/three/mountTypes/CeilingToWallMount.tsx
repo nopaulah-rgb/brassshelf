@@ -438,9 +438,22 @@ export const handleCeilingToWallMount = async ({
 
   const adjustedCornerPositions = getAllCornerPositions();
 
+  // Vertical rip Z-position calculator (CeilingMount parity)
+  const computeVerticalZPos = (pos: { z: number; sectionBox: { min: { z: number }; max: { z: number } } }) => {
+    const isFront = Math.abs(pos.z - (pos.sectionBox.min.z + 5)) < 0.008;
+    const isBack = Math.abs(pos.z - (pos.sectionBox.max.z - 5)) < 0.008;
+    let z = pos.z + zOffset + 5; // base offset
+    if (isFront) {
+      if (frontBars) z -= 5; // front horizontal açıkken 5 geri
+    } else if (isBack) {
+      if (frontBars) z -= 20; // arka için 20 geri
+    }
+    return z;
+  };
+
   // Tavan bağlantıları - backVertical seçeneğine göre
   adjustedCornerPositions.forEach((pos) => {
-    const isFrontPosition = pos.z === pos.sectionBox.min.z + 5; // Ön pozisyon
+    const isFrontPosition = Math.abs(pos.z - (pos.sectionBox.min.z + 5)) < 0.008; // Ön pozisyon
     
     // Back Vertical: NO ve ön pozisyonlarda tavan modelini kaldır (dikey rip olmadığı için gerek yok)
     if (!backVertical && isFrontPosition) {
@@ -464,25 +477,21 @@ export const handleCeilingToWallMount = async ({
     // Ceiling connector pozisyonu - CeilingMount'daki gibi
     const topShelfHeight = adjustedBaseY; // İlk shelf pozisyonu (en üst shelf)
     const connectorCeilingY = topShelfHeight + shelfSpacing; // CeilingMount'daki gibi
-    ceilingConnector.position.set(pos.x, connectorCeilingY, pos.z + zOffset);
+    // Ceiling connector Z - vertical rip ile tam aynı hizaya getir
+    const ceilingConnectorZPos = computeVerticalZPos(pos);
+    ceilingConnector.position.set(pos.x, connectorCeilingY, ceilingConnectorZPos);
     scene.add(ceilingConnector);
 
-    // Dikey rip: en üst raftan tavana kadar - sadece tavan bağlantısı olan pozisyonlarda
-    // Tavan bağlantısı eklenen pozisyonlarda dikey rip de ekle
-    // CeilingMount'daki gibi hesapla: shelf spacing + model yüksekliği - 3 birim kısalt
-    const actualTopRipHeight = shelfSpacing + model13Height - 17;
+    // Tek parça top rip: ceiling connector'dan en üst rafa kadar (CeilingFloorWallMount uyumu)
+    const ceilingConnectorY = connectorCeilingY;
+    const topShelfY = topShelfHeight;
+    const actualTopRipHeight = ceilingConnectorY - topShelfY;
     const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
-    
-    // Arka pozisyonlardaki tavan ripleri arkaya doğru hareket ettir
-    let topRipZPos = pos.z + zOffset;
-    if (pos.z === pos.sectionBox.max.z - 5) { // Arka pozisyon
-      topRipZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
-    }
-    
+    const topRipZPos = computeVerticalZPos(pos);
     verticalTopRip.position.set(
       pos.x,
-      topShelfHeight + actualTopRipHeight / 2,
+      topShelfY + actualTopRipHeight / 2,
       topRipZPos
     );
     scene.add(verticalTopRip);
@@ -859,7 +868,7 @@ export const handleCeilingToWallMount = async ({
         
       // Dikey ripler (raflar arası - sadece ceiling to wall için) - backVertical seçeneğine göre
       if (i < shelfQuantity - 1) {
-        const isFront = pos.z === shelfBoundingBox.min.z + 5; // Ön pozisyon
+        const isFront = Math.abs(pos.z - (pos.sectionBox.min.z + 5)) < 0.001; // Ön pozisyon (toleranslı)
         
         // Back Vertical: NO olduğunda TÜM ön pozisyonlardaki dikey ripler kaldırılır
         if (!backVertical && isFront) {
@@ -887,17 +896,20 @@ export const handleCeilingToWallMount = async ({
         
         const verticalRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, totalExtension, 32);
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-        // Arka pozisyonlardaki dikey ripleri arkaya doğru hareket ettir
+        // CeilingMount mantığına uyumlu ön/arka tespiti ve Z ayarı
+        const isFrontPosition = Math.abs(pos.z - (pos.sectionBox.min.z + 5)) < 0.008; // Ön
+        const isBackPosition = Math.abs(pos.z - (pos.sectionBox.max.z - 5)) < 0.008; // Arka
         let finalZPos = pos.z + zOffset;
-        if (pos.z === pos.sectionBox.max.z - 5) { // Arka pozisyon
-          finalZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
-        }
-        
-        // Front horizontal YES olduğunda SADECE öndeki dikey ripleri hareket ettir
-        const isFrontPosition = pos.z === pos.sectionBox.min.z + 23; // Ön pozisyon
-        if (frontBars && selectedShelvesForBars.includes(i) && isFrontPosition) {
-          console.log('Front dikey rip hareket ediyor:', { i, frontBars, selectedShelvesForBars, isFrontPosition });
-          finalZPos -= 23; // Sadece öndeki ripler hareket etsin
+        if (isFrontPosition) {
+          finalZPos += 5; // base offset (CeilingMount)
+          if (frontBars) {
+            finalZPos -= 5; // front horizontal açıkken öndeki dikey ripleri 5 geri
+          }
+        } else if (isBackPosition) {
+          finalZPos += 5; // base offset
+          if (frontBars) {
+            finalZPos -= 20; // CeilingMount'taki arkadaki geri çekilme mantığı
+          }
         }
         
         verticalRip.position.set(
@@ -929,14 +941,14 @@ export const handleCeilingToWallMount = async ({
         // Bu şekilde ripin alt ucu son raftan tam bottomExtension (50mm) aşağı olur
         // Arka pozisyonlardaki alt ripleri de arkaya doğru hareket ettir
         let bottomFinalZPos = pos.z + zOffset;
-        if (pos.z === pos.sectionBox.max.z - 5) { // Arka pozisyon
-          bottomFinalZPos = pos.z + zOffset + 5; // Arka ripler 5 birim arkaya
-        }
-        
-        // Front horizontal YES olduğunda SADECE öndeki alt ripleri hareket ettir
-        const isFrontBottomPosition = pos.z === pos.sectionBox.min.z + 5; // Ön pozisyon
-        if (frontBars && selectedShelvesForBars.includes(i) && isFrontBottomPosition) {
-          bottomFinalZPos -= 35; // Sadece öndeki alt ripler hareket etsin
+        const isFrontBottomPosition = Math.abs(pos.z - (pos.sectionBox.min.z + 5)) < 0.008;
+        const isBackBottomPosition = Math.abs(pos.z - (pos.sectionBox.max.z - 5)) < 0.008;
+        if (isFrontBottomPosition) {
+          bottomFinalZPos += 5; // base offset
+          if (frontBars) bottomFinalZPos -= 5; // front açıkken 5 geri
+        } else if (isBackBottomPosition) {
+          bottomFinalZPos += 5; // base offset
+          if (frontBars) bottomFinalZPos -= 20; // arka için aynı mantık
         }
         
         bottomRip.position.set(
