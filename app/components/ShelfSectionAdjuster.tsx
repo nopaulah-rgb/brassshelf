@@ -200,31 +200,34 @@ const ShelfSectionAdjuster: React.FC<ShelfSectionAdjusterProps> = ({
       </p>
 
       {/* Individual Section Width Inputs */}
-      <div className="space-y-3 mb-4">
+      <div className="space-y-4 mb-4">
         {Array.from({ length: barCount }, (_, index) => (
-          <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <label className="text-sm font-medium text-slate-700 sm:w-24 flex-shrink-0">
-              Section {index + 1}:
-            </label>
-            <div className="flex-1 min-w-0">
+          <div key={index} className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Section {index + 1}:</label>
+            <div className="w-full">
               <input
-                type="text"
+                type="number"
+                inputMode="decimal"
+                step={unit === 'inch' ? 0.1 : 1}
+                pattern="[0-9]*[.,]?[0-9]*"
                 value={inputValues[index] || ''}
                 onChange={(e) => handleWidthChange(index, e.target.value)}
                 onBlur={(e) => handleBlur(index, e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                autoComplete="off"
+                className={`form-input ${
                   invalidIndex === index 
                     ? 'border-red-300 bg-red-50 text-red-700 focus:ring-red-500 focus:border-red-500' 
-                    : 'border-gray-300 bg-white text-gray-900'
+                    : ''
                 }`}
+                style={{ WebkitTextFillColor: '#181511' as any }}
                 placeholder={unit === 'inch' ? "36.0" : "914"}
               />
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-sm text-slate-600 w-8 sm:w-12 flex-shrink-0">{unit}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">{unit}</span>
               <button
                 onClick={() => resetToDefault(index)}
-                className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 flex-shrink-0"
+                className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
                 title="Reset to default"
               >
                 Reset
