@@ -12,6 +12,7 @@ export const handleFreestandingMount = async ({
   barCount,
   baySpacing = 0,
   baySpacings = [],
+  sectionWidths = [],
   showCrossbars,
   userHeight,
   userWidth,
@@ -197,14 +198,40 @@ export const handleFreestandingMount = async ({
   const getShelfPositions = (barCount: number) => {
     const positions: number[] = [];
     const effectiveWidth = userWidth || shelfWidth;
+    
     if (barCount === 1) {
       positions.push(0);
     } else {
+      // Check if we have custom section widths
+      const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
       // Check if we have individual bay spacings
       const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
       
-      if (hasIndividualSpacings) {
-        // Use individual bay spacings
+      if (hasCustomWidths) {
+        // Use custom section widths
+        const customWidths: number[] = [];
+        for (let i = 0; i < barCount; i++) {
+          const customWidth = sectionWidths.find(sw => sw.sectionIndex === i);
+          const width = customWidth ? customWidth.width : effectiveWidth;
+          customWidths.push(width);
+        }
+        
+        // Use individual section widths with spacing
+        const totalSpacing = hasIndividualSpacings 
+          ? baySpacings.reduce((sum, spacing) => sum + spacing, 0)
+          : (barCount - 1) * baySpacing;
+        const totalWidth = customWidths.reduce((sum, width) => sum + width, 0) + totalSpacing;
+        
+        let currentX = -totalWidth / 2 + customWidths[0] / 2;
+        positions.push(currentX); // First bay position
+        
+        for (let i = 1; i < barCount; i++) {
+          const spacing = hasIndividualSpacings ? baySpacings[i - 1] : baySpacing;
+          currentX += customWidths[i - 1] / 2 + spacing + customWidths[i] / 2;
+          positions.push(currentX);
+        }
+      } else if (hasIndividualSpacings) {
+        // Use individual bay spacings with uniform width
         const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
         const totalWidth = (barCount * effectiveWidth) + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
@@ -217,9 +244,11 @@ export const handleFreestandingMount = async ({
           positions.push(currentX);
         }
       } else if (baySpacing === 0) {
+        // Connected bays with uniform width
         const startX = -(barCount - 1) * effectiveWidth / 2;
         for (let i = 0; i < barCount; i++) positions.push(startX + i * effectiveWidth);
       } else {
+        // Uniform spacing and width
         const totalSpacing = (barCount - 1) * baySpacing;
         const totalWidth = (barCount * effectiveWidth) + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
@@ -246,39 +275,75 @@ export const handleFreestandingMount = async ({
       currentHeight = adjustedBaseY - (i * shelfSpacing);
     }
 
-    // Place shelves
-    shelfPositions.forEach((shelfX) => {
-      const shelfMesh = new THREE.Mesh(shelfGeometry, shelfMaterial);
+    // Place shelves with custom widths if available
+    shelfPositions.forEach((shelfX, sectionIndex) => {
+      let currentShelfGeometry = shelfGeometry;
+      
+      // Check if we have custom section widths
+      const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
+      if (hasCustomWidths) {
+        const customWidth = sectionWidths.find(sw => sw.sectionIndex === sectionIndex);
+        if (customWidth) {
+          // Create a scaled version of the shelf geometry for this section
+          currentShelfGeometry = shelfGeometry.clone();
+          const effectiveWidth = userWidth || shelfWidth;
+          const scaleX = customWidth.width / effectiveWidth;
+          currentShelfGeometry.scale(scaleX, 1, 1);
+        }
+      }
+      
+      const shelfMesh = new THREE.Mesh(currentShelfGeometry, shelfMaterial);
       shelfMesh.position.set(shelfX, currentHeight + model13Height + 5, zOffset);
       scene.add(shelfMesh);
     });
 
+    // Helper function to get bounding box for a specific section
+    const getSectionBoundingBox = (sectionIndex: number) => {
+      const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
+      if (hasCustomWidths) {
+        const customWidth = sectionWidths.find(sw => sw.sectionIndex === sectionIndex);
+        if (customWidth) {
+          const effectiveWidth = userWidth || shelfWidth;
+          const scaleX = customWidth.width / effectiveWidth;
+          return {
+            min: { x: shelfBoundingBox.min.x * scaleX, z: shelfBoundingBox.min.z },
+            max: { x: shelfBoundingBox.max.x * scaleX, z: shelfBoundingBox.max.z }
+          };
+        }
+      }
+      return shelfBoundingBox;
+    };
+
     // Corner positions for connectors
     const allCornerPositions: { x: number; z: number }[] = [];
     if (baySpacing === 0) {
+      const firstSectionBox = getSectionBoundingBox(0);
       allCornerPositions.push(
-        { x: shelfBoundingBox.min.x + 5 + shelfPositions[0], z: shelfBoundingBox.min.z + 5 },
-        { x: shelfBoundingBox.min.x + 5 + shelfPositions[0], z: shelfBoundingBox.max.z - 5 }
+        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.min.z + 5 },
+        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.max.z - 5 }
       );
       for (let j = 0; j < barCount - 1; j++) {
-        const joinX = shelfPositions[j] + shelfBoundingBox.max.x;
+        const currentSectionBox = getSectionBoundingBox(j);
+        const joinX = shelfPositions[j] + currentSectionBox.max.x;
         allCornerPositions.push(
-          { x: joinX, z: shelfBoundingBox.min.z + 5 },
-          { x: joinX, z: shelfBoundingBox.max.z - 5 }
+          { x: joinX, z: currentSectionBox.min.z + 5 },
+          { x: joinX, z: currentSectionBox.max.z - 5 }
         );
       }
+      const lastSectionBox = getSectionBoundingBox(barCount - 1);
       allCornerPositions.push(
-        { x: shelfBoundingBox.max.x - 5 + shelfPositions[barCount - 1], z: shelfBoundingBox.min.z + 5 },
-        { x: shelfBoundingBox.max.x - 5 + shelfPositions[barCount - 1], z: shelfBoundingBox.max.z - 5 }
+        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.min.z + 5 },
+        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.max.z - 5 }
       );
     } else {
       for (let bayIndex = 0; bayIndex < barCount; bayIndex++) {
         const bayX = shelfPositions[bayIndex];
+        const sectionBox = getSectionBoundingBox(bayIndex);
         allCornerPositions.push(
-          { x: shelfBoundingBox.min.x + 5 + bayX, z: shelfBoundingBox.min.z + 5 },
-          { x: shelfBoundingBox.min.x + 5 + bayX, z: shelfBoundingBox.max.z - 5 },
-          { x: shelfBoundingBox.max.x - 5 + bayX, z: shelfBoundingBox.min.z + 5 },
-          { x: shelfBoundingBox.max.x - 5 + bayX, z: shelfBoundingBox.max.z - 5 }
+          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.min.z + 5 },
+          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.max.z - 5 },
+          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.min.z + 5 },
+          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.max.z - 5 }
         );
       }
     }

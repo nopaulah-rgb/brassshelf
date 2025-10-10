@@ -8,6 +8,7 @@ export interface MountTypeProps {
   barCount: number;
   baySpacing?: number;  // Bayslar arası boşluk (mm cinsinden) - legacy single spacing
   baySpacings?: number[]; // Individual bay spacings array (mm cinsinden)
+  sectionWidths?: { sectionIndex: number; width: number }[]; // Custom section widths array
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;

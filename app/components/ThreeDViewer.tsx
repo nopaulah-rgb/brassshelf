@@ -35,6 +35,7 @@ interface ThreeDViewerProps {
   barCount: number;
   baySpacing?: number;
   baySpacings?: number[];
+  sectionWidths?: { sectionIndex: number; width: number }[];
   showCrossbars: boolean;
   userHeight?: number;
   userWidth?: number;
@@ -65,6 +66,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
   barCount,
   baySpacing = 0,
   baySpacings = [],
+  sectionWidths = [],
   showCrossbars,
   userHeight,
   userWidth,
@@ -567,6 +569,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           barCount,
           baySpacing,
           baySpacings,
+          sectionWidths,
           showCrossbars,
           userHeight,
           userWidth: effectiveUserWidth,
@@ -720,6 +723,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
     barCount, 
     baySpacing,
     baySpacings,
+    sectionWidths,
     showCrossbars, 
     userHeight, 
     userWidth, 

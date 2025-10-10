@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { useRouteError } from "@remix-run/react";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import ThreeDViewer, { ThreeDViewerHandle } from "~/components/ThreeDViewer";
 import CrossbarSelector from "~/components/CrossbarSelector";
 import UseTopShelfSelector from "~/components/UseTopShelfSelector";
@@ -17,7 +17,7 @@ import DimensionInputs from "~/components/DimensionInputs";
 import PipeDiameterSelector from "~/components/PipeDiameterSelector";
 import DimensionsModal from "~/components/DimensionsModal";
 import WallConnectionSelector from "~/components/WallConnectionSelector";
-import BaySpacingInput from "~/components/BaySpacingInput";
+import ShelfSectionAdjuster from "~/components/ShelfSectionAdjuster";
 
 // Loader function for server-side data fetching (if needed)
 export const loader = async () => {
@@ -35,6 +35,8 @@ export default function Index() {
   const [barCount, setBarCount] = useState<number>(1);
   const [baySpacing, setBaySpacing] = useState<number>(0); // Bay spacing in mm - default 0 (birleşik) - legacy
   const [baySpacings, setBaySpacings] = useState<number[]>([]); // Individual bay spacings in mm
+  const [sectionWidths, setSectionWidths] = useState<{ sectionIndex: number; width: number }[]>([]);
+  const [useCustomSectionWidths, setUseCustomSectionWidths] = useState<boolean>(false);
   const [userHeight, setUserHeight] = useState<number>(42); // in inches
   const [userWidth, setUserWidth] = useState<number>(36); // in inches
   const [shelfDepth, setShelfDepth] = useState<number>(12); // in inches
@@ -71,6 +73,13 @@ export default function Index() {
   const [material, setMaterial] = useState<'brass' | 'stainless-steel'>('brass');
   const [finish, setFinish] = useState<'polished' | 'brushed'>('polished');
 
+  // Reset section widths when barCount changes
+  useEffect(() => {
+    if (useCustomSectionWidths) {
+      setSectionWidths([]);
+    }
+  }, [barCount, useCustomSectionWidths]);
+
   // Mark step as completed
   const markStepCompleted = useCallback((step: number) => {
     setCompletedSteps(prev => {
@@ -98,6 +107,12 @@ export default function Index() {
     setWallConnectionPoint(points);
     markStepCompleted(3);
   }, [markStepCompleted]);
+
+  // Callback for section widths changes
+  const handleSectionWidthsChange = useCallback((widths: { sectionIndex: number; width: number }[]) => {
+    console.log('Section widths updated:', widths);
+    setSectionWidths(widths);
+  }, []);
 
   // Callback for back vertical changes
   const handleBackVerticalChange = useCallback((vertical: boolean) => {
@@ -517,14 +532,46 @@ export default function Index() {
                             }} 
                           />
                           
-                          <BaySpacingInput 
-                            key={`bay-spacing-${mountType}`}
-                            baySpacings={baySpacings}
-                            onBaySpacingsChange={setBaySpacings}
-                            barCount={barCount}
-                            totalWidth={userWidth}
-                            unit={unit}
-                />
+                          {/* Custom Section Widths Mode Toggle */}
+                          <div>
+                            <div className="mb-2 block text-sm font-medium">Section Width Mode</div>
+                            <div className="flex gap-4">
+                              <label className={`radio-label ${!useCustomSectionWidths ? 'active' : ''}`}>
+                                <input 
+                                  className="sr-only" 
+                                  type="radio" 
+                                  name="sectionWidthMode" 
+                                  checked={!useCustomSectionWidths}
+                                  onChange={() => setUseCustomSectionWidths(false)}
+                                />
+                                <span className="radio-custom"></span>
+                                Uniform Width
+                              </label>
+                              <label className={`radio-label ${useCustomSectionWidths ? 'active' : ''}`}>
+                                <input 
+                                  className="sr-only" 
+                                  type="radio" 
+                                  name="sectionWidthMode" 
+                                  checked={useCustomSectionWidths}
+                                  onChange={() => setUseCustomSectionWidths(true)}
+                                />
+                                <span className="radio-custom"></span>
+                                Custom Widths
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Shelf Section Adjuster */}
+                          {useCustomSectionWidths && (
+                            <ShelfSectionAdjuster
+                              key={`shelf-sections-${mountType}`}
+                              barCount={barCount}
+                              sectionWidths={sectionWidths}
+                              onSectionWidthsChange={handleSectionWidthsChange}
+                              defaultWidth={914.4} // 36 inches in mm (always in mm)
+                              unit={unit}
+                            />
+                          )}
                 
                 {/* Spacing Mode Toggle */}
                           <div>
@@ -804,6 +851,7 @@ export default function Index() {
                       barCount={barCount}
                       baySpacing={baySpacings.length > 0 ? (baySpacings.every(spacing => spacing === 0) ? 0 : baySpacings[0]) : baySpacing}
                       baySpacings={baySpacings}
+                      sectionWidths={useCustomSectionWidths && sectionWidths.length > 0 ? sectionWidths : undefined}
                       showCrossbars={frontBars || backBars}
                       userHeight={unit === 'inch' ? userHeight * 25.4 : userHeight}
                       userWidth={unit === 'inch' ? userWidth * 25.4 : userWidth}
