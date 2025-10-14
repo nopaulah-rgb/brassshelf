@@ -172,16 +172,13 @@ export const handleCeilingMount = async ({
     }
   }
 
-  // ÜST MOUNT: userHeight düzeltme hesaplaması  
-  // Formül: En Üst Raf Pozisyonu = Reference Point ± Clearance
-  // Ceiling Mount için: topShelf = ceiling - 2" (tavanın 2" altında)
+  // ÜST MOUNT: tavan yüksekliği odanın yüksekliğinden alınır
   const baseCeilingY = roomHeight || 1500; // Tavan yüksekliği (mm)
-  const topClearance = 50.8; // 2" üst boşluk (mm)
-  
-  // En üst rafın pozisyonu: ceiling - 2" (topClearance)
-  const topShelfY = baseCeilingY - topClearance;
-  const adjustedBaseY = topShelfY; // First shelf stays at this position
-  // shelfSpacing now comes from props
+  // İlk raf ile tavan arası mesafe: individual spacing varsa ilk değer, yoksa tek spacing
+  const firstTopSpacing = (shelfSpacings && shelfSpacings.length > 0) ? shelfSpacings[0] : shelfSpacing;
+  // En üst rafın merkezi yüksekliği
+  const topShelfY = baseCeilingY - firstTopSpacing;
+  const adjustedBaseY = topShelfY; // Çoklu raf durumunda üst raf yüksekliği
 
   // Calculate pipe radius based on pipeDiameter
   const getPipeRadius = () => {
@@ -545,12 +542,8 @@ export const handleCeilingMount = async ({
         // Next shelf spacing'i al
         const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
         
-        // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafe + model yüksekliği
-        let ripLength = nextSpacingToUse + model13Height; // Model yüksekliğini de dahil et
-        // En alttaki dikey rip: 1 inç aşağı uzatma ve 100 birim kısalt
-        if (i === shelfQuantity - 2) {
-          ripLength += TWO_INCH;
-        }
+        // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafeye +2" alt taşma
+        const ripLength = nextSpacingToUse + TWO_INCH;
         
         // Ön ve arka ripler için farklı çaplar kullan
         const isFrente = pos.z === pos.sectionBox.min.z + 5;
@@ -619,7 +612,7 @@ export const handleCeilingMount = async ({
         // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat (ekstra aşağı uzatma yok)
         verticalRip.position.set(
           pos.x,
-          currentHeight - ripLength / 2,
+          currentHeight + TWO_INCH - ripLength / 2,
           ripZPos + verticalRipZAdjustment
         );
         scene.add(verticalRip);
@@ -634,8 +627,8 @@ export const handleCeilingMount = async ({
         if (selectedShelvesForBars.includes(i)) {
           const sectionBox = getSectionBoundingBox(sectionIndex);
           const backPositions = [
-            { x: sectionBox.min.x + 5 + shelfX, z: sectionBox.max.z - 5 },
-            { x: sectionBox.max.x - 5 + shelfX, z: sectionBox.max.z - 5 }
+            { x: shelfX + sectionBox.min.x + 5, z: sectionBox.max.z - 5 },
+            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.max.z - 5 }
           ];
 
           if (backPositions.length === 2) {
@@ -669,8 +662,8 @@ export const handleCeilingMount = async ({
         if (selectedBackShelvesForBars.includes(i)) {
           const sectionBox = getSectionBoundingBox(sectionIndex);
           const frontPositions = [
-            { x: sectionBox.min.x + 5 + shelfX, z: sectionBox.min.z + 5 },
-            { x: sectionBox.max.x - 5 + shelfX, z: sectionBox.min.z + 5 }
+            { x: shelfX + sectionBox.min.x + 5, z: sectionBox.min.z + 5 },
+            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.min.z + 5 }
           ];
 
           if (frontPositions.length === 2) {
@@ -715,9 +708,10 @@ export const handleCeilingMount = async ({
 
       // Kısa kenarlara yatay rip ekle (her durumda) - section-specific bounding box kullan
       const sectionBox = getSectionBoundingBox(sectionIndex);
-      const leftFront = { x: sectionBox.min.x + 5 + shelfX, z: sectionBox.min.z + 5 };
-      const leftBack = { x: sectionBox.min.x + 5 + shelfX, z: sectionBox.max.z - 5 };
-      const rightFront = { x: sectionBox.max.x - 5 + shelfX, z: sectionBox.min.z + 5 };
+      // Section bounding box'u custom width'e ölçeklediğimiz için, kısa kenarların X konumunu o section'a göre hesapla
+      const leftFront = { x: shelfX + sectionBox.min.x + 5, z: sectionBox.min.z + 5 };
+      const leftBack = { x: shelfX + sectionBox.min.x + 5, z: sectionBox.max.z - 5 };
+      const rightFront = { x: shelfX + sectionBox.max.x - 5, z: sectionBox.min.z + 5 };
 
       // Sol ve sağ kısa kenarlar için ripler - modellerin gerçek pozisyonlarını kullan
       let zFront = leftFront.z + zOffset + 5;
@@ -762,8 +756,8 @@ export const handleCeilingMount = async ({
       const length = Math.abs(zBack - zFront);
       const shortSideRadius = pipeRadius * 1.6; // Sol ve sağ kısa kenar ripleri %60 daha kalın
 
-      // Bay'in pozisyonunu kontrol et
-      const bayIndex = shelfPositions.indexOf(shelfX);
+      // Bay indexini güvenilir şekilde belirle (floating point hatalarından kaçınmak için sectionIndex kullan)
+      const bayIndex = sectionIndex;
       
       if (baySpacing === 0) {
         // Bay spacing 0 ise eski mantık: sol kenar sadece ilk bay, sağ kenar her bay
@@ -893,14 +887,9 @@ export const handleCeilingMount = async ({
     }
 
     singleShelfCornerPositions.forEach((pos) => {
-      // Dikey rip: raftan tavana kadar - shelf spacing + model yüksekliği + 2 inç aşağı uzatma
-      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
-      let ripHeight = shelfSpacing + model13Height; // Shelf spacing + model yüksekliği
-      
-      // Tek raf durumunda da en alttaki dikey rip: 2 inç aşağı uzatma
-      if (shelfQuantity === 1) {
-        ripHeight += -17; // 17 birim + 2 birim daha kısalt
-      }
+      // Dikey rip: tavan bağlantısından başlayıp rafın üstünde 2" taşacak şekilde hesapla
+      const topShelfHeight = baseCeilingY - shelfSpacing;
+      const ripHeight = shelfSpacing + TWO_INCH; // 2" raf üzerinde taşma
       
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === pos.sectionBox.min.z + 5;
@@ -950,7 +939,7 @@ export const handleCeilingMount = async ({
         }
       }
       
-      // Ceiling rip uzunluğu hesaplanan uzunluk olsun
+      // Rip uzunluğu doğrudan kullanılacak
       const actualRipHeight = ripHeight;
       const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
       verticalRip.geometry = updatedRipGeometry;
@@ -963,9 +952,10 @@ export const handleCeilingMount = async ({
         verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
       }
       
+      // Üstten aşağı: merkez, tavanın altında ripHeight/2 konumlanmalı
       verticalRip.position.set(
         pos.x,
-        topShelfHeight + actualRipHeight / 2,
+        baseCeilingY - actualRipHeight / 2,
         ripZPos + verticalRipZAdjustment
       );
       scene.add(verticalRip);
@@ -989,8 +979,8 @@ export const handleCeilingMount = async ({
         ceilingConnector.rotation.y = Math.PI;
       }
       
-      // Type16E modeli için pozisyon ayarı - tek shelf durumunda asıl tavan seviyesinde
-      const singleConnectorCeilingY = shelfQuantity === 1 ? baseCeilingY : topShelfHeight + shelfSpacing;
+      // Type16E modeli için pozisyon ayarı - tek shelfte gerçek tavan seviyesi
+      const singleConnectorCeilingY = baseCeilingY;
       // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
       let connectorZAdjustment = 0;
       if (frontBars) {
@@ -1002,76 +992,7 @@ export const handleCeilingMount = async ({
       scene.add(ceilingConnector);
     });
 
-    // Tek raf durumunda aşağı uzayan dikey ripler ekle
-    singleShelfCornerPositions.forEach((pos) => {
-      // Raftan aşağı uzayan dikey rip - 38mm sabit uzunluk
-      const downwardRipHeight = 50.4 - 100; // 38mm sabit aşağı uzatma - 100 birim kısalt
-      const topShelfHeight = baseCeilingY - shelfSpacing; // Tek rafın pozisyonu
-      
-      // Ön ve arka ripler için farklı çaplar kullan
-      const isFrente = pos.z === pos.sectionBox.min.z + 5;
-      const isBacke = pos.z === pos.sectionBox.max.z - 5;
-      const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %60 daha kalın
-      
-      const downwardRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, downwardRipHeight, 16);
-      const downwardRip = new THREE.Mesh(downwardRipGeometry, ripMaterial);
-      
-      // Ön ve arka ripler için pozisyon ayarları
-      let ripZPos = pos.z + zOffset;
-      
-      // Öndeki ripler için pozisyon ayarı
-      if (isFrente) {
-        ripZPos += 5; // Base offset
-        // Back bar YES ve tek raf seçili değilse öndeki ripi öne al
-        if (backBars && !selectedBackShelvesForBars.includes(pos.sectionIndex)) {
-          ripZPos += 15; // 15 birim öne al
-        } else if (backBars && selectedBackShelvesForBars.includes(pos.sectionIndex)) {
-          // Back bar YES ve raf seçili - modeller ile tutarlı
-          ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
-        }
-      }
-      
-      if (isBacke) {
-        // Sadece arkadaki ripler için pozisyon ayarla
-        ripZPos += 5; // Base offset
-        // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
-        if (frontBars) {
-          ripZPos -= 20; // 10 birim geriye hareket ettir (tavan modelleriyle hizalamak için)
-        }
-        if (frontBars && selectedShelvesForBars.includes(0)) {
-          // Front bar açık ve tek raf seçili - arkadaki model Model13
-          ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
-        } else {
-          // Front bar kapalı veya tek raf seçili değil - Type16A
-          if (type16AGeometry) {
-            // Front bar YES ve raf seçili değilse arkadaki ripi de öne al
-            if (frontBars && !selectedShelvesForBars.includes(0)) {
-              ripZPos += model13Depth - 58; // 10 birim öne alındı (68'den 58'e)
-            } else {
-              ripZPos += model13Depth - 68; // Type16A arkadaki normal pozisyon
-            }
-          } else {
-            ripZPos += model13Depth - 45; // Normal arkadaki pozisyon
-          }
-        }
-      }
-      
-      // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
-      let verticalRipZAdjustment = 0;
-      if (frontBars) {
-        verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
-      } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
-        verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
-      }
-      
-      // Aşağı uzayan ripi rafın altından başlat
-      downwardRip.position.set(
-        pos.x,
-        topShelfHeight - downwardRipHeight / 2, // Rafın altından aşağı uzat
-        ripZPos + verticalRipZAdjustment
-      );
-      scene.add(downwardRip);
-    });
+    // Tek raf için raftan aşağı uzayan ekstra ripler devre dışı bırakıldı (kopma/çakışma önlemek için)
   }
 
   // En üstteki raftan tavana kadar olan dikey ripler ve tavan bağlantıları (sadece çoklu shelf durumunda)

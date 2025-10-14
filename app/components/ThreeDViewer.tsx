@@ -530,32 +530,22 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           });
         };
 
-        // Calculate height-based scaling for system width
-        // Taller systems should be proportionally wider for structural stability and aesthetics
-        const calculateEffectiveWidth = (baseWidth: number, height: number): number => {
-          // const defaultHeight = 1067; // 42 inches in mm (default height)
-          const heightInInches = height / 25.4; // Convert mm to inches for calculation
-          
-          // Apply scaling factor based on height
-          if (heightInInches <= 48) {
-            // Small systems: no scaling needed
-            return baseWidth;
-          } else if (heightInInches <= 72) {
-            // Medium systems: 10-20% wider
-            const scaleFactor = 1 + (heightInInches - 48) * 0.008; // 0.8% per inch above 48"
-            return baseWidth * scaleFactor;
-          } else {
-            // Large systems: 20-40% wider
-            const mediumScale = 1.2; // 20% for 72" systems
-            const additionalScale = (heightInInches - 72) * 0.01; // 1% per inch above 72"
-            const scaleFactor = mediumScale + additionalScale;
-            return baseWidth * Math.min(scaleFactor, 1.4); // Cap at 40% increase
-          }
-        };
+        // Use raw user width without auto-scaling
+        const effectiveUserWidth = userWidth || 914.4; // Default 36 inches in mm
 
-        // Calculate effective width based on height scaling
-        const baseUserWidth = userWidth || 914.4; // Default 36 inches in mm
-        const effectiveUserWidth = calculateEffectiveWidth(baseUserWidth, userHeight || 1067);
+        // Derive shelf spacings from userHeight so height directly affects model
+        let effectiveShelfSpacings = shelfSpacings;
+        let fallbackShelfSpacing = shelfSpacing;
+        if (userHeight && userHeight > 0) {
+          if (shelfQuantity <= 1) {
+            effectiveShelfSpacings = [userHeight];
+            fallbackShelfSpacing = userHeight;
+          } else {
+            const per = userHeight / shelfQuantity;
+            effectiveShelfSpacings = Array.from({ length: shelfQuantity }, () => per);
+            fallbackShelfSpacing = per;
+          }
+        }
 
         // Derive wall connection for freestanding based on mountType string
         const isFreestanding = mountType === 'freestanding' || mountType === 'freestanding to wall';
@@ -564,8 +554,8 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
         const mountTypeProps = {
           scene,
           shelfQuantity,
-          shelfSpacing,
-          shelfSpacings,
+          shelfSpacing: fallbackShelfSpacing,
+          shelfSpacings: effectiveShelfSpacings,
           barCount,
           baySpacing,
           baySpacings,
