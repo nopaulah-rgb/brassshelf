@@ -583,7 +583,7 @@ const ThreeDViewer = forwardRef<ThreeDViewerHandle, ThreeDViewerProps>(({
           addHorizontalConnectingRips,
           addFrontToBackRips,
           frontBars,
-          backBars,
+          backBars: false,
           verticalBarsAtBack,
           pipeDiameter,
           roomDepth,

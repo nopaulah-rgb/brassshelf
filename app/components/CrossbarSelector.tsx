@@ -149,60 +149,7 @@ const CrossbarSelector: React.FC<CrossbarSelectorProps> = ({
           )}
         </div>
 
-        {/* Back Horizontal Bars */}
-        {!hideBackBars && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Back Horizontal Bars</span>
-                <div className="tooltip-container relative flex items-center">
-                  <svg className="h-4 w-4 cursor-help text-gray-400" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" x2="12" y1="16" y2="12"></line>
-                    <line x1="12" x2="12.01" y1="8" y2="8"></line>
-                  </svg>
-                  <div className="tooltip">Also known as crossbars, these add stability and a design element.</div>
-                </div>
-              </div>
-              <button
-                aria-checked={backBars}
-                className={`toggle-switch ${backBars ? 'on' : ''}`}
-                id="back-bars-toggle"
-                role="switch"
-                type="button"
-                onClick={() => handleBackBarsChange(!backBars)}
-                disabled={isUpdating}
-              >
-                <span className="toggle-switch-knob"></span>
-              </button>
-            </div>
-            
-            {backBars && (
-              <div className="bg-white p-4 border border-gray-300">
-                <p className="text-slate-600 text-sm mb-3">Select shelves for back bars:</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: shelfCount }, (_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleBackShelfToggle(index)}
-                      disabled={isUpdating}
-                      className={`w-10 h-10 text-sm font-medium transition-colors border ${
-                                 selectedBackShelves.includes(index)
-                                   ? 'bg-black text-white border-black'
-                                   : selectedShelves.includes(index)
-                                   ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
-                                   : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
-                               }`}
-                      title={selectedShelves.includes(index) ? 'This shelf is selected for front bars' : ''}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Back Horizontal Bars - temporarily hidden */}
       </div>
     </div>
   );

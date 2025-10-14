@@ -428,8 +428,8 @@ export const handleCeilingMount = async ({
       // Front bar YES ve bu raf seçili -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
       // Back bar YES ve bu raf seçili -> öndeki modeller Model13 (çünkü öne bağlanır)
       const shouldUseModel13 = 
-        (isFrente && backBars && selectedBackShelvesForBars.includes(pos.sectionIndex)) ||   // Ön pozisyon ve back bar açık ve bu raf seçili
-        (isBacke && frontBars && selectedShelvesForBars.includes(pos.sectionIndex));         // Arka pozisyon ve front bar açık ve bu raf seçili
+        (isFrente && backBars && selectedBackShelvesForBars.includes(i)) ||   // Ön pozisyon ve back bar açık ve bu raf (shelf index) seçili
+        (isBacke && frontBars && selectedShelvesForBars.includes(i));         // Arka pozisyon ve front bar açık ve bu raf (shelf index) seçili
       
       if (shouldUseModel13) {
         // Model13 kullan
@@ -609,10 +609,10 @@ export const handleCeilingMount = async ({
           verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
         }
         
-        // Ripi mevcut modelin altından başlatıp bir sonraki modele kadar uzat (ekstra aşağı uzatma yok)
+        // Dikey rip her zaman aşağı doğru +2" taşacak şekilde (horizontal bar durumundan bağımsız)
         verticalRip.position.set(
           pos.x,
-          currentHeight + TWO_INCH - ripLength / 2,
+          currentHeight - ripLength / 2,
           ripZPos + verticalRipZAdjustment
         );
         scene.add(verticalRip);
@@ -632,24 +632,20 @@ export const handleCeilingMount = async ({
           ];
 
           if (backPositions.length === 2) {
-            // Arka model 13'lerin yeni z konumlarını bul
             const start = backPositions[0];
             const end = backPositions[1];
-            let zStart = start.z + zOffset + 5;
-            let zEnd = end.z + zOffset + 5;
-            zStart -= model13Depth - 10; // 20 birim öne yaklaştırıldı
-            zEnd -= model13Depth - 10; // 20 birim öne yaklaştırıldı
+            // Tek raftaki referansla aynı: arka Model13 z-pozisyonu düzlemi
+            const multiShelfForwardAdjust = shelfQuantity > 1 ? 68 : 68; // çoklu durumda 5 birim öne
+            const zCross = (start.z + zOffset + 5) - (model13Depth + 28) + multiShelfForwardAdjust;
 
-            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH); // Her iki tarafta net 2" uzama (toplam +101.6mm)
-            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
+            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-            horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
-            // Aynı shelf'te hem front hem back açık olduğunda sadece front horizontal'ı 5 birim öne al
-            const frontBothBarsAdjustment = (frontBars && backBars) ? -25 : -25; // Front bar açık olduğunda 5 birim geriye, hem front hem back açık olduğunda 5 birim öne
+            horizontalRip.rotation.z = Math.PI / 2;
             horizontalRip.position.set(
-              start.x + (end.x - start.x) / 2 ,
-              currentHeight + model13Height / 2 -15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 + 62 + frontBothBarsAdjustment // Arkadaki modeller 20 birim öne yaklaştırıldığı için crossbar da öne kaydırıldı + hem front hem back açıksa front 5 birim öne
+              start.x + (end.x - start.x) / 2,
+              currentHeight + model13Height / 2 - 15,
+              zCross
             );
             scene.add(horizontalRip);
           }
@@ -667,39 +663,20 @@ export const handleCeilingMount = async ({
           ];
 
           if (frontPositions.length === 2) {
-            // Ön modellerin z konumlarını bul  
             const start = frontPositions[0];
             const end = frontPositions[1];
-            let zStart = start.z + zOffset + 5;
-            let zEnd = end.z + zOffset + 5;
-            
-            // Öndeki modellerin pozisyonuna göre ayarla
-            // Back bar YES olduğunda öndeki modeller Model13 olur
-            if (backBars) {
-              // Back bar açık - öndeki modeller Model13 (şu anki doğru pozisyon)
-              zStart += model13Depth + 20; // Modeller ile aynı pozisyon (+20)
-              zEnd += model13Depth + 20;
-            } else {
-              // Back bar kapalı - öndeki modeller Type16A
-              if (type16AGeometry) {
-                zStart += model13Depth - 20; // Type16A pozisyonu
-                zEnd += model13Depth - 20;
-              } else {
-                zStart += model13Depth + 3; // Fallback Model13 pozisyonu
-                zEnd += model13Depth + 3;
-              }
-            }
+            // Tek raf mantığını tüm raflara uygula: öndeki Model13 düzlemi baz alınır
+            const zFrontBase = start.z + zOffset + 5;
+            const zCross = zFrontBase + (model13Depth + 20) - 40; // tek raftaki gibi sabit ofset
 
-            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH); // Her iki tarafta net 2" uzama (toplam +101.6mm)
-            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16); // Horizontal crossbar %75 daha kalın
+            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH);
+            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16);
             const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-            horizontalRip.rotation.z = Math.PI / 2; // Yatay duruma getir
-            // Back bar açık olduğunda horizontal bar'ı 5 birim geriye hareket ettir
-            const backBarZAdjustment = backBars ? -35 : 0;
+            horizontalRip.rotation.z = Math.PI / 2;
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 15, // 3 birim yukarı kaldırıldı
-              (zStart + zEnd) / 2 - 40 + backBarZAdjustment // Öndeki crossbar pozisyonu - back bar açıksa 5 birim geriye
+              currentHeight + model13Height / 2 - 15,
+              zCross
             );
             scene.add(horizontalRip);
           }
@@ -718,9 +695,10 @@ export const handleCeilingMount = async ({
       let zBack = leftBack.z + zOffset + 5;
       
       // Ön modellerin pozisyonunu hesapla
-      if (backBars && selectedBackShelvesForBars.includes(sectionIndex)) {
-        // Back bar açık ve bu raf seçili - öndeki model Model13
-        zFront += model13Depth + 20; // Model13 öndeki pozisyon (şu anki doğru pozisyon)
+      if (backBars && selectedBackShelvesForBars.includes(i)) {
+        // Back horizontal YES: kısa ön rip, crossbar düzlemine kadar uzasın (tek raftaki gibi)
+        const zFrontCross = zFront + (model13Depth + 20) - 40;
+        zFront = zFrontCross;
       } else {
         // Back bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
@@ -736,9 +714,11 @@ export const handleCeilingMount = async ({
       }
       
       // Arka modellerin pozisyonunu hesapla
-      if (frontBars && selectedShelvesForBars.includes(sectionIndex)) {
-        // Front bar açık ve bu raf seçili - arkadaki model Model13
-        zBack -= model13Depth + 5; // Model13 arkadaki pozisyon (5 birim daha geriye hareket ettirildi)
+      if (frontBars && selectedShelvesForBars.includes(i)) {
+        // Front horizontal YES: kısa arka rip, crossbar düzlemine kadar uzasın (tek raftaki gibi)
+        const multiShelfForwardAdjust = shelfQuantity > 1 ? 68 : 68;
+        const zBackCross = zBack - (model13Depth + 28) + multiShelfForwardAdjust;
+        zBack = zBackCross;
       } else {
         // Front bar kapalı veya bu raf seçili değil - Type16A
         if (type16AGeometry) {
@@ -888,7 +868,6 @@ export const handleCeilingMount = async ({
 
     singleShelfCornerPositions.forEach((pos) => {
       // Dikey rip: tavan bağlantısından başlayıp rafın üstünde 2" taşacak şekilde hesapla
-      const topShelfHeight = baseCeilingY - shelfSpacing;
       const ripHeight = shelfSpacing + TWO_INCH; // 2" raf üzerinde taşma
       
       // Ön ve arka ripler için farklı çaplar kullan
