@@ -211,6 +211,20 @@ export const handleCeilingToCounterMount = async ({
     scene.add(door);
   });
 
+  // Counter üst yüzeyi ve Height mode (üst/alt eşit boşluk) ayarları
+  const counterTopY = 200; // Counter üst yüzeyi (y)
+  const heightModeActive = typeof userHeight === 'number' && userHeight > 0;
+  const totalAvailableHeight = baseCeilingY - counterTopY;
+  const clampedHeight = heightModeActive
+    ? Math.max(0, Math.min(userHeight as number, totalAvailableHeight - 1))
+    : 0;
+  const marginTop = heightModeActive ? clampedHeight / 2 : 0;
+  const marginBottom = heightModeActive ? clampedHeight / 2 : 0;
+  const topBoundaryY = heightModeActive ? baseCeilingY - marginTop : baseCeilingY;
+  const bottomBoundaryY = heightModeActive ? counterTopY + marginBottom : counterTopY;
+  const innerHeight = heightModeActive ? Math.max(0, topBoundaryY - bottomBoundaryY) : 0;
+  const equalInterval = heightModeActive && shelfQuantity > 0 ? innerHeight / (shelfQuantity + 1) : 0;
+
   // Calculate shelf positions for multiple bars with spacing between them
   // Custom section widths için gelişmiş pozisyon hesaplama
   const getShelfPositionsWithCustomWidths = (barCount: number) => {
@@ -334,7 +348,10 @@ export const handleCeilingToCounterMount = async ({
     
     // Individual spacing için cumulative height hesaplama
     let currentHeight;
-    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
+    if (heightModeActive) {
+      // Height modu: üst/alt eşit boşluk, raflar iç aralıkta eşit mesafeyle
+      currentHeight = bottomBoundaryY + (i + 1) * equalInterval;
+    } else if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
       let cumulativeHeight = 0;
       for (let j = 0; j <= i; j++) {
         cumulativeHeight += shelfSpacings[j];
@@ -775,17 +792,20 @@ export const handleCeilingToCounterMount = async ({
   }
 
   allTopBottomCornerPositions.forEach((pos) => {
-    // Dikey rip: en üst raftan tavana kadar - dinamik uzunluk
+    // Dikey rip: en üst raftan tavana kadar
     let topShelfHeight;
-    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
-      // Individual spacing kullanarak en üst rafın pozisyonunu hesapla
-      topShelfHeight = baseCeilingY - shelfSpacings[0]; // İlk spacing kadar aşağı
+    let actualTopRipHeight;
+    if (heightModeActive) {
+      // İlk rafın hedef yüksekliği (eşit aralığın ilki)
+      const firstShelfY = bottomBoundaryY + equalInterval;
+      topShelfHeight = firstShelfY;
+      actualTopRipHeight = baseCeilingY - firstShelfY;
     } else {
-      // Fallback: eşit spacing
-      topShelfHeight = baseY; // İlk shelf pozisyonu (en üst shelf)
+      // Normal mod: top rip uzunluğu shelfSpacing kadar
+      topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : baseY;
+      actualTopRipHeight = shelfSpacing;
     }
-    const actualTopRipHeight = baseCeilingY - topShelfHeight; // Tavan ile üst shelf arası mesafe
-    const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, actualTopRipHeight, 32);
+    const verticalTopRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, Math.max(0, actualTopRipHeight), 32);
     const verticalTopRip = new THREE.Mesh(verticalTopRipGeometry, ripMaterial);
     
     // Dikey riplerin pozisyon ayarlamaları - ceiling connectors ile aynı mantık
@@ -806,19 +826,15 @@ export const handleCeilingToCounterMount = async ({
 
     // Dikey rip: en alt raftan counter'ın üst yüzeyine kadar
     let bottomShelfHeight;
-    if (shelfSpacings && shelfSpacings.length >= shelfQuantity) {
-      // Individual spacing kullanarak en alt rafın pozisyonunu hesapla
-      let totalCumulativeHeight = 0;
-      for (let j = 0; j < shelfQuantity; j++) {
-        totalCumulativeHeight += shelfSpacings[j];
-      }
-      bottomShelfHeight = baseCeilingY - totalCumulativeHeight;
+    let bottomRipHeight;
+    if (heightModeActive) {
+      const lastShelfY = bottomBoundaryY + shelfQuantity * equalInterval;
+      bottomShelfHeight = lastShelfY;
+      bottomRipHeight = lastShelfY - counterTopY;
     } else {
-      // Fallback: eşit spacing
       bottomShelfHeight = baseY - ((shelfQuantity - 1) * shelfSpacing);
+      bottomRipHeight = bottomShelfHeight - counterTopY;
     }
-    const counterTopY = 200; // Counter'ın üst yüzeyi (zemin seviyesinde + yarı yükseklik)
-    const bottomRipHeight = bottomShelfHeight - counterTopY;
     const verticalBottomRipGeometry = new THREE.CylinderGeometry(pipeRadius, pipeRadius, bottomRipHeight, 32);
     const verticalBottomRip = new THREE.Mesh(verticalBottomRipGeometry, ripMaterial);
     verticalBottomRip.position.set(
