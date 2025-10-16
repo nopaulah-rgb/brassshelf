@@ -10,7 +10,11 @@ export default defineConfig({
         v3_relativeSplatPath: true,
         v3_throwAbortReason: true,
       },
+      serverBuildFile: "index.js",
     }),
     tsconfigPaths(),
   ],
+  ssr: {
+    noExternal: ["three"],
+  },
 });
