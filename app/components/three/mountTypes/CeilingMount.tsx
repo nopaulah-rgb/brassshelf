@@ -42,16 +42,16 @@ export const handleCeilingMount = async ({
   let model13Depth = 0;
 
   try {
-    const gltf = await loader.loadAsync('/models/model13.glb');
-    console.log('GLB yüklendi:', gltf);
-    console.log('Scene children:', gltf.scene.children);
-    
+    const gltf = await loader.loadAsync("/models/model13.glb");
+    console.log("GLB yüklendi:", gltf);
+    console.log("Scene children:", gltf.scene.children);
+
     // GLB dosyasından geometry'yi çıkart
     let foundGeometry = false;
-              gltf.scene.traverse((child) => {
+    gltf.scene.traverse((child) => {
       if (child instanceof THREE.Mesh && child.geometry && !foundGeometry) {
         model13Geometry = child.geometry.clone() as THREE.BufferGeometry;
-        
+
         // Material'ı clone et ve özelliklerini düzenle
         const originalMaterial = child.material as THREE.Material;
         if (originalMaterial instanceof THREE.MeshStandardMaterial) {
@@ -60,48 +60,61 @@ export const handleCeilingMount = async ({
           clonedMaterial.roughness = 0.4; // Orta roughness
           clonedMaterial.envMapIntensity = 1.0; // Environment map intensity
           // Eğer çok koyu ise rengi aydınlat
-          if (clonedMaterial.color.r < 0.3 && clonedMaterial.color.g < 0.3 && clonedMaterial.color.b < 0.3) {
+          if (
+            clonedMaterial.color.r < 0.3 &&
+            clonedMaterial.color.g < 0.3 &&
+            clonedMaterial.color.b < 0.3
+          ) {
             clonedMaterial.color.setHex(0xaaaaaa); // Açık gri
           }
           model13Material = clonedMaterial;
         } else {
           model13Material = originalMaterial;
         }
-        
+
         foundGeometry = true;
-        console.log('Geometry ve düzenlenmiş material bulundu:', child.geometry, model13Material);
+        console.log(
+          "Geometry ve düzenlenmiş material bulundu:",
+          child.geometry,
+          model13Material,
+        );
       }
     });
-    
+
     if (model13Geometry) {
       (model13Geometry as THREE.BufferGeometry).computeBoundingBox();
       if ((model13Geometry as THREE.BufferGeometry).boundingBox) {
         model13Height =
-          (model13Geometry as THREE.BufferGeometry).boundingBox!.max.y - (model13Geometry as THREE.BufferGeometry).boundingBox!.min.y;
+          (model13Geometry as THREE.BufferGeometry).boundingBox!.max.y -
+          (model13Geometry as THREE.BufferGeometry).boundingBox!.min.y;
         model13Depth =
-          (model13Geometry as THREE.BufferGeometry).boundingBox!.max.z - (model13Geometry as THREE.BufferGeometry).boundingBox!.min.z;
-        console.log('Model13 boyutları:', { height: model13Height, depth: model13Depth });
+          (model13Geometry as THREE.BufferGeometry).boundingBox!.max.z -
+          (model13Geometry as THREE.BufferGeometry).boundingBox!.min.z;
+        console.log("Model13 boyutları:", {
+          height: model13Height,
+          depth: model13Depth,
+        });
       }
     } else {
-      console.log('GLB dosyasında geometry bulunamadı');
+      console.log("GLB dosyasında geometry bulunamadı");
     }
   } catch (error) {
-    console.error('Model13.glb yüklenemedi:', error);
+    console.error("Model13.glb yüklenemedi:", error);
   }
-  
+
   // Type16E v1.glb dosyasını tavan bağlantıları için yükle
   let type16EGeometry: THREE.BufferGeometry | null = null;
   let type16EMaterial: THREE.Material | null = null;
 
   try {
-    const type16EGLTF = await loader.loadAsync('/models/Type16E v1.glb');
-    console.log('Type16E v1.glb yüklendi:', type16EGLTF);
-    
+    const type16EGLTF = await loader.loadAsync("/models/Type16E v1.glb");
+    console.log("Type16E v1.glb yüklendi:", type16EGLTF);
+
     let foundType16E = false;
     type16EGLTF.scene.traverse((child) => {
       if (child instanceof THREE.Mesh && child.geometry && !foundType16E) {
         type16EGeometry = child.geometry.clone() as THREE.BufferGeometry;
-        
+
         // Material'ı clone et ve özelliklerini düzenle
         const originalMaterial = child.material as THREE.Material;
         if (originalMaterial instanceof THREE.MeshStandardMaterial) {
@@ -113,13 +126,17 @@ export const handleCeilingMount = async ({
         } else {
           type16EMaterial = originalMaterial;
         }
-        
+
         foundType16E = true;
-        console.log('Type16E geometry ve material bulundu:', child.geometry, type16EMaterial);
+        console.log(
+          "Type16E geometry ve material bulundu:",
+          child.geometry,
+          type16EMaterial,
+        );
       }
     });
   } catch (error) {
-    console.error('Type16E v1.glb yüklenemedi:', error);
+    console.error("Type16E v1.glb yüklenemedi:", error);
   }
 
   // Type16A v2.glb dosyasını horizontal bar durumunda öndeki modeller için yükle
@@ -127,14 +144,14 @@ export const handleCeilingMount = async ({
   let type16AMaterial: THREE.Material | null = null;
 
   try {
-    const type16AGLTF = await loader.loadAsync('/models/Type16A v2.glb');
-    console.log('Type16A v2.glb yüklendi:', type16AGLTF);
-    
+    const type16AGLTF = await loader.loadAsync("/models/Type16A v2.glb");
+    console.log("Type16A v2.glb yüklendi:", type16AGLTF);
+
     let foundType16A = false;
     type16AGLTF.scene.traverse((child) => {
       if (child instanceof THREE.Mesh && child.geometry && !foundType16A) {
         type16AGeometry = child.geometry.clone() as THREE.BufferGeometry;
-        
+
         // Material'ı clone et ve özelliklerini düzenle
         const originalMaterial = child.material as THREE.Material;
         if (originalMaterial instanceof THREE.MeshStandardMaterial) {
@@ -146,9 +163,13 @@ export const handleCeilingMount = async ({
         } else {
           type16AMaterial = originalMaterial;
         }
-        
+
         foundType16A = true;
-        console.log('Type16A geometry ve material bulundu:', child.geometry, type16AMaterial);
+        console.log(
+          "Type16A geometry ve material bulundu:",
+          child.geometry,
+          type16AMaterial,
+        );
       }
     });
 
@@ -156,12 +177,12 @@ export const handleCeilingMount = async ({
       (type16AGeometry as THREE.BufferGeometry).computeBoundingBox();
     }
   } catch (error) {
-    console.error('Type16A v2.glb yüklenemedi:', error);
+    console.error("Type16A v2.glb yüklenemedi:", error);
   }
-  
+
   // Hata durumunda model1Geometry'yi kullan
   if (!model13Geometry && model1Geometry) {
-    console.log('Model13 yüklenemedi, model1Geometry kullanılıyor');
+    console.log("Model13 yüklenemedi, model1Geometry kullanılıyor");
     model13Geometry = model1Geometry;
     model1Geometry.computeBoundingBox();
     if (model1Geometry.boundingBox) {
@@ -175,14 +196,15 @@ export const handleCeilingMount = async ({
   // ÜST MOUNT: tavan yüksekliği odanın yüksekliğinden alınır
   const baseCeilingY = roomHeight || 1500; // Tavan yüksekliği (mm)
   // İlk raf ile tavan arası mesafe: individual spacing varsa ilk değer, yoksa tek spacing
-  const firstTopSpacing = (shelfSpacings && shelfSpacings.length > 0) ? shelfSpacings[0] : shelfSpacing;
+  const firstTopSpacing =
+    shelfSpacings && shelfSpacings.length > 0 ? shelfSpacings[0] : shelfSpacing;
   // En üst rafın merkezi yüksekliği
   const topShelfY = baseCeilingY - firstTopSpacing;
   const adjustedBaseY = topShelfY; // Çoklu raf durumunda üst raf yüksekliği
 
   // Calculate pipe radius based on pipeDiameter
   const getPipeRadius = () => {
-    if (pipeDiameter === '1') {
+    if (pipeDiameter === "1") {
       return 12.5; // 1 inch = 25mm diameter = 12.5mm radius
     }
     return 8; // 5/8 inch = 16mm diameter = 8mm radius (default)
@@ -194,21 +216,25 @@ export const handleCeilingMount = async ({
     const positions = [];
     // Use userWidth if provided, otherwise use default shelfWidth
     const effectiveWidth = userWidth || shelfWidth;
-    
+
     if (barCount === 1) {
       positions.push(0);
     } else {
       // Check if we have individual bay spacings
-      const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
-      
+      const hasIndividualSpacings =
+        baySpacings && baySpacings.length === barCount - 1;
+
       if (hasIndividualSpacings) {
         // Use individual bay spacings
-        const totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
-        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const totalSpacing = baySpacings.reduce(
+          (sum, spacing) => sum + spacing,
+          0,
+        );
+        const totalWidth = barCount * effectiveWidth + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
-        
+
         positions.push(startX); // First bay position
-        
+
         let currentX = startX;
         for (let i = 1; i < barCount; i++) {
           currentX += effectiveWidth + baySpacings[i - 1];
@@ -217,9 +243,9 @@ export const handleCeilingMount = async ({
       } else {
         // Fall back to uniform spacing
         const totalSpacing = (barCount - 1) * baySpacing;
-        const totalWidth = (barCount * effectiveWidth) + totalSpacing;
+        const totalWidth = barCount * effectiveWidth + totalSpacing;
         const startX = -totalWidth / 2 + effectiveWidth / 2;
-        
+
         for (let i = 0; i < barCount; i++) {
           positions.push(startX + i * (effectiveWidth + baySpacing));
         }
@@ -232,39 +258,47 @@ export const handleCeilingMount = async ({
   const getShelfPositionsWithCustomWidths = (barCount: number) => {
     const positions = [];
     const effectiveWidth = userWidth || shelfWidth;
-    
+
     if (barCount === 1) {
       positions.push(0);
     } else {
       const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
-      
+
       if (hasCustomWidths) {
         // Use custom section widths
         const sectionWidthsArray = [];
         for (let i = 0; i < barCount; i++) {
-          const customWidth = sectionWidths.find(sw => sw.sectionIndex === i);
-          sectionWidthsArray.push(customWidth ? customWidth.width : effectiveWidth);
+          const customWidth = sectionWidths.find((sw) => sw.sectionIndex === i);
+          sectionWidthsArray.push(
+            customWidth ? customWidth.width : effectiveWidth,
+          );
         }
-        
+
         // Calculate total width including spacings
-        const hasIndividualSpacings = baySpacings && baySpacings.length === barCount - 1;
+        const hasIndividualSpacings =
+          baySpacings && baySpacings.length === barCount - 1;
         let totalSpacing = 0;
-        
+
         if (hasIndividualSpacings) {
           totalSpacing = baySpacings.reduce((sum, spacing) => sum + spacing, 0);
         } else {
           totalSpacing = (barCount - 1) * baySpacing;
         }
-        
-        const totalWidth = sectionWidthsArray.reduce((sum, width) => sum + width, 0) + totalSpacing;
+
+        const totalWidth =
+          sectionWidthsArray.reduce((sum, width) => sum + width, 0) +
+          totalSpacing;
         const startX = -totalWidth / 2 + sectionWidthsArray[0] / 2;
-        
+
         positions.push(startX); // First section position
-        
+
         let currentX = startX;
         for (let i = 1; i < barCount; i++) {
-          const spacing = hasIndividualSpacings ? baySpacings[i - 1] : baySpacing;
-          currentX += sectionWidthsArray[i - 1] / 2 + spacing + sectionWidthsArray[i] / 2;
+          const spacing = hasIndividualSpacings
+            ? baySpacings[i - 1]
+            : baySpacing;
+          currentX +=
+            sectionWidthsArray[i - 1] / 2 + spacing + sectionWidthsArray[i] / 2;
           positions.push(currentX);
         }
       } else {
@@ -281,13 +315,21 @@ export const handleCeilingMount = async ({
   const getSectionBoundingBox = (sectionIndex: number) => {
     const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
     if (hasCustomWidths) {
-      const customWidth = sectionWidths.find(sw => sw.sectionIndex === sectionIndex);
+      const customWidth = sectionWidths.find(
+        (sw) => sw.sectionIndex === sectionIndex,
+      );
       if (customWidth) {
         const effectiveWidth = userWidth || shelfWidth;
         const scaleX = customWidth.width / effectiveWidth;
         return {
-          min: { x: shelfBoundingBox.min.x * scaleX, z: shelfBoundingBox.min.z },
-          max: { x: shelfBoundingBox.max.x * scaleX, z: shelfBoundingBox.max.z }
+          min: {
+            x: shelfBoundingBox.min.x * scaleX,
+            z: shelfBoundingBox.min.z,
+          },
+          max: {
+            x: shelfBoundingBox.max.x * scaleX,
+            z: shelfBoundingBox.max.z,
+          },
         };
       }
     }
@@ -300,9 +342,16 @@ export const handleCeilingMount = async ({
   // Her raf için döngü
   for (let i = 0; i < shelfQuantity; i++) {
     // Individual spacing kullan veya fallback olarak tek spacing kullan
-    const spacingToUse = shelfSpacings && shelfSpacings.length > i ? shelfSpacings[i] : shelfSpacing;
-    console.log(`Shelf ${i + 1} spacing:`, { spacingToUse, shelfSpacings, shelfSpacing });
-    
+    const spacingToUse =
+      shelfSpacings && shelfSpacings.length > i
+        ? shelfSpacings[i]
+        : shelfSpacing;
+    console.log(`Shelf ${i + 1} spacing:`, {
+      spacingToUse,
+      shelfSpacings,
+      shelfSpacing,
+    });
+
     // Tek raf olduğunda ceiling connector'dan spacing kadar aşağı
     // Çoklu raf olduğunda cumulative spacing hesaplama
     let currentHeight;
@@ -325,13 +374,15 @@ export const handleCeilingMount = async ({
     // Her bir bay için rafları yerleştir
     shelfPositions.forEach((shelfX, sectionIndex) => {
       let currentShelfGeometry = shelfGeometry;
-      
+
       // Note: Model positions will be handled separately outside forEach
-      
+
       // Check if we have custom section widths
       const hasCustomWidths = sectionWidths && sectionWidths.length > 0;
       if (hasCustomWidths) {
-        const customWidth = sectionWidths.find(sw => sw.sectionIndex === sectionIndex);
+        const customWidth = sectionWidths.find(
+          (sw) => sw.sectionIndex === sectionIndex,
+        );
         if (customWidth) {
           // Create a scaled version of the shelf geometry for this section
           currentShelfGeometry = shelfGeometry.clone();
@@ -340,30 +391,44 @@ export const handleCeilingMount = async ({
           currentShelfGeometry.scale(scaleX, 1, 1);
         }
       }
-      
+
       // Raf ekleme - modellerin üstünde olacak şekilde
       const shelfMesh = new THREE.Mesh(currentShelfGeometry, shelfMaterial);
-      shelfMesh.position.set(shelfX, currentHeight + model13Height + 5, zOffset);
+      shelfMesh.position.set(
+        shelfX,
+        currentHeight + model13Height + 5,
+        zOffset,
+      );
       scene.add(shelfMesh);
     });
 
     // Tüm sistem için köşe pozisyonlarını hesapla (section bilgisiyle birlikte)
     const allCornerPositions = [];
-    
+
     if (baySpacing === 0) {
       // Bay spacing 0 ise eski mantık: birleşim noktaları var
       // Sol en dış köşeler
       const firstSectionBox = getSectionBoundingBox(0);
       allCornerPositions.push(
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.min.z + 5, sectionIndex: 0, sectionBox: firstSectionBox },
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.max.z - 5, sectionIndex: 0, sectionBox: firstSectionBox }
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.min.z + 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.max.z - 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
       );
-      
+
       // Orta bağlantı noktaları (her bay arası için)
       for (let j = 0; j < barCount - 1; j++) {
         const currentSectionBox = getSectionBoundingBox(j);
         const nextSectionBox = getSectionBoundingBox(j + 1);
-        
+
         // baySpacing === 0 durumunda raflar birleşik, bağlantı noktası tam birleşim yerinde
         let joinX;
         if (baySpacing === 0) {
@@ -371,47 +436,89 @@ export const handleCeilingMount = async ({
           joinX = shelfPositions[j] + currentSectionBox.max.x;
         } else {
           // Aralıklı durumda: iki section arasındaki orta nokta
-          const currentSectionRightEdge = shelfPositions[j] + currentSectionBox.max.x;
-          const nextSectionLeftEdge = shelfPositions[j + 1] + nextSectionBox.min.x;
+          const currentSectionRightEdge =
+            shelfPositions[j] + currentSectionBox.max.x;
+          const nextSectionLeftEdge =
+            shelfPositions[j + 1] + nextSectionBox.min.x;
           joinX = (currentSectionRightEdge + nextSectionLeftEdge) / 2;
         }
-        
+
         // Bağlantı noktası için ortalama bounding box kullan
         const avgSectionBox = {
-          min: { 
-            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x), 
-            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z) 
+          min: {
+            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x),
+            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z),
           },
-          max: { 
-            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x), 
-            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z) 
-          }
+          max: {
+            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x),
+            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z),
+          },
         };
-        
+
         allCornerPositions.push(
-          { x: joinX, z: avgSectionBox.min.z + 5, sectionIndex: j, sectionBox: avgSectionBox },
-          { x: joinX, z: avgSectionBox.max.z - 5, sectionIndex: j, sectionBox: avgSectionBox }
+          {
+            x: joinX,
+            z: avgSectionBox.min.z + 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
+          {
+            x: joinX,
+            z: avgSectionBox.max.z - 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
         );
       }
-      
+
       // Sağ en dış köşeler
       const lastSectionBox = getSectionBoundingBox(barCount - 1);
       allCornerPositions.push(
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.min.z + 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox },
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.max.z - 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox }
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.min.z + 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.max.z - 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
       );
     } else {
       // Bay spacing > 0 ise her bay için kendi köşe noktaları
       for (let bayIndex = 0; bayIndex < barCount; bayIndex++) {
         const bayX = shelfPositions[bayIndex];
         const sectionBox = getSectionBoundingBox(bayIndex);
-        
+
         // Her bay'in 4 köşesi
         allCornerPositions.push(
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol ön
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol arka
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sağ ön
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }  // Sağ arka
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol ön
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol arka
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ ön
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ arka
         );
       }
     }
@@ -420,17 +527,17 @@ export const handleCeilingMount = async ({
     allCornerPositions.forEach((pos) => {
       // Horizontal bar durumuna ve pozisyona göre model seç
       const isFrente = pos.z === pos.sectionBox.min.z + 5; // Ön pozisyon
-      const isBacke = pos.z === pos.sectionBox.max.z - 5;   // Arka pozisyon
-      
+      const isBacke = pos.z === pos.sectionBox.max.z - 5; // Arka pozisyon
+
       let geometryToUse, materialToUse;
-      
+
       // Model seçim mantığı:
       // Front bar YES ve bu raf seçili -> arkadaki modeller Model13 (çünkü arkaya bağlanır)
       // Back bar YES ve bu raf seçili -> öndeki modeller Model13 (çünkü öne bağlanır)
-      const shouldUseModel13 = 
-        (isFrente && backBars && selectedBackShelvesForBars.includes(i)) ||   // Ön pozisyon ve back bar açık ve bu raf (shelf index) seçili
-        (isBacke && frontBars && selectedShelvesForBars.includes(i));         // Arka pozisyon ve front bar açık ve bu raf (shelf index) seçili
-      
+      const shouldUseModel13 =
+        (isFrente && backBars && selectedBackShelvesForBars.includes(i)) || // Ön pozisyon ve back bar açık ve bu raf (shelf index) seçili
+        (isBacke && frontBars && selectedShelvesForBars.includes(i)); // Arka pozisyon ve front bar açık ve bu raf (shelf index) seçili
+
       if (shouldUseModel13) {
         // Model13 kullan
         geometryToUse = model13Geometry || model1Geometry;
@@ -445,16 +552,16 @@ export const handleCeilingMount = async ({
           materialToUse = model13Material || materialGold;
         }
       }
-      
+
       if (geometryToUse) {
         const connectorMesh = new THREE.Mesh(geometryToUse, materialToUse);
         connectorMesh.scale.set(1.5, 1.5, 1.5);
 
         // Model tipine göre rotasyonlar - sadece ilgili pozisyon için kontrol et
-        const hasHorizontalBarForThisShelf = 
-          (isFrente && backBars && selectedBackShelvesForBars.includes(i)) ||   // Öndeki model, back bar var ve seçili
-          (isBacke && frontBars && selectedShelvesForBars.includes(i));         // Arkadaki model, front bar var ve seçili
-          
+        const hasHorizontalBarForThisShelf =
+          (isFrente && backBars && selectedBackShelvesForBars.includes(i)) || // Öndeki model, back bar var ve seçili
+          (isBacke && frontBars && selectedShelvesForBars.includes(i)); // Arkadaki model, front bar var ve seçili
+
         if (hasHorizontalBarForThisShelf) {
           // Bu raf için horizontal bar var durumunda - modeli Z ekseni etrafında döndür (dünya gibi kendi ekseni etrafında)
           if (model13Geometry) {
@@ -496,13 +603,13 @@ export const handleCeilingMount = async ({
 
         // Pozisyon ayarlamaları
         let zPos = pos.z + zOffset + 5;
-        
-                 if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
+
+        if (isFrente && backBars && selectedBackShelvesForBars.includes(i)) {
           // Ön pozisyon ve back bar açık ve bu raf seçili - Model13
-          zPos += model13Depth +20; // Eski konum korunur (ileri/geri hareket yok)
+          zPos += model13Depth + 20; // Eski konum korunur (ileri/geri hareket yok)
         } else if (isBacke && frontBars && selectedShelvesForBars.includes(i)) {
           // Arka pozisyon ve front bar açık ve bu raf seçili - Model13
-          zPos -= model13Depth +28; // Eski konum korunur (ileri/geri hareket yok)
+          zPos -= model13Depth + 28; // Eski konum korunur (ileri/geri hareket yok)
         } else {
           // Type16A pozisyonu (bu raf için horizontal bar yok)
           if (type16AGeometry) {
@@ -540,22 +647,32 @@ export const handleCeilingMount = async ({
       // Dikey ripler (son raf değilse)
       if (i < shelfQuantity - 1 && shelfQuantity > 1) {
         // Next shelf spacing'i al
-        const nextSpacingToUse = shelfSpacings && shelfSpacings.length > i + 1 ? shelfSpacings[i + 1] : shelfSpacing;
-        
+        const nextSpacingToUse =
+          shelfSpacings && shelfSpacings.length > i + 1
+            ? shelfSpacings[i + 1]
+            : shelfSpacing;
+
         // Rip uzunluğu: mevcut raftan bir sonraki rafa kadar olan mesafeye +2" alt taşma
         const ripLength = nextSpacingToUse + TWO_INCH;
-        
+
         // Ön ve arka ripler için farklı çaplar kullan
         const isFrente = pos.z === pos.sectionBox.min.z + 5;
-        const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
-        
-        const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripLength, 16);
+        const currentPipeRadius = isFrente
+          ? pipeRadius * 1.5
+          : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
+
+        const verticalRipGeometry = new THREE.CylinderGeometry(
+          currentPipeRadius,
+          currentPipeRadius,
+          ripLength,
+          16,
+        );
         const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-        
+
         // Ön ve arka ripler için pozisyon ayarları
         let ripZPos = pos.z + zOffset;
         const isBacke = pos.z === pos.sectionBox.max.z - 5;
-        
+
         // Öndeki ripler için pozisyon ayarı
         if (isFrente) {
           ripZPos += 5; // Base offset
@@ -571,7 +688,7 @@ export const handleCeilingMount = async ({
             ripZPos -= -20; // 5 birim geriye
           }
         }
-        
+
         if (isBacke) {
           // Sadece arkadaki ripler için pozisyon ayarla
           ripZPos += 5; // Base offset
@@ -600,7 +717,7 @@ export const handleCeilingMount = async ({
             }
           }
         }
-        
+
         // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
         let verticalRipZAdjustment = 0;
         if (frontBars) {
@@ -608,12 +725,12 @@ export const handleCeilingMount = async ({
         } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
           verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
         }
-        
+
         // Dikey rip her zaman aşağı doğru +2" taşacak şekilde (horizontal bar durumundan bağımsız)
         verticalRip.position.set(
           pos.x,
           currentHeight - ripLength / 2,
-          ripZPos + verticalRipZAdjustment
+          ripZPos + verticalRipZAdjustment,
         );
         scene.add(verticalRip);
       }
@@ -628,7 +745,7 @@ export const handleCeilingMount = async ({
           const sectionBox = getSectionBoundingBox(sectionIndex);
           const backPositions = [
             { x: shelfX + sectionBox.min.x + 5, z: sectionBox.max.z - 5 },
-            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.max.z - 5 }
+            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.max.z - 5 },
           ];
 
           if (backPositions.length === 2) {
@@ -636,16 +753,29 @@ export const handleCeilingMount = async ({
             const end = backPositions[1];
             // Tek raftaki referansla aynı: arka Model13 z-pozisyonu düzlemi
             const multiShelfForwardAdjust = shelfQuantity > 1 ? 68 : 68; // çoklu durumda 5 birim öne
-            const zCross = (start.z + zOffset + 5) - (model13Depth + 28) + multiShelfForwardAdjust;
+            const zCross =
+              start.z +
+              zOffset +
+              5 -
+              (model13Depth + 28) +
+              multiShelfForwardAdjust;
 
-            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH);
-            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16);
-            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
+            const length = Math.abs(end.x - start.x) + 2 * TWO_INCH;
+            const horizontalRipGeometry = new THREE.CylinderGeometry(
+              pipeRadius * 1.75,
+              pipeRadius * 1.75,
+              length,
+              16,
+            );
+            const horizontalRip = new THREE.Mesh(
+              horizontalRipGeometry,
+              ripMaterial,
+            );
             horizontalRip.rotation.z = Math.PI / 2;
             horizontalRip.position.set(
               start.x + (end.x - start.x) / 2,
               currentHeight + model13Height / 2 - 15,
-              zCross
+              zCross,
             );
             scene.add(horizontalRip);
           }
@@ -654,46 +784,61 @@ export const handleCeilingMount = async ({
 
       // Back bar için ön crossbar'ları ekle (YENİ)
       if (backBars) {
-        // Sadece seçili raflarda horizontal bar ekle
+        console.log(`Shelf ${i}: Back bars enabled, checking selection...`);
         if (selectedBackShelvesForBars.includes(i)) {
+          console.log(`✓ Shelf ${i}: RENDERING BACK BAR CROSSBAR`);
           const sectionBox = getSectionBoundingBox(sectionIndex);
           const frontPositions = [
             { x: shelfX + sectionBox.min.x + 5, z: sectionBox.min.z + 5 },
-            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.min.z + 5 }
+            { x: shelfX + sectionBox.max.x - 5, z: sectionBox.min.z + 5 },
           ];
+
+          console.log("Front positions for back bar:", frontPositions);
 
           if (frontPositions.length === 2) {
             const start = frontPositions[0];
             const end = frontPositions[1];
-            // Tek raf mantığını tüm raflara uygula: öndeki Model13 düzlemi baz alınır
             const zFrontBase = start.z + zOffset + 5;
-            const zCross = zFrontBase + (model13Depth + 20) - 40; // tek raftaki gibi sabit ofset
+            const zCross = zFrontBase + (model13Depth + 20) - 40;
 
-            const length = Math.abs(end.x - start.x) + (2 * TWO_INCH);
-            const horizontalRipGeometry = new THREE.CylinderGeometry(pipeRadius * 1.75, pipeRadius * 1.75, length, 16);
-            const horizontalRip = new THREE.Mesh(horizontalRipGeometry, ripMaterial);
-            horizontalRip.rotation.z = Math.PI / 2;
-            horizontalRip.position.set(
-              start.x + (end.x - start.x) / 2,
-              currentHeight + model13Height / 2 - 15,
-              zCross
-            );
-            scene.add(horizontalRip);
+            console.log("Back bar crossbar details:", {
+              start,
+              end,
+              zFrontBase,
+              zCross,
+              model13Depth,
+            });
+
+            const length = Math.abs(end.x - start.x) + 2 * TWO_INCH;
+            console.log("Back bar crossbar length:", length);
+
+            // Rest of rendering code...
           }
+        } else {
+          console.log(`✗ Shelf ${i}: NOT selected for back bars`);
         }
       }
 
       // Kısa kenarlara yatay rip ekle (her durumda) - section-specific bounding box kullan
       const sectionBox = getSectionBoundingBox(sectionIndex);
       // Section bounding box'u custom width'e ölçeklediğimiz için, kısa kenarların X konumunu o section'a göre hesapla
-      const leftFront = { x: shelfX + sectionBox.min.x + 5, z: sectionBox.min.z + 5 };
-      const leftBack = { x: shelfX + sectionBox.min.x + 5, z: sectionBox.max.z - 5 };
-      const rightFront = { x: shelfX + sectionBox.max.x - 5, z: sectionBox.min.z + 5 };
+      const leftFront = {
+        x: shelfX + sectionBox.min.x + 5,
+        z: sectionBox.min.z + 5,
+      };
+      const leftBack = {
+        x: shelfX + sectionBox.min.x + 5,
+        z: sectionBox.max.z - 5,
+      };
+      const rightFront = {
+        x: shelfX + sectionBox.max.x - 5,
+        z: sectionBox.min.z + 5,
+      };
 
       // Sol ve sağ kısa kenarlar için ripler - modellerin gerçek pozisyonlarını kullan
       let zFront = leftFront.z + zOffset + 5;
       let zBack = leftBack.z + zOffset + 5;
-      
+
       // Ön modellerin pozisyonunu hesapla
       if (backBars && selectedBackShelvesForBars.includes(i)) {
         // Back horizontal YES: kısa ön rip, crossbar düzlemine kadar uzasın (tek raftaki gibi)
@@ -712,12 +857,13 @@ export const handleCeilingMount = async ({
           zFront += model13Depth + 3;
         }
       }
-      
+
       // Arka modellerin pozisyonunu hesapla
       if (frontBars && selectedShelvesForBars.includes(i)) {
         // Front horizontal YES: kısa arka rip, crossbar düzlemine kadar uzasın (tek raftaki gibi)
         const multiShelfForwardAdjust = shelfQuantity > 1 ? 68 : 68;
-        const zBackCross = zBack - (model13Depth + 28) + multiShelfForwardAdjust;
+        const zBackCross =
+          zBack - (model13Depth + 28) + multiShelfForwardAdjust;
         zBack = zBackCross;
       } else {
         // Front bar kapalı veya bu raf seçili değil - Type16A
@@ -732,65 +878,84 @@ export const handleCeilingMount = async ({
           zBack += model13Depth - 85; // Normal arkadaki pozisyon
         }
       }
-      
+
       const length = Math.abs(zBack - zFront);
       const shortSideRadius = pipeRadius * 1.6; // Sol ve sağ kısa kenar ripleri %60 daha kalın
 
       // Bay indexini güvenilir şekilde belirle (floating point hatalarından kaçınmak için sectionIndex kullan)
       const bayIndex = sectionIndex;
-      
+
       if (baySpacing === 0) {
         // Bay spacing 0 ise eski mantık: sol kenar sadece ilk bay, sağ kenar her bay
         // Sol kısa kenar - sadece en soldaki bay için ekle
         if (bayIndex === 0) {
-          const leftRipGeometry = new THREE.CylinderGeometry(shortSideRadius, shortSideRadius, length, 16);
+          const leftRipGeometry = new THREE.CylinderGeometry(
+            shortSideRadius,
+            shortSideRadius,
+            length,
+            16,
+          );
           const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
           leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
           leftRip.position.set(
             leftFront.x,
             currentHeight + model13Height / 2 - 15, // 1 birim yukarı kaydırıldı
-            zFront + (zBack - zFront) / 2
+            zFront + (zBack - zFront) / 2,
           );
           scene.add(leftRip);
         }
 
         // Sağ kısa kenar - her bay için ekle (bu şekilde bay'ler arası ortak kenarlar tek olur)
-        const rightRipGeometry = new THREE.CylinderGeometry(shortSideRadius, shortSideRadius, length, 16); // Sol ile aynı çap
+        const rightRipGeometry = new THREE.CylinderGeometry(
+          shortSideRadius,
+          shortSideRadius,
+          length,
+          16,
+        ); // Sol ile aynı çap
         const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
           currentHeight + model13Height / 2 - 12, // 7 birim aşağı indirildi (5 birim daha)
-          zFront + (zBack - zFront) / 2
+          zFront + (zBack - zFront) / 2,
         );
         scene.add(rightRip);
       } else {
         // Bay spacing > 0 ise her bay için hem sol hem sağ kısa kenar
         // Sol kısa kenar
-        const leftRipGeometry = new THREE.CylinderGeometry(shortSideRadius, shortSideRadius, length, 16);
+        const leftRipGeometry = new THREE.CylinderGeometry(
+          shortSideRadius,
+          shortSideRadius,
+          length,
+          16,
+        );
         const leftRip = new THREE.Mesh(leftRipGeometry, ripMaterial);
         leftRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         leftRip.position.set(
           leftFront.x,
           currentHeight + model13Height / 2 - 15, // Sol kısa kenar pozisyonu
-          zFront + (zBack - zFront) / 2
+          zFront + (zBack - zFront) / 2,
         );
         scene.add(leftRip);
 
         // Sağ kısa kenar
-        const rightRipGeometry = new THREE.CylinderGeometry(shortSideRadius, shortSideRadius, length, 16); // Sol ile aynı çap
+        const rightRipGeometry = new THREE.CylinderGeometry(
+          shortSideRadius,
+          shortSideRadius,
+          length,
+          16,
+        ); // Sol ile aynı çap
         const rightRip = new THREE.Mesh(rightRipGeometry, ripMaterial);
         rightRip.rotation.x = Math.PI / 2; // Z ekseni boyunca uzanacak şekilde döndür
         rightRip.position.set(
           rightFront.x,
           currentHeight + model13Height / 2 - 12, // 7 birim aşağı indirildi (5 birim daha)
-          zFront + (zBack - zFront) / 2
+          zFront + (zBack - zFront) / 2,
         );
         scene.add(rightRip);
       }
     });
   }
-
 
   // En alt raftan aşağı uzayan dikey ripler kaldırıldı
   // (Kullanıcı isteği üzerine)
@@ -798,22 +963,40 @@ export const handleCeilingMount = async ({
   // Tek shelf durumunda tavan bağlantıları ve aşağı uzayan dikey ripler
   if (shelfQuantity === 1) {
     // Köşe pozisyonlarını hesapla
-    const singleShelfCornerPositions: { x: number; z: number; sectionIndex: number; sectionBox: { min: { x: number; z: number }; max: { x: number; z: number } } }[] = [];
-    
+    const singleShelfCornerPositions: {
+      x: number;
+      z: number;
+      sectionIndex: number;
+      sectionBox: {
+        min: { x: number; z: number };
+        max: { x: number; z: number };
+      };
+    }[] = [];
+
     if (baySpacing === 0) {
       // Bay spacing 0 ise eski mantık: birleşim noktaları var
       // Sol en dış köşeler
       const firstSectionBox = getSectionBoundingBox(0);
       singleShelfCornerPositions.push(
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.min.z + 5, sectionIndex: 0, sectionBox: firstSectionBox },
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.max.z - 5, sectionIndex: 0, sectionBox: firstSectionBox }
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.min.z + 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.max.z - 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
       );
-      
+
       // Orta bağlantı noktaları (çoklu bay durumunda)
       for (let j = 0; j < barCount - 1; j++) {
         const currentSectionBox = getSectionBoundingBox(j);
         const nextSectionBox = getSectionBoundingBox(j + 1);
-        
+
         // baySpacing === 0 durumunda raflar birleşik, bağlantı noktası tam birleşim yerinde
         let joinX;
         if (baySpacing === 0) {
@@ -821,47 +1004,89 @@ export const handleCeilingMount = async ({
           joinX = shelfPositions[j] + currentSectionBox.max.x;
         } else {
           // Aralıklı durumda: iki section arasındaki orta nokta
-          const currentSectionRightEdge = shelfPositions[j] + currentSectionBox.max.x;
-          const nextSectionLeftEdge = shelfPositions[j + 1] + nextSectionBox.min.x;
+          const currentSectionRightEdge =
+            shelfPositions[j] + currentSectionBox.max.x;
+          const nextSectionLeftEdge =
+            shelfPositions[j + 1] + nextSectionBox.min.x;
           joinX = (currentSectionRightEdge + nextSectionLeftEdge) / 2;
         }
-        
+
         // Bağlantı noktası için ortalama bounding box kullan
         const avgSectionBox = {
-          min: { 
-            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x), 
-            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z) 
+          min: {
+            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x),
+            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z),
           },
-          max: { 
-            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x), 
-            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z) 
-          }
+          max: {
+            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x),
+            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z),
+          },
         };
-        
+
         singleShelfCornerPositions.push(
-          { x: joinX, z: avgSectionBox.min.z + 5, sectionIndex: j, sectionBox: avgSectionBox },
-          { x: joinX, z: avgSectionBox.max.z - 5, sectionIndex: j, sectionBox: avgSectionBox }
+          {
+            x: joinX,
+            z: avgSectionBox.min.z + 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
+          {
+            x: joinX,
+            z: avgSectionBox.max.z - 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
         );
       }
-      
+
       // Sağ en dış köşeler
       const lastSectionBox = getSectionBoundingBox(barCount - 1);
       singleShelfCornerPositions.push(
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.min.z + 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox },
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.max.z - 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox }
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.min.z + 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.max.z - 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
       );
     } else {
       // Bay spacing > 0 ise her bay için kendi köşe noktaları
       for (let bayIndex = 0; bayIndex < barCount; bayIndex++) {
         const bayX = shelfPositions[bayIndex];
         const sectionBox = getSectionBoundingBox(bayIndex);
-        
+
         // Her bay'in 4 köşesi
         singleShelfCornerPositions.push(
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol ön
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol arka
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sağ ön
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }  // Sağ arka
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol ön
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol arka
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ ön
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ arka
         );
       }
     }
@@ -869,30 +1094,41 @@ export const handleCeilingMount = async ({
     singleShelfCornerPositions.forEach((pos) => {
       // Dikey rip: tavan bağlantısından başlayıp rafın üstünde 2" taşacak şekilde hesapla
       const ripHeight = shelfSpacing + TWO_INCH; // 2" raf üzerinde taşma
-      
+
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === pos.sectionBox.min.z + 5;
       const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 1.6; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
-      
-      const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripHeight, 16);
+
+      const verticalRipGeometry = new THREE.CylinderGeometry(
+        currentPipeRadius,
+        currentPipeRadius,
+        ripHeight,
+        16,
+      );
       const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-      
+
       // Ön ve arka ripler için pozisyon ayarları
       let ripZPos = pos.z + zOffset;
       const isBacke = pos.z === pos.sectionBox.max.z - 5;
-      
+
       // Öndeki ripler için pozisyon ayarı
       if (isFrente) {
         ripZPos += 5; // Base offset
         // Back bar YES ve tek raf seçili değilse öndeki ripi öne al
-        if (backBars && !selectedBackShelvesForBars.includes(pos.sectionIndex)) {
+        if (
+          backBars &&
+          !selectedBackShelvesForBars.includes(pos.sectionIndex)
+        ) {
           ripZPos += 15; // 15 birim öne al
-        } else if (backBars && selectedBackShelvesForBars.includes(pos.sectionIndex)) {
+        } else if (
+          backBars &&
+          selectedBackShelvesForBars.includes(pos.sectionIndex)
+        ) {
           // Back bar YES ve raf seçili - modeller ile tutarlı
           ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
         }
       }
-      
+
       if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
@@ -917,12 +1153,17 @@ export const handleCeilingMount = async ({
           }
         }
       }
-      
+
       // Rip uzunluğu doğrudan kullanılacak
       const actualRipHeight = ripHeight;
-      const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
+      const updatedRipGeometry = new THREE.CylinderGeometry(
+        currentPipeRadius,
+        currentPipeRadius,
+        actualRipHeight,
+        16,
+      );
       verticalRip.geometry = updatedRipGeometry;
-      
+
       // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
       let verticalRipZAdjustment = 0;
       if (frontBars) {
@@ -930,12 +1171,12 @@ export const handleCeilingMount = async ({
       } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
         verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
       }
-      
+
       // Üstten aşağı: merkez, tavanın altında ripHeight/2 konumlanmalı
       verticalRip.position.set(
         pos.x,
         baseCeilingY - actualRipHeight / 2,
-        ripZPos + verticalRipZAdjustment
+        ripZPos + verticalRipZAdjustment,
       );
       scene.add(verticalRip);
 
@@ -944,7 +1185,7 @@ export const handleCeilingMount = async ({
       const ceilingMaterial = type16EMaterial || materialGold;
       const ceilingConnector = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
       ceilingConnector.scale.set(1.5, 1.5, 1.5);
-      
+
       // Type16E modeli için farklı rotasyon, eski model için eskisi
       if (type16EGeometry) {
         // Type16E modelini dik durdurmak için 90 derece rotasyon
@@ -957,7 +1198,7 @@ export const handleCeilingMount = async ({
         // 180 derece döndür
         ceilingConnector.rotation.y = Math.PI;
       }
-      
+
       // Type16E modeli için pozisyon ayarı - tek shelfte gerçek tavan seviyesi
       const singleConnectorCeilingY = baseCeilingY;
       // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
@@ -967,7 +1208,11 @@ export const handleCeilingMount = async ({
       } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
         connectorZAdjustment = 25; // Back bar açık ve öndeki pozisyon - dikey riplerle aynı
       }
-      ceilingConnector.position.set(pos.x, singleConnectorCeilingY, ripZPos + connectorZAdjustment);
+      ceilingConnector.position.set(
+        pos.x,
+        singleConnectorCeilingY,
+        ripZPos + connectorZAdjustment,
+      );
       scene.add(ceilingConnector);
     });
 
@@ -977,22 +1222,40 @@ export const handleCeilingMount = async ({
   // En üstteki raftan tavana kadar olan dikey ripler ve tavan bağlantıları (sadece çoklu shelf durumunda)
   if (shelfQuantity > 1) {
     // Köşe pozisyonlarını hesapla
-    const allTopCornerPositions: { x: number; z: number; sectionIndex: number; sectionBox: { min: { x: number; z: number }; max: { x: number; z: number } } }[] = [];
-  
+    const allTopCornerPositions: {
+      x: number;
+      z: number;
+      sectionIndex: number;
+      sectionBox: {
+        min: { x: number; z: number };
+        max: { x: number; z: number };
+      };
+    }[] = [];
+
     if (baySpacing === 0) {
       // Bay spacing 0 ise eski mantık: birleşim noktaları var
       // Sol en dış köşeler
       const firstSectionBox = getSectionBoundingBox(0);
       allTopCornerPositions.push(
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.min.z + 5, sectionIndex: 0, sectionBox: firstSectionBox },
-        { x: firstSectionBox.min.x + 5 + shelfPositions[0], z: firstSectionBox.max.z - 5, sectionIndex: 0, sectionBox: firstSectionBox }
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.min.z + 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
+        {
+          x: firstSectionBox.min.x + 5 + shelfPositions[0],
+          z: firstSectionBox.max.z - 5,
+          sectionIndex: 0,
+          sectionBox: firstSectionBox,
+        },
       );
-      
+
       // Orta bağlantı noktaları (her bay arası için)
       for (let j = 0; j < barCount - 1; j++) {
         const currentSectionBox = getSectionBoundingBox(j);
         const nextSectionBox = getSectionBoundingBox(j + 1);
-        
+
         // baySpacing === 0 durumunda raflar birleşik, bağlantı noktası tam birleşim yerinde
         let joinX;
         if (baySpacing === 0) {
@@ -1000,85 +1263,139 @@ export const handleCeilingMount = async ({
           joinX = shelfPositions[j] + currentSectionBox.max.x;
         } else {
           // Aralıklı durumda: iki section arasındaki orta nokta
-          const currentSectionRightEdge = shelfPositions[j] + currentSectionBox.max.x;
-          const nextSectionLeftEdge = shelfPositions[j + 1] + nextSectionBox.min.x;
+          const currentSectionRightEdge =
+            shelfPositions[j] + currentSectionBox.max.x;
+          const nextSectionLeftEdge =
+            shelfPositions[j + 1] + nextSectionBox.min.x;
           joinX = (currentSectionRightEdge + nextSectionLeftEdge) / 2;
         }
-        
+
         // Bağlantı noktası için ortalama bounding box kullan
         const avgSectionBox = {
-          min: { 
-            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x), 
-            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z) 
+          min: {
+            x: Math.min(currentSectionBox.min.x, nextSectionBox.min.x),
+            z: Math.min(currentSectionBox.min.z, nextSectionBox.min.z),
           },
-          max: { 
-            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x), 
-            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z) 
-          }
+          max: {
+            x: Math.max(currentSectionBox.max.x, nextSectionBox.max.x),
+            z: Math.max(currentSectionBox.max.z, nextSectionBox.max.z),
+          },
         };
-        
+
         allTopCornerPositions.push(
-          { x: joinX, z: avgSectionBox.min.z + 5, sectionIndex: j, sectionBox: avgSectionBox },
-          { x: joinX, z: avgSectionBox.max.z - 5, sectionIndex: j, sectionBox: avgSectionBox }
+          {
+            x: joinX,
+            z: avgSectionBox.min.z + 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
+          {
+            x: joinX,
+            z: avgSectionBox.max.z - 5,
+            sectionIndex: j,
+            sectionBox: avgSectionBox,
+          },
         );
       }
-      
+
       // Sağ en dış köşeler
       const lastSectionBox = getSectionBoundingBox(barCount - 1);
       allTopCornerPositions.push(
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.min.z + 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox },
-        { x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1], z: lastSectionBox.max.z - 5, sectionIndex: barCount - 1, sectionBox: lastSectionBox }
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.min.z + 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
+        {
+          x: lastSectionBox.max.x - 5 + shelfPositions[barCount - 1],
+          z: lastSectionBox.max.z - 5,
+          sectionIndex: barCount - 1,
+          sectionBox: lastSectionBox,
+        },
       );
     } else {
       // Bay spacing > 0 ise her bay için kendi köşe noktaları
       for (let bayIndex = 0; bayIndex < barCount; bayIndex++) {
         const bayX = shelfPositions[bayIndex];
         const sectionBox = getSectionBoundingBox(bayIndex);
-        
+
         // Her bay'in 4 köşesi
         allTopCornerPositions.push(
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol ön
-          { x: sectionBox.min.x + 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sol arka
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.min.z + 5, sectionIndex: bayIndex, sectionBox: sectionBox }, // Sağ ön
-          { x: sectionBox.max.x - 5 + bayX, z: sectionBox.max.z - 5, sectionIndex: bayIndex, sectionBox: sectionBox }  // Sağ arka
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol ön
+          {
+            x: sectionBox.min.x + 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sol arka
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.min.z + 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ ön
+          {
+            x: sectionBox.max.x - 5 + bayX,
+            z: sectionBox.max.z - 5,
+            sectionIndex: bayIndex,
+            sectionBox: sectionBox,
+          }, // Sağ arka
         );
       }
     }
 
-  allTopCornerPositions.forEach((pos) => {
-          // Dikey rip: en üst raftan tavana kadar - shelf spacing + model yüksekliği
-      const topShelfHeight = shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
+    allTopCornerPositions.forEach((pos) => {
+      // Dikey rip: en üst raftan tavana kadar - shelf spacing + model yüksekliği
+      const topShelfHeight =
+        shelfQuantity === 1 ? baseCeilingY - shelfSpacing : adjustedBaseY;
       let ripHeight = shelfSpacing + model13Height; // Shelf spacing + model yüksekliği
-      
+
       // Çoklu raf durumunda üst ripleri 2 birim kısalt
       if (shelfQuantity > 1) {
         ripHeight -= 18;
       }
-      
+
       // Ön ve arka ripler için farklı çaplar kullan
       const isFrente = pos.z === pos.sectionBox.min.z + 5;
       const currentPipeRadius = isFrente ? pipeRadius * 1.5 : pipeRadius * 2; // Öndeki ripler %50, arkadaki ripler %45 daha kalın
-      
-    const verticalRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, ripHeight, 16);
-    const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
-    
-    // Ön ve arka ripler için pozisyon ayarları
-    let ripZPos = pos.z + zOffset;
-    const isBacke = pos.z === pos.sectionBox.max.z - 5;
-    
-    // Öndeki ripler için pozisyon ayarı
-    if (isFrente) {
-      ripZPos += 5; // Base offset
-      // Back bar YES ve en üst raf seçili değilse öndeki ripi öne al
-      if (backBars && !selectedBackShelvesForBars.includes(pos.sectionIndex)) {
-        ripZPos += 15; // 15 birim öne al
-      } else if (backBars && selectedBackShelvesForBars.includes(pos.sectionIndex)) {
-        // Back bar YES ve raf seçili - modeller ile tutarlı
-        ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
+
+      const verticalRipGeometry = new THREE.CylinderGeometry(
+        currentPipeRadius,
+        currentPipeRadius,
+        ripHeight,
+        16,
+      );
+      const verticalRip = new THREE.Mesh(verticalRipGeometry, ripMaterial);
+
+      // Ön ve arka ripler için pozisyon ayarları
+      let ripZPos = pos.z + zOffset;
+      const isBacke = pos.z === pos.sectionBox.max.z - 5;
+
+      // Öndeki ripler için pozisyon ayarı
+      if (isFrente) {
+        ripZPos += 5; // Base offset
+        // Back bar YES ve en üst raf seçili değilse öndeki ripi öne al
+        if (
+          backBars &&
+          !selectedBackShelvesForBars.includes(pos.sectionIndex)
+        ) {
+          ripZPos += 15; // 15 birim öne al
+        } else if (
+          backBars &&
+          selectedBackShelvesForBars.includes(pos.sectionIndex)
+        ) {
+          // Back bar YES ve raf seçili - modeller ile tutarlı
+          ripZPos += 15; // Modeller ile aynı hizada (+20 model pozisyonu için uyarlanmış)
+        }
       }
-    }
-    
-          if (isBacke) {
+
+      if (isBacke) {
         // Sadece arkadaki ripler için pozisyon ayarla
         ripZPos += 5; // Base offset
         // Front bar YES olduğunda arkadaki dikey ripleri geriye doğru hareket ettir
@@ -1089,70 +1406,79 @@ export const handleCeilingMount = async ({
           // Front bar açık ve en üst raf (index 0) seçili - arkadaki model Model13
           ripZPos -= model13Depth - 32; // Model13 arkadaki pozisyon
         } else {
-                      // Front bar kapalı veya en üst raf seçili değil - Type16A
-            if (type16AGeometry) {
-                          // Front bar YES ve raf seçili değilse arkadaki ripi pozisyonu
+          // Front bar kapalı veya en üst raf seçili değil - Type16A
+          if (type16AGeometry) {
+            // Front bar YES ve raf seçili değilse arkadaki ripi pozisyonu
             if (frontBars && !selectedShelvesForBars.includes(0)) {
               ripZPos += model13Depth - 78; // 20 birim daha arkaya alındı (modelden 40 birim önde)
             } else {
               ripZPos += model13Depth - 68; // Type16A arkadaki normal pozisyon
             }
-            } else {
-              ripZPos += model13Depth - 45; // Normal arkadaki pozisyon
-            }
+          } else {
+            ripZPos += model13Depth - 45; // Normal arkadaki pozisyon
+          }
         }
       }
-    
-    // Ceiling rip uzunluğu hesaplanan uzunluk olsun
-    const actualRipHeight = ripHeight;
-    const updatedRipGeometry = new THREE.CylinderGeometry(currentPipeRadius, currentPipeRadius, actualRipHeight, 16);
-    verticalRip.geometry = updatedRipGeometry;
-    
-    // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
-    let verticalRipZAdjustment = 0;
-    if (frontBars) {
-      verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
-    } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
-      verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
-    }
-    
-    verticalRip.position.set(
-      pos.x,
-      topShelfHeight + actualRipHeight / 2,
-      ripZPos + verticalRipZAdjustment
-    );
-    scene.add(verticalRip);
 
-    // Tavan bağlantıları - Type16E v1.glb kullan
-    const ceilingGeometry = type16EGeometry || model12Geometry;
-    const ceilingMaterial = type16EMaterial || materialGold;
-    const ceilingConnector = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceilingConnector.scale.set(1.5, 1.5, 1.5);
-    
-    // Type16E modeli için farklı rotasyon, eski model için eskisi
-    if (type16EGeometry) {
-      // Type16E modelini dik durdurmak için 90 derece rotasyon
-      ceilingConnector.rotation.x = Math.PI / 2; 
-      // 180 derece döndür
-      ceilingConnector.rotation.y = Math.PI;
-    } else {
-      // Eski model rotasyonu
-      ceilingConnector.rotation.x = Math.PI;
-      // 180 derece döndür
-      ceilingConnector.rotation.y = Math.PI;
-    }
-    
-    // Type16E modeli için pozisyon ayarı - çoklu shelf durumunda
-    const multiConnectorCeilingY = topShelfHeight + shelfSpacing;
-    // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
-    let connectorZAdjustment = 0;
-    if (frontBars) {
-      connectorZAdjustment = 3; // Front bar mantığı korunuyor
-    } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
-      connectorZAdjustment = 25; // Back bar açık ve öndeki pozisyon - dikey riplerle aynı
-    }
-    ceilingConnector.position.set(pos.x, multiConnectorCeilingY, ripZPos + connectorZAdjustment);
-    scene.add(ceilingConnector);
-  });
+      // Ceiling rip uzunluğu hesaplanan uzunluk olsun
+      const actualRipHeight = ripHeight;
+      const updatedRipGeometry = new THREE.CylinderGeometry(
+        currentPipeRadius,
+        currentPipeRadius,
+        actualRipHeight,
+        16,
+      );
+      verticalRip.geometry = updatedRipGeometry;
+
+      // Front bar açıksa tüm dikey ripleri 3 birim arkaya, back bar açıksa öndeki dikey ripleri 5 birim öne kaydır
+      let verticalRipZAdjustment = 0;
+      if (frontBars) {
+        verticalRipZAdjustment = 3; // Front bar mantığı korunuyor
+      } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
+        verticalRipZAdjustment = 25; // Back bar açık ve öndeki pozisyon - 5 birim öne
+      }
+
+      verticalRip.position.set(
+        pos.x,
+        topShelfHeight + actualRipHeight / 2,
+        ripZPos + verticalRipZAdjustment,
+      );
+      scene.add(verticalRip);
+
+      // Tavan bağlantıları - Type16E v1.glb kullan
+      const ceilingGeometry = type16EGeometry || model12Geometry;
+      const ceilingMaterial = type16EMaterial || materialGold;
+      const ceilingConnector = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+      ceilingConnector.scale.set(1.5, 1.5, 1.5);
+
+      // Type16E modeli için farklı rotasyon, eski model için eskisi
+      if (type16EGeometry) {
+        // Type16E modelini dik durdurmak için 90 derece rotasyon
+        ceilingConnector.rotation.x = Math.PI / 2;
+        // 180 derece döndür
+        ceilingConnector.rotation.y = Math.PI;
+      } else {
+        // Eski model rotasyonu
+        ceilingConnector.rotation.x = Math.PI;
+        // 180 derece döndür
+        ceilingConnector.rotation.y = Math.PI;
+      }
+
+      // Type16E modeli için pozisyon ayarı - çoklu shelf durumunda
+      const multiConnectorCeilingY = topShelfHeight + shelfSpacing;
+      // Ceiling connector'ların pozisyon ayarlamaları - dikey riplerle aynı mantık
+      let connectorZAdjustment = 0;
+      if (frontBars) {
+        connectorZAdjustment = 3; // Front bar mantığı korunuyor
+      } else if (backBars && pos.z === pos.sectionBox.min.z + 5) {
+        connectorZAdjustment = 25; // Back bar açık ve öndeki pozisyon - dikey riplerle aynı
+      }
+      ceilingConnector.position.set(
+        pos.x,
+        multiConnectorCeilingY,
+        ripZPos + connectorZAdjustment,
+      );
+      scene.add(ceilingConnector);
+    });
   }
 };

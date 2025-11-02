@@ -107,7 +107,6 @@ export const handleWallMount = async ({
         } else {
           type16AMaterial = originalMaterial;
         }
-        
         foundType16A = true;
         console.log('Type16A geometry ve material bulundu:', child.geometry, type16AMaterial);
       }
